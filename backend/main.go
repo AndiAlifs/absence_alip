@@ -43,6 +43,7 @@ func main() {
 			admin.GET("/records", handlers.GetAllRecords)
 			admin.GET("/leaves", handlers.GetAllLeaveRequests)
 			admin.PATCH("/leave/:id", handlers.UpdateLeaveStatus)
+			admin.POST("/users", handlers.CreateUser)
 		}
 	}
 

@@ -83,3 +83,32 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": token, "role": user.Role})
 }
+
+func CreateUser(c *gin.Context) {
+	var input RegisterInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	// Force role to employee for now, or respect input if needed.
+	// The requirement is "Add Employee", so we default to employee.
+	user := models.User{
+		Username:     input.Username,
+		PasswordHash: string(hashedPassword),
+		Role:         "employee",
+	}
+
+	if result := database.DB.Create(&user); result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists or invalid data"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Employee created successfully", "user": user})
+}

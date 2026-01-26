@@ -43,4 +43,8 @@ export class ApiService {
   updateLeaveStatus(id: number, status: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/admin/leave/${id}`, { status }, this.getHeaders());
   }
+
+  createEmployee(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/users`, userData, this.getHeaders());
+  }
 }
