@@ -22,10 +22,7 @@ func Connect() {
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-		// In a real scenario, we might want to panic or retry.
-		// For this sandbox, we proceed so code compiles, but runtime will fail if no DB.
-		return
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	log.Println("Database connection established")
