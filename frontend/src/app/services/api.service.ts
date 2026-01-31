@@ -102,4 +102,9 @@ export class ApiService {
   updateClockInStatus(id: number, status: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/admin/clockin/${id}`, { status }, this.getHeaders());
   }
+
+  // Daily Dashboard
+  getDailyAttendance(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/daily-attendance`, this.getHeaders());
+  }
 }

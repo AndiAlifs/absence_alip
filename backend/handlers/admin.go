@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"field-attendance-system/database"
 	"field-attendance-system/models"
@@ -197,6 +198,99 @@ func hashPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hashedPassword), nil
+}
+
+type EmployeeDailyStatus struct {
+	UserID      uint       `json:"user_id"`
+	FullName    string     `json:"full_name"`
+	Username    string     `json:"username"`
+	Status      string     `json:"status"` // "present_ontime", "present_late", "on_leave", "absent"
+	ClockInTime *time.Time `json:"clock_in_time,omitempty"`
+	MinutesLate int        `json:"minutes_late,omitempty"`
+	LeaveReason string     `json:"leave_reason,omitempty"`
+	LeaveStatus string     `json:"leave_status,omitempty"`
+}
+
+func GetDailyAttendanceDashboard(c *gin.Context) {
+	// Get all employees
+	var users []models.User
+	if result := database.DB.Find(&users); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+		return
+	}
+
+	// Get today's date range
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+
+	// Get all today's attendance records
+	var attendances []models.Attendance
+	database.DB.Where("clock_in_time BETWEEN ? AND ?", startOfDay, endOfDay).Find(&attendances)
+
+	// Create map for quick lookup
+	attendanceMap := make(map[uint]models.Attendance)
+	for _, att := range attendances {
+		attendanceMap[att.UserID] = att
+	}
+
+	// Get all today's approved leave requests
+	var leaves []models.LeaveRequest
+	database.DB.Where("? BETWEEN start_date AND end_date", startOfDay).Find(&leaves)
+
+	// Create map for leave lookup
+	leaveMap := make(map[uint]models.LeaveRequest)
+	for _, leave := range leaves {
+		leaveMap[leave.UserID] = leave
+	}
+
+	// Build status for each employee
+	var dailyStatus []EmployeeDailyStatus
+	var summary = map[string]int{
+		"total":          len(users),
+		"present_ontime": 0,
+		"present_late":   0,
+		"on_leave":       0,
+		"absent":         0,
+	}
+
+	for _, user := range users {
+		status := EmployeeDailyStatus{
+			UserID:   user.ID,
+			FullName: user.FullName,
+			Username: user.Username,
+		}
+
+		// Check if on leave
+		if leave, hasLeave := leaveMap[user.ID]; hasLeave {
+			status.Status = "on_leave"
+			status.LeaveReason = leave.Reason
+			status.LeaveStatus = leave.Status
+			summary["on_leave"]++
+		} else if att, hasAttendance := attendanceMap[user.ID]; hasAttendance {
+			// Has clocked in
+			if att.IsLate {
+				status.Status = "present_late"
+				status.MinutesLate = att.MinutesLate
+				summary["present_late"]++
+			} else {
+				status.Status = "present_ontime"
+				summary["present_ontime"]++
+			}
+			status.ClockInTime = &att.ClockInTime
+		} else {
+			// No attendance and no leave
+			status.Status = "absent"
+			summary["absent"]++
+		}
+
+		dailyStatus = append(dailyStatus, status)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":    dailyStatus,
+		"summary": summary,
+	})
 }
 
 func GetPendingClockIns(c *gin.Context) {

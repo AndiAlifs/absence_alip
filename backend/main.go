@@ -69,6 +69,7 @@ func main() {
 			admin.POST("/office-location", handlers.SetOfficeLocation)
 			admin.GET("/pending-clockins", handlers.GetPendingClockIns)
 			admin.PATCH("/clockin/:id", handlers.UpdateClockInStatus)
+			admin.GET("/daily-attendance", handlers.GetDailyAttendanceDashboard)
 		}
 	}
 

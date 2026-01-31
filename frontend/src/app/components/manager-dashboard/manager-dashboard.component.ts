@@ -12,6 +12,91 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           <p class="mt-2 text-gray-600">Kelola lokasi kantor, karyawan, dan lihat catatan absensi</p>
         </div>
 
+        <!-- Daily Attendance Dashboard Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Dashboard Absensi Hari Ini
+          </h2>
+
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <p class="text-xs text-gray-600 mb-1">Total Karyawan</p>
+              <p class="text-2xl font-bold text-blue-700">{{ dailySummary.total }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+              <p class="text-xs text-gray-600 mb-1">Tepat Waktu</p>
+              <p class="text-2xl font-bold text-green-700">{{ dailySummary.present_ontime }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+              <p class="text-xs text-gray-600 mb-1">Terlambat</p>
+              <p class="text-2xl font-bold text-orange-700">{{ dailySummary.present_late }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+              <p class="text-xs text-gray-600 mb-1">Cuti</p>
+              <p class="text-2xl font-bold text-purple-700">{{ dailySummary.on_leave }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-red-50 to-rose-50 p-4 rounded-lg border border-red-200">
+              <p class="text-xs text-gray-600 mb-1">Tidak Hadir</p>
+              <p class="text-2xl font-bold text-red-700">{{ dailySummary.absent }}</p>
+            </div>
+          </div>
+
+          <!-- Daily Attendance Table -->
+          <div *ngIf="dailyAttendance.length > 0" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-In</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let emp of dailyAttendance" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <p class="text-sm font-medium text-gray-900">{{ emp.full_name || emp.username }}</p>
+                    <p *ngIf="emp.full_name" class="text-xs text-gray-500">{{ emp.username }}</p>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span *ngIf="emp.status === 'present_ontime'" class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Hadir - Tepat Waktu
+                    </span>
+                    <span *ngIf="emp.status === 'present_late'" class="px-3 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                      Hadir - Terlambat
+                    </span>
+                    <span *ngIf="emp.status === 'on_leave'" class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                      Cuti
+                    </span>
+                    <span *ngIf="emp.status === 'absent'" class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                      Tidak Hadir
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {{ emp.clock_in_time ? (emp.clock_in_time | date:'HH:mm') : '-' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <span *ngIf="emp.status === 'present_late'">Terlambat {{ emp.minutes_late }} menit</span>
+                    <span *ngIf="emp.status === 'on_leave'">{{ emp.leave_reason }} ({{ emp.leave_status }})</span>
+                    <span *ngIf="emp.status === 'present_ontime' || emp.status === 'absent'">-</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="dailyAttendance.length === 0" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <p class="mt-2 text-gray-600">Tidak ada data absensi.</p>
+          </div>
+        </div>
+
         <!-- Office Location Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
@@ -548,6 +633,16 @@ export class ManagerDashboardComponent implements OnInit {
   clockInMessage: { [key: number]: string } = {};
   clockInError: { [key: number]: boolean } = {};
 
+  // Daily attendance dashboard properties
+  dailyAttendance: any[] = [];
+  dailySummary: any = {
+    total: 0,
+    present_ontime: 0,
+    present_late: 0,
+    on_leave: 0,
+    absent: 0
+  };
+
   constructor(
     private apiService: ApiService,
     private sanitizer: DomSanitizer
@@ -558,6 +653,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.loadRecords();
     this.loadEmployees();
     this.loadPendingClockIns();
+    this.loadDailyAttendance();
   }
 
   // Pending Clock-in Methods
@@ -568,6 +664,18 @@ export class ManagerDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load pending clock-ins:', error);
+      }
+    });
+  }
+
+  loadDailyAttendance() {
+    this.apiService.getDailyAttendance().subscribe({
+      next: (response) => {
+        this.dailyAttendance = response.data || [];
+        this.dailySummary = response.summary || this.dailySummary;
+      },
+      error: (error) => {
+        console.error('Failed to load daily attendance:', error);
       }
     });
   }
