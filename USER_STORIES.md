@@ -1,6 +1,6 @@
 # Field Attendance System - User Stories
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Last Updated:** January 31, 2026  
 **Project:** Field Attendance System  
 **Status:** In Development
@@ -12,6 +12,7 @@ This document lists all implemented features of the Field Attendance System orga
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 2.1 | Jan 31, 2026 | Added US-043 (expandable/collapsible dashboard cards) | Product Team |
 | 2.0 | Jan 31, 2026 | Added 9 new stories (US-033 to US-041) for clock-in time, employee status, and daily dashboard | Product Team |
 | 1.2 | Jan 31, 2026 | Added US-032 (full name field support) | Product Team |
 | 1.1 | Jan 31, 2026 | Added US-031 (employee view office location) | Product Team |
@@ -19,10 +20,10 @@ This document lists all implemented features of the Field Attendance System orga
 
 ## Progress Summary
 
-- **Total User Stories:** 41
-- **Completed:** 41 (100%)
+- **Total User Stories:** 42
+- **Completed:** 32 (76%)
 - **In Progress:** 0
-- **Planned:** 0 (0%)
+- **Planned:** 10 (24%)
 - **Blocked:** 0
 
 ---
@@ -42,7 +43,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-037** - Employee can see their leave status for today (approved, pending, or not on leave)
 - [x] **US-038** - Employee can see if they are marked absent pending approval
 
-### 👨‍💼 Manager Features (17 stories)
+### 👨‍💼 Manager Features (18 stories)
 - [x] **US-001** - Manager can log in to the system with username and password to access administrative features
 - [x] **US-007** - Manager can configure office location coordinates and allowed radius for attendance validation
 - [x] **US-008** - Manager can view all employee attendance records to monitor attendance patterns and history
@@ -60,6 +61,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-040** - Manager can see which employees have clocked in today (on time or late)
 - [x] **US-041** - Manager can see which employees are on approved leave for today
 - [x] **US-042** - Manager can see which employees are absent (haven't clocked in and not on leave)
+- [ ] **US-043** - Manager can expand/collapse dashboard cards to manage screen space efficiently
 
 ### ⚙️ System Features (14 stories)
 - [x] **US-002** - System provides API for user registration to add new employees and managers
@@ -520,6 +522,29 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
+### US-043: Expandable/Collapsible Dashboard Cards
+**As a** manager  
+**I want to** expand and minimize dashboard cards (except today's insight)  
+**So that** I can focus on relevant information and manage screen space efficiently
+
+**Acceptance Criteria:**
+- All dashboard cards except "Today Insight" can be expanded/collapsed
+- Expand/collapse state is indicated by an icon (chevron/arrow)
+- Click on card header to toggle expand/collapse
+- Collapsed cards show only the header/title
+- Expanded cards show full content
+- State persists during current session (optional: save preference to localStorage)
+- Smooth animation when expanding/collapsing
+- Default state: all cards expanded
+- Responsive behavior on mobile devices
+
+**Status:** 🔄 Planned  
+**Priority:** Nice-to-Have  
+**Type:** UI/UX Enhancement  
+**Components:** [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+
+---
+
 ## Epic 5: Daily Attendance Dashboard
 
 ### US-039: Manager View Daily Attendance Dashboard
@@ -883,7 +908,7 @@ This document lists all implemented features of the Field Attendance System orga
 **Features by Priority:**
 - **Critical (Must-Have):** 18 stories - All implemented ✅
 - **Important (Should-Have):** 8 stories - All implemented ✅
-- **Nice-to-Have:** 4 stories - All implemented ✅
+- **Nice-to-Have:** 5 stories - 4 implemented ✅, 1 planned 🔄
 
 ---
 
