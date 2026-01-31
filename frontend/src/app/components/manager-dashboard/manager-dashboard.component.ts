@@ -99,14 +99,20 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
         <!-- Office Location Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="toggleOfficeLocation()">
+            <div class="flex items-center">
+              <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Atur Lokasi Kantor
+            </div>
+            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isOfficeLocationExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-            Atur Lokasi Kantor
           </h2>
           
+          <div *ngIf="isOfficeLocationExpanded" class="transition-all duration-200">
           <div *ngIf="officeLocation" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border border-blue-200">
             <p class="text-sm font-semibold text-gray-700 mb-3">Lokasi Kantor Saat Ini:</p>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -254,16 +260,20 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <p [class]="isOfficeError ? 'text-sm text-red-800' : 'text-sm text-green-800'">{{ officeMessage }}</p>
             </div>
           </form>
+          </div>
         </div>
 
         <!-- Employees Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center cursor-pointer" (click)="toggleEmployees()">
               <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               Manajemen Karyawan
+              <svg class="h-5 w-5 text-gray-500 ml-2 transition-transform duration-200" [class.rotate-180]="!isEmployeesExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
             </h2>
             <button 
               (click)="openAddEmployeeModal()" 
@@ -276,6 +286,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </button>
           </div>
           
+          <div *ngIf="isEmployeesExpanded" class="transition-all duration-200">
           <div *ngIf="employees.length > 0" class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -325,6 +336,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <p class="mt-2 text-gray-600">Tidak ada karyawan ditemukan.</p>
+          </div>
           </div>
         </div>
 
@@ -439,14 +451,19 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
         <!-- Pending Clock-ins Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <svg class="h-6 w-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="togglePendingClockIns()">
+            <div class="flex items-center">
+              <svg class="h-6 w-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Absensi Menunggu Persetujuan
+            </div>
+            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isPendingClockInsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-            Absensi Menunggu Persetujuan
           </h2>
 
-          <div *ngIf="pendingClockIns.length > 0" class="space-y-4">
+          <div *ngIf="isPendingClockInsExpanded" class="transition-all duration-200"><div *ngIf="pendingClockIns.length > 0" class="space-y-4">
             <div *ngFor="let clockIn of pendingClockIns" class="bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-500 rounded-lg p-6 shadow-md">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -518,18 +535,24 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </svg>
             <p class="mt-2 text-gray-600">Tidak ada absensi yang menunggu persetujuan.</p>
           </div>
+          </div>
         </div>
 
         <!-- Attendance Records Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="toggleAttendanceRecords()">
+            <div class="flex items-center">
+              <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Catatan Absensi
+            </div>
+            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isAttendanceRecordsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-            Catatan Absensi
           </h2>
 
-          <div *ngIf="records.length > 0" class="overflow-x-auto">
+          <div *ngIf="isAttendanceRecordsExpanded" class="transition-all duration-200"><div *ngIf="records.length > 0" class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <tr>
@@ -584,6 +607,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
             <p class="mt-2 text-gray-600">Tidak ada catatan absensi ditemukan.</p>
+          </div>
           </div>
         </div>
       </div>
@@ -642,6 +666,12 @@ export class ManagerDashboardComponent implements OnInit {
     on_leave: 0,
     absent: 0
   };
+
+  // Card expansion states (Daily Dashboard is always expanded)
+  isOfficeLocationExpanded = true;
+  isEmployeesExpanded = true;
+  isPendingClockInsExpanded = true;
+  isAttendanceRecordsExpanded = true;
 
   constructor(
     private apiService: ApiService,
@@ -982,5 +1012,22 @@ export class ManagerDashboardComponent implements OnInit {
         this.isOfficeError = true;
       }
     });
+  }
+
+  // Toggle methods for card expansion
+  toggleOfficeLocation() {
+    this.isOfficeLocationExpanded = !this.isOfficeLocationExpanded;
+  }
+
+  toggleEmployees() {
+    this.isEmployeesExpanded = !this.isEmployeesExpanded;
+  }
+
+  togglePendingClockIns() {
+    this.isPendingClockInsExpanded = !this.isPendingClockInsExpanded;
+  }
+
+  toggleAttendanceRecords() {
+    this.isAttendanceRecordsExpanded = !this.isAttendanceRecordsExpanded;
   }
 }
