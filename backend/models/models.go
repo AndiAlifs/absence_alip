@@ -8,6 +8,7 @@ import (
 type User struct {
 	ID           uint   `gorm:"primaryKey" json:"id"`
 	Username     string `gorm:"unique;not null" json:"username"`
+	FullName     string `gorm:"type:varchar(255)" json:"full_name"`
 	PasswordHash string `gorm:"not null" json:"-"`
 	Role         string `gorm:"type:enum('employee','manager');default:'employee'" json:"role"`
 }

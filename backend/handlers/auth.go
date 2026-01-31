@@ -13,6 +13,7 @@ import (
 
 type RegisterInput struct {
 	Username string `json:"username" binding:"required"`
+	FullName string `json:"full_name"`
 	Password string `json:"password" binding:"required"`
 	Role     string `json:"role" binding:"omitempty,oneof=employee manager"` // optional, defaults to employee if empty? Logic below.
 }
@@ -45,6 +46,7 @@ func Register(c *gin.Context) {
 
 	user := models.User{
 		Username:     input.Username,
+		FullName:     input.FullName,
 		PasswordHash: string(hashedPassword),
 		Role:         role,
 	}
@@ -81,7 +83,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token, "role": user.Role})
+	c.JSON(http.StatusOK, gin.H{"token": token, "role": user.Role, "full_name": user.FullName, "username": user.Username})
 }
 
 func CreateUser(c *gin.Context) {
@@ -101,6 +103,7 @@ func CreateUser(c *gin.Context) {
 	// The requirement is "Add Employee", so we default to employee.
 	user := models.User{
 		Username:     input.Username,
+		FullName:     input.FullName,
 		PasswordHash: string(hashedPassword),
 		Role:         "employee",
 	}

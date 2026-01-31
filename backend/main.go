@@ -50,6 +50,7 @@ func main() {
 	{
 		protected.POST("/clock-in", handlers.ClockIn)
 		protected.POST("/leave", handlers.CreateLeaveRequest)
+		protected.GET("/office-location", handlers.GetOfficeLocation)
 
 		// Manager routes
 		admin := protected.Group("/admin")
@@ -63,7 +64,6 @@ func main() {
 			admin.POST("/employees", handlers.CreateEmployee)
 			admin.PUT("/employees/:id", handlers.UpdateEmployee)
 			admin.DELETE("/employees/:id", handlers.DeleteEmployee)
-			admin.GET("/office-location", handlers.GetOfficeLocation)
 			admin.POST("/office-location", handlers.SetOfficeLocation)
 			admin.GET("/pending-clockins", handlers.GetPendingClockIns)
 			admin.PATCH("/clockin/:id", handlers.UpdateClockInStatus)
@@ -93,6 +93,7 @@ func seedAdminUser() {
 
 	adminUser := models.User{
 		Username:     "admin",
+		FullName:     "Administrator",
 		PasswordHash: string(hashedPassword),
 		Role:         "manager",
 	}

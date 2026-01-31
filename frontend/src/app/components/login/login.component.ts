@@ -63,6 +63,8 @@ export class LoginComponent {
         next: (res) => {
           localStorage.setItem('token', res.token);
           localStorage.setItem('role', res.role);
+          localStorage.setItem('full_name', res.full_name || '');
+          localStorage.setItem('username', res.username || '');
           if (res.role === 'manager') {
             this.router.navigate(['/admin']);
           } else {

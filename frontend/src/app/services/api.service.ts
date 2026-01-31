@@ -70,7 +70,7 @@ export class ApiService {
 
   // Office Location
   getOfficeLocation(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/admin/office-location`, this.getHeaders());
+    return this.http.get(`${this.apiUrl}/office-location`, this.getHeaders());
   }
 
   setOfficeLocation(data: any): Observable<any> {

@@ -50,11 +50,16 @@ import { Component } from '@angular/core';
 
           <!-- User Info & Logout -->
           <div class="flex items-center space-x-4">
-            <div class="hidden md:flex items-center px-3 py-1 bg-indigo-800 rounded-full">
-              <svg class="h-5 w-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span class="text-sm text-white font-medium">{{ isManager ? 'Manajer' : 'Karyawan' }}</span>
+            <div class="hidden md:flex flex-col items-end px-3 py-1 bg-indigo-800 rounded-lg">
+              <div class="flex items-center">
+                <svg class="h-5 w-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <div>
+                  <p class="text-sm text-white font-bold">{{ fullName || username }}</p>
+                  <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : 'Karyawan' }}</p>
+                </div>
+              </div>
             </div>
             
             <button 
@@ -118,11 +123,16 @@ import { Component } from '@angular/core';
             Dashboard Manajer
           </a>
 
-          <div class="px-3 py-2 flex items-center text-white border-t border-indigo-700 mt-2 pt-2">
-            <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span class="text-sm font-medium">{{ isManager ? 'Manajer' : 'Karyawan' }}</span>
+          <div class="px-3 py-2 border-t border-indigo-700 mt-2 pt-2">
+            <div class="flex items-center text-white">
+              <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <div>
+                <p class="text-sm font-bold">{{ fullName || username }}</p>
+                <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : 'Karyawan' }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -142,6 +152,14 @@ export class AppComponent {
     return localStorage.getItem('role') === 'manager';
   }
 
+  get fullName() {
+    return localStorage.getItem('full_name') || '';
+  }
+
+  get username() {
+    return localStorage.getItem('username') || '';
+  }
+
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
@@ -149,6 +167,8 @@ export class AppComponent {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('full_name');
+    localStorage.removeItem('username');
     window.location.reload();
   }
 }

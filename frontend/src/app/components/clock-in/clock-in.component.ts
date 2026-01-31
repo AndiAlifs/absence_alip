@@ -61,7 +61,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </div>
 
             <button 
-              (click)="submitClockIn()" 
+              (click)="checkAndSubmitClockIn()" 
               [disabled]="submitting"
               class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-lg">
               <span *ngIf="!submitting">Absen Sekarang</span>
@@ -90,6 +90,36 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <div *ngIf="showConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+        <div class="text-center">
+          <svg class="mx-auto h-12 w-12 text-orange-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Lokasi Di Luar Kantor</h3>
+          <p class="text-gray-600 mb-2">Clock in diluar kantor memerlukan persetujuan manajer.</p>
+          <p class="text-sm text-gray-500 mb-6">Jarak Anda dari kantor: <strong>{{ distanceFromOffice?.toFixed(2) }} meter</strong></p>
+
+          <div class="flex gap-3">
+            <button 
+              (click)="cancelClockIn()" 
+              type="button"
+              class="flex-1 py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
+              Batal
+            </button>
+            <button 
+              (click)="confirmClockIn()" 
+              type="button"
+              [disabled]="submitting"
+              class="flex-1 py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ submitting ? 'Mengirim...' : 'Lanjutkan' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   `,
   styles: []
 })
@@ -99,11 +129,26 @@ export class ClockInComponent implements OnInit {
   submitting = false;
   error = '';
   successMessage = '';
+  showConfirmation = false;
+  distanceFromOffice: number | null = null;
+  officeLocation: any = null;
 
   constructor(private apiService: ApiService, private sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.getLocation();
+    this.loadOfficeLocation();
+  }
+
+  loadOfficeLocation() {
+    this.apiService.getOfficeLocation().subscribe({
+      next: (response) => {
+        this.officeLocation = response.data;
+      },
+      error: (error) => {
+        console.error('Failed to load office location:', error);
+      }
+    });
   }
 
   getLocation() {
@@ -126,6 +171,52 @@ export class ClockInComponent implements OnInit {
       this.error = 'Geolokasi tidak didukung oleh browser ini.';
       this.loading = false;
     }
+  }
+
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const earthRadiusMeters = 6371000;
+    const lat1Rad = lat1 * Math.PI / 180;
+    const lat2Rad = lat2 * Math.PI / 180;
+    const deltaLat = (lat2 - lat1) * Math.PI / 180;
+    const deltaLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+              Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+              Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return earthRadiusMeters * c;
+  }
+
+  checkAndSubmitClockIn() {
+    if (!this.location || !this.officeLocation) {
+      this.submitClockIn();
+      return;
+    }
+
+    // Calculate distance from office
+    this.distanceFromOffice = this.calculateDistance(
+      this.location.latitude,
+      this.location.longitude,
+      this.officeLocation.latitude,
+      this.officeLocation.longitude
+    );
+
+    // Check if outside office radius
+    if (this.distanceFromOffice > this.officeLocation.allowed_radius_meters) {
+      this.showConfirmation = true;
+    } else {
+      this.submitClockIn();
+    }
+  }
+
+  confirmClockIn() {
+    this.showConfirmation = false;
+    this.submitClockIn();
+  }
+
+  cancelClockIn() {
+    this.showConfirmation = false;
   }
 
   submitClockIn() {

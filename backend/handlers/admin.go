@@ -71,6 +71,7 @@ func GetAllEmployees(c *gin.Context) {
 
 type CreateEmployeeInput struct {
 	Username string `json:"username" binding:"required"`
+	FullName string `json:"full_name"`
 	Password string `json:"password" binding:"required,min=6"`
 	Role     string `json:"role" binding:"required,oneof=employee manager"`
 }
@@ -98,6 +99,7 @@ func CreateEmployee(c *gin.Context) {
 
 	user := models.User{
 		Username:     input.Username,
+		FullName:     input.FullName,
 		PasswordHash: hashedPassword,
 		Role:         input.Role,
 	}
@@ -112,6 +114,7 @@ func CreateEmployee(c *gin.Context) {
 
 type UpdateEmployeeInput struct {
 	Username string `json:"username"`
+	FullName string `json:"full_name"`
 	Password string `json:"password"`
 	Role     string `json:"role" binding:"omitempty,oneof=employee manager"`
 }
@@ -139,6 +142,11 @@ func UpdateEmployee(c *gin.Context) {
 			return
 		}
 		user.Username = input.Username
+	}
+
+	// Update full name if provided
+	if input.FullName != "" {
+		user.FullName = input.FullName
 	}
 
 	// Update password if provided

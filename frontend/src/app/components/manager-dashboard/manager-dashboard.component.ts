@@ -183,6 +183,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <tr>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Lengkap</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pengguna</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peran</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
@@ -191,7 +192,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr *ngFor="let employee of employees" class="hover:bg-gray-50 transition-colors">
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ employee.id }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ employee.username }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ employee.full_name || '-' }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ employee.username }}</td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span [class]="employee.role === 'manager' ? 'px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800' : 'px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800'">
                       {{ employee.role }}
@@ -234,6 +236,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <h3 class="text-2xl font-bold text-gray-900 mb-6">{{ editingEmployee ? 'Edit Karyawan' : 'Tambah Karyawan Baru' }}</h3>
             
             <form class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                <input 
+                  [(ngModel)]="employeeForm.full_name" 
+                  name="full_name"
+                  type="text" 
+                  placeholder="Masukkan nama lengkap"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
                 <input 
@@ -341,7 +353,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p class="text-xs text-gray-600 mb-1">Karyawan</p>
-                  <p class="font-bold text-gray-900">{{ clockIn.user?.username }}</p>
+                  <p class="font-bold text-gray-900">{{ clockIn.user?.full_name || clockIn.user?.username }}</p>
+                  <p *ngIf="clockIn.user?.full_name" class="text-xs text-gray-500">{{ clockIn.user?.username }}</p>
                 </div>
                 <div>
                   <p class="text-xs text-gray-600 mb-1">Waktu Clock-in</p>
@@ -423,7 +436,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <tr>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID Karyawan</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pengguna</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Karyawan</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peta</th>
@@ -433,7 +446,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                 <ng-container *ngFor="let record of records">
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.user_id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ record.user?.username || 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <p class="text-sm font-medium text-gray-900">{{ record.user?.full_name || record.user?.username || 'N/A' }}</p>
+                      <p *ngIf="record.user?.full_name" class="text-xs text-gray-500">{{ record.user?.username }}</p>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ record.clock_in_time | date:'medium' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {{ record.latitude }}, {{ record.longitude }}
@@ -503,6 +519,7 @@ export class ManagerDashboardComponent implements OnInit {
   employeeToDelete: any = null;
   employeeForm: any = {
     username: '',
+    full_name: '',
     password: '',
     role: 'employee'
   };
@@ -593,6 +610,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.editingEmployee = null;
     this.employeeForm = {
       username: '',
+      full_name: '',
       password: '',
       role: 'employee'
     };
@@ -605,6 +623,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.editingEmployee = employee;
     this.employeeForm = {
       username: employee.username,
+      full_name: employee.full_name || '',
       password: '',
       role: employee.role
     };
@@ -618,6 +637,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.editingEmployee = null;
     this.employeeForm = {
       username: '',
+      full_name: '',
       password: '',
       role: 'employee'
     };
@@ -649,6 +669,7 @@ export class ManagerDashboardComponent implements OnInit {
 
     const payload: any = {
       username: this.employeeForm.username,
+      full_name: this.employeeForm.full_name,
       role: this.employeeForm.role
     };
 
