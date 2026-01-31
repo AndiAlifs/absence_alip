@@ -56,12 +56,12 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] [**US-015**](#us-015-update-employee-information) - Manager can update employee information including username, password, or role
 - [x] [**US-016**](#us-016-delete-employee) - Manager can delete employee accounts to remove access for staff who have left
 - [x] [**US-028**](#us-028-map-visualization) - Manager can view office location on an interactive map to visually confirm office location settings
-- [x] [**US-033**](#us-033-manager-set-clock-in-time) - Manager can set official clock-in time to determine late arrivals
-- [x] [**US-039**](#us-039-manager-view-daily-attendance-dashboard) - Manager can view daily attendance dashboard showing today's status for all employees
-- [x] [**US-040**](#us-040-manager-see-employees-who-clocked-in) - Manager can see which employees have clocked in today (on time or late)
-- [x] [**US-041**](#us-041-manager-see-employees-on-leave) - Manager can see which employees are on approved leave for today
-- [x] [**US-042**](#us-042-manager-see-absent-employees) - Manager can see which employees are absent (haven't clocked in and not on leave)
-- [x] [**US-043**](#us-043-expandablecollapsible-dashboard-cards) - Manager can expand/collapse dashboard cards to manage screen space efficiently
+- [ ] [**US-033**](#us-033-manager-set-clock-in-time) - Manager can set official clock-in time to determine late arrivals
+- [ ] [**US-039**](#us-039-manager-view-daily-attendance-dashboard) - Manager can view daily attendance dashboard showing today's status for all employees
+- [ ] [**US-040**](#us-040-manager-see-employees-who-clocked-in) - Manager can see which employees have clocked in today (on time or late)
+- [ ] [**US-041**](#us-041-manager-see-employees-on-leave) - Manager can see which employees are on approved leave for today
+- [ ] [**US-042**](#us-042-manager-see-absent-employees) - Manager can see which employees are absent (haven't clocked in and not on leave)
+- [ ] [**US-043**](#us-043-expandablecollapsible-dashboard-cards) - Manager can expand/collapse dashboard cards to manage screen space efficiently
 
 ### ⚙️ System Features (14 stories)
 - [x] [**US-002**](#us-002-user-registration) - System provides API for user registration to add new employees and managers
@@ -174,8 +174,14 @@ This document lists all implemented features of the Field Attendance System orga
 
 **Status:** ✅ Implemented  
 **Priority:** Important  
+**Depends On:** US-034  
 **Routes:** `GET /api/my-attendance/today`  
-**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)
+**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)  
+**Technical Details:**
+- Backend filters attendance records by user ID and today's date
+- Returns single record with all fields including is_late and minutes_late
+- Frontend displays status card with color-coded badges
+- Shows late status with red badge when applicable
 
 ---
 
@@ -215,7 +221,12 @@ This document lists all implemented features of the Field Attendance System orga
 **Status:** ✅ Implemented  
 **Priority:** Important  
 **Routes:** `GET /api/my-leave/today`  
-**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)
+**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)  
+**Technical Details:**
+- Backend uses SQL date range query: "? BETWEEN start_date AND end_date"
+- Checks both approved and pending leave requests
+- Frontend displays status card with green (approved) or yellow (pending) badges
+- Shows leave reason and full date range for context
 
 ---
 
@@ -332,8 +343,14 @@ This document lists all implemented features of the Field Attendance System orga
 
 **Status:** ✅ Implemented  
 **Priority:** Critical  
+**Depends On:** US-033  
 **Implementation:** [attendance.go](backend/handlers/attendance.go) - ClockIn function with time comparison logic  
-**Data Model:** Added `is_late` (boolean) and `minutes_late` (integer) to Attendance model
+**Data Model:** Added `is_late` (boolean) and `minutes_late` (integer) to Attendance model  
+**Technical Details:**
+- Parses office clock_in_time using Go time.Parse("15:04")
+- Compares with actual clock-in time from attendance record
+- Automatically calculates minute difference when late
+- Both fields stored in database for historical tracking
 
 ---
 
@@ -563,8 +580,16 @@ This document lists all implemented features of the Field Attendance System orga
 
 **Status:** ✅ Implemented  
 **Priority:** Critical  
+**Depends On:** US-033, US-034  
 **Routes:** `GET /api/admin/daily-attendance`  
-**Components:** [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+**Components:** [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)  
+**Implementation:** [admin.go](backend/handlers/admin.go) - GetDailyAttendanceDashboard function  
+**Technical Details:**
+- Aggregates data from Users, Attendance, and LeaveRequests tables
+- Creates status map categorizing each employee as: present_ontime, present_late, on_leave, or absent
+- Includes summary statistics in response header
+- Frontend displays 4 color-coded summary cards with gradient backgrounds
+- Shows detailed employee list for each category in expandable sections
 
 ---
 
@@ -585,7 +610,14 @@ This document lists all implemented features of the Field Attendance System orga
 **Status:** ✅ Implemented  
 **Priority:** Important  
 **Depends On:** US-039  
-**Implementation:** Integrated with daily attendance dashboard
+**Implementation:** Integrated with daily attendance dashboard  
+**Technical Details:**
+- Present employees shown in two separate lists: On Time and Late
+- On Time list shows employees with is_late = false
+- Late list shows employees with is_late = true and displays minutes_late
+- Each entry includes full name, clock-in time, and status badge
+- Color coding: Green for on-time, Yellow for late
+- Data sourced from present_ontime and present_late arrays in dashboard response
 
 ---
 
@@ -605,7 +637,14 @@ This document lists all implemented features of the Field Attendance System orga
 **Status:** ✅ Implemented  
 **Priority:** Important  
 **Depends On:** US-039  
-**Implementation:** Integrated with daily attendance dashboard
+**Implementation:** Integrated with daily attendance dashboard  
+**Technical Details:**
+- Backend filters for approved leave requests where today falls within date range
+- Returns employee name, leave reason, start_date, and end_date
+- Frontend displays in dedicated "On Leave" section with blue color coding
+- Shows leave duration and reason for each employee
+- Count displayed in summary card at top of dashboard
+- Excludes pending or rejected leave requests from display
 
 ---
 
@@ -626,7 +665,17 @@ This document lists all implemented features of the Field Attendance System orga
 **Status:** ✅ Implemented  
 **Priority:** Critical  
 **Depends On:** US-039, US-033  
-**Implementation:** Integrated with daily attendance dashboard
+**Implementation:** Integrated with daily attendance dashboard  
+**Technical Details:**
+- Backend identifies absent employees by process of elimination:
+  - Gets all employees from database
+  - Removes those who clocked in today
+  - Removes those on approved leave today
+  - Remaining employees are marked absent
+- Frontend displays in dedicated "Absent" section with red color coding
+- Shows employee full name for each absent person
+- Count displayed in summary card at top of dashboard
+- List updates dynamically as employees clock in during the day
 
 ---
 

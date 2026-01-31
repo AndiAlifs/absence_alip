@@ -1,0 +1,19 @@
+[Unit]
+Description=Field Attendance System Backend
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/attendance/backend
+ExecStart=/var/www/attendance/backend/attendance-server
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment file
+EnvironmentFile=/var/www/attendance/backend/.env
+
+[Install]
+WantedBy=multi-user.target
