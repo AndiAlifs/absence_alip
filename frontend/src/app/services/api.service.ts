@@ -39,6 +39,10 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/leave`, data, this.getHeaders());
   }
 
+  getTodayLeave(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/my-leave/today`, this.getHeaders());
+  }
+
   // Admin
   getAllRecords(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admin/records`, this.getHeaders());

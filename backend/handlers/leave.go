@@ -53,3 +53,29 @@ func CreateLeaveRequest(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Leave request submitted", "data": leave})
 }
+
+// GetTodayLeave returns today's leave status for the logged-in user
+func GetTodayLeave(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	// Get today's date
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	var leave models.LeaveRequest
+	// Find leave request where today falls between start_date and end_date
+	result := database.DB.Where("user_id = ? AND ? BETWEEN start_date AND end_date", userID, today).First(&leave)
+
+	if result.Error != nil {
+		// No leave request for today
+		c.JSON(http.StatusOK, gin.H{
+			"data":    nil,
+			"message": "Tidak sedang cuti hari ini",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": leave,
+	})
+}

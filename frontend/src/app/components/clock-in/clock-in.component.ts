@@ -39,6 +39,32 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           <p class="text-sm text-orange-800 font-medium">Anda belum melakukan clock-in hari ini</p>
         </div>
 
+        <!-- Today's Leave Status Card -->
+        <div *ngIf="todayLeave" class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-purple-500">
+          <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Status Cuti Hari Ini
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Status Cuti</p>
+              <span [class]="todayLeave.status === 'approved' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800' : todayLeave.status === 'pending' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800' : 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800'">
+                {{ todayLeave.status === 'approved' ? 'Disetujui' : todayLeave.status === 'pending' ? 'Menunggu Persetujuan' : 'Ditolak' }}
+              </span>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Periode Cuti</p>
+              <p class="text-sm font-semibold text-gray-900">{{ todayLeave.start_date | date:'dd/MM/yyyy' }} - {{ todayLeave.end_date | date:'dd/MM/yyyy' }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Alasan</p>
+              <p class="text-sm font-semibold text-gray-900">{{ todayLeave.reason }}</p>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-xl p-8">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Absen Masuk</h2>
           
@@ -165,6 +191,7 @@ export class ClockInComponent implements OnInit {
   distanceFromOffice: number | null = null;
   officeLocation: any = null;
   todayAttendance: any = null;
+  todayLeave: any = null;
 
   constructor(private apiService: ApiService, private sanitizer: DomSanitizer) {}
 
@@ -172,6 +199,7 @@ export class ClockInComponent implements OnInit {
     this.getLocation();
     this.loadOfficeLocation();
     this.loadTodayAttendance();
+    this.loadTodayLeave();
   }
 
   loadOfficeLocation() {
@@ -192,6 +220,17 @@ export class ClockInComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load today attendance:', error);
+      }
+    });
+  }
+
+  loadTodayLeave() {
+    this.apiService.getTodayLeave().subscribe({
+      next: (response) => {
+        this.todayLeave = response.data;
+      },
+      error: (error) => {
+        console.error('Failed to load today leave:', error);
       }
     });
   }

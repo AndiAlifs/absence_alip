@@ -20,9 +20,9 @@ This document lists all implemented features of the Field Attendance System orga
 ## Progress Summary
 
 - **Total User Stories:** 41
-- **Completed:** 35 (85%)
+- **Completed:** 37 (90%)
 - **In Progress:** 0
-- **Planned:** 6 (15%)
+- **Planned:** 4 (10%)
 - **Blocked:** 0
 
 ---
@@ -38,8 +38,8 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-028** - Employee can view their location on an interactive map to visually confirm location data
 - [x] **US-031** - Employee can view office location settings to see where they need to be for attendance approval
 - [x] **US-035** - Employee can view their attendance record for today to check their status
-- [ ] **US-036** - Employee can see if they are on time, late, or pending approval for today's attendance
-- [ ] **US-037** - Employee can see their leave status for today (approved, pending, or not on leave)
+- [x] **US-036** - Employee can see if they are on time, late, or pending approval for today's attendance
+- [x] **US-037** - Employee can see their leave status for today (approved, pending, or not on leave)
 - [ ] **US-038** - Employee can see if they are marked absent pending approval
 
 ### 👨‍💼 Manager Features (17 stories)
@@ -190,9 +190,10 @@ This document lists all implemented features of the Field Attendance System orga
 - Status is clearly visible with color coding (green/yellow/red)
 - Works in conjunction with today's attendance view
 
-**Status:** 🔄 Planned  
+**Status:** ✅ Implemented  
 **Priority:** Important  
-**Depends On:** US-033, US-035
+**Depends On:** US-033, US-035  
+**Implementation:** Integrated with clock-in component showing late status with color coding
 
 ---
 
@@ -209,9 +210,10 @@ This document lists all implemented features of the Field Attendance System orga
 - Shows leave reason and date range
 - Integrated with today's status dashboard
 
-**Status:** 🔄 Planned  
+**Status:** ✅ Implemented  
 **Priority:** Important  
-**Routes:** `GET /api/my-leave/today`
+**Routes:** `GET /api/my-leave/today`  
+**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)
 
 ---
 
