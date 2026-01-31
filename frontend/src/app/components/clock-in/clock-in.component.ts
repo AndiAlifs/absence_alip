@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-clock-in',
@@ -12,6 +13,19 @@ import { ApiService } from '../../services/api.service';
       <div *ngIf="location">
         <p>Latitude: {{ location.latitude }}</p>
         <p>Longitude: {{ location.longitude }}</p>
+        
+        <div class="map-container">
+          <h3>Your Current Location</h3>
+          <iframe 
+            [src]="getMapEmbed()" 
+            width="100%" 
+            height="400" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy">
+          </iframe>
+        </div>
+
         <button (click)="submitClockIn()" [disabled]="submitting">
           {{ submitting ? 'Submitting...' : 'Clock In Now' }}
         </button>
@@ -22,9 +36,11 @@ import { ApiService } from '../../services/api.service';
   `,
   styles: [`
     .container { padding: 20px; }
+    .map-container { margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 4px; }
+    .map-container h3 { margin-top: 0; color: #333; }
     .error { color: red; }
     .success { color: green; margin-top: 10px; font-weight: bold; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
   `]
 })
 export class ClockInComponent implements OnInit {
@@ -34,7 +50,7 @@ export class ClockInComponent implements OnInit {
   error = '';
   successMessage = '';
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.getLocation();
@@ -72,9 +88,15 @@ export class ClockInComponent implements OnInit {
         this.submitting = false;
       },
       error: (err) => {
-        this.error = 'Failed to clock in.';
+        this.error = err.error?.error || 'Failed to clock in.';
         this.submitting = false;
       }
     });
+  }
+
+  getMapEmbed(): SafeResourceUrl {
+    if (!this.location) return '';
+    const url = `https://maps.google.com/maps?q=${this.location.latitude},${this.location.longitude}&output=embed&z=17`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 }
