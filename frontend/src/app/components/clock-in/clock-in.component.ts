@@ -32,11 +32,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-blue-50 p-4 rounded-lg">
                 <p class="text-sm text-gray-600 mb-1">Lintang</p>
-                <p class="text-lg font-semibold text-gray-900">{{ location?.latitude }}</p>
+                <p class="text-lg font-semibold text-gray-900">{{ location.latitude }}</p>
               </div>
               <div class="bg-blue-50 p-4 rounded-lg">
                 <p class="text-sm text-gray-600 mb-1">Bujur</p>
-                <p class="text-lg font-semibold text-gray-900">{{ location?.longitude }}</p>
+                <p class="text-lg font-semibold text-gray-900">{{ location.longitude }}</p>
               </div>
             </div>
             
