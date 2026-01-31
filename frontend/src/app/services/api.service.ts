@@ -47,4 +47,13 @@ export class ApiService {
   createEmployee(userData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/users`, userData, this.getHeaders());
   }
+
+  // Office Location
+  getOfficeLocation(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/office-location`, this.getHeaders());
+  }
+
+  setOfficeLocation(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/office-location`, data, this.getHeaders());
+  }
 }

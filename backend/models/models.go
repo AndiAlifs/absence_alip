@@ -19,7 +19,7 @@ type Attendance struct {
 	ClockInTime time.Time `gorm:"not null" json:"clock_in_time"`
 	Latitude    float64   `gorm:"type:decimal(10,8)" json:"latitude"`
 	Longitude   float64   `gorm:"type:decimal(11,8)" json:"longitude"`
-	User        User      `gorm:"foreignKey:UserID" json:"-"`
+	User        User      `gorm:"foreignKey:UserID" json:"user"`
 }
 
 // LeaveRequest represents a leave application
@@ -31,4 +31,13 @@ type LeaveRequest struct {
 	Reason    string    `gorm:"type:text" json:"reason"`
 	Status    string    `gorm:"type:enum('pending','approved','rejected');default:'pending'" json:"status"`
 	User      User      `gorm:"foreignKey:UserID" json:"-"`
+}
+
+// OfficeLocation represents the office coordinates and allowed radius for clock-in
+type OfficeLocation struct {
+	ID                  uint    `gorm:"primaryKey" json:"id"`
+	Latitude            float64 `gorm:"type:decimal(10,8);not null" json:"latitude"`
+	Longitude           float64 `gorm:"type:decimal(11,8);not null" json:"longitude"`
+	AllowedRadiusMeters float64 `gorm:"not null;default:100" json:"allowed_radius_meters"`
+	Name                string  `gorm:"type:varchar(255)" json:"name"`
 }

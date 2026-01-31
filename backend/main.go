@@ -23,6 +23,9 @@ func main() {
 
 	database.Connect()
 
+	// Auto-migrate models
+	database.DB.AutoMigrate(&models.OfficeLocation{})
+
 	// Seed admin user
 	seedAdminUser()
 
@@ -56,6 +59,8 @@ func main() {
 			admin.GET("/leaves", handlers.GetAllLeaveRequests)
 			admin.PATCH("/leave/:id", handlers.UpdateLeaveStatus)
 			admin.POST("/users", handlers.CreateUser)
+			admin.GET("/office-location", handlers.GetOfficeLocation)
+			admin.POST("/office-location", handlers.SetOfficeLocation)
 		}
 	}
 
