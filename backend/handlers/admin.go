@@ -57,3 +57,14 @@ func UpdateLeaveStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Leave status updated", "data": leave})
 }
+
+func GetAllEmployees(c *gin.Context) {
+	// Get all users in the system
+	var users []models.User
+	if result := database.DB.Find(&users); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": users})
+}

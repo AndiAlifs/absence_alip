@@ -48,6 +48,10 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/admin/users`, userData, this.getHeaders());
   }
 
+  getAllEmployees(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/employees`, this.getHeaders());
+  }
+
   // Office Location
   getOfficeLocation(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admin/office-location`, this.getHeaders());

@@ -90,6 +90,27 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
       <hr />
 
+      <h3>All Employees</h3>
+      <table border="1" cellspacing="0" cellpadding="5">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let employee of employees">
+            <td>{{ employee.id }}</td>
+            <td>{{ employee.username }}</td>
+            <td>{{ employee.role }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="employees.length === 0">No employees found.</div>
+
+      <hr />
+
       <h3>Attendance Records</h3>
       <table border="1" cellspacing="0" cellpadding="5">
         <thead>
@@ -166,6 +187,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class ManagerDashboardComponent implements OnInit {
   records: any[] = [];
+  employees: any[] = [];
   newUser = { username: '', password: '' };
   message = '';
   isError = false;
@@ -184,6 +206,7 @@ export class ManagerDashboardComponent implements OnInit {
   ngOnInit() {
     this.loadRecords();
     this.loadOfficeLocation();
+    this.loadEmployees();
   }
 
   loadRecords() {
@@ -193,6 +216,17 @@ export class ManagerDashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load records', err);
+      }
+    });
+  }
+
+  loadEmployees() {
+    this.apiService.getAllEmployees().subscribe({
+      next: (res) => {
+        this.employees = res.data;
+      },
+      error: (err) => {
+        console.error('Failed to load employees', err);
       }
     });
   }
@@ -209,6 +243,7 @@ export class ManagerDashboardComponent implements OnInit {
         this.message = 'Employee created successfully!';
         this.isError = false;
         this.newUser = { username: '', password: '' };
+        this.loadEmployees(); // Refresh employee list
       },
       error: (err) => {
         this.message = err.error?.error || 'Failed to create employee';
