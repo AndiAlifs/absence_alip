@@ -6,31 +6,41 @@ import { ApiService } from '../../services/api.service';
 @Component({
   selector: 'app-login',
   template: `
-    <div class="login-container">
-      <h2>Masuk</h2>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <div>
-          <label>Nama Pengguna</label>
-          <input type="text" formControlName="username">
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold text-gray-900">Masuk</h2>
+          <p class="mt-2 text-sm text-gray-600">Selamat datang kembali</p>
         </div>
-        <div>
-          <label>Kata Sandi</label>
-          <input type="password" formControlName="password">
-        </div>
-        <button type="submit" [disabled]="loginForm.invalid">Masuk</button>
-        <p *ngIf="error" class="error">{{ error }}</p>
-      </form>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
+            <input 
+              type="text" 
+              formControlName="username"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              placeholder="Masukkan nama pengguna">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Kata Sandi</label>
+            <input 
+              type="password" 
+              formControlName="password"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              placeholder="Masukkan kata sandi">
+          </div>
+          <button 
+            type="submit" 
+            [disabled]="loginForm.invalid"
+            class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-[1.02]">
+            Masuk
+          </button>
+          <p *ngIf="error" class="text-red-500 text-sm text-center bg-red-50 py-2 px-4 rounded-lg">{{ error }}</p>
+        </form>
+      </div>
     </div>
   `,
-  styles: [`
-    .login-container { max-width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-    div { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-    button:disabled { background-color: #ccc; }
-    .error { color: red; margin-top: 10px; }
-  `]
+  styles: []
 })
 export class LoginComponent {
   loginForm: FormGroup;

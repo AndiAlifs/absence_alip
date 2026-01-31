@@ -40,6 +40,10 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/admin/records`, this.getHeaders());
   }
 
+  getAttendanceRecords(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/records`, this.getHeaders());
+  }
+
   updateLeaveStatus(id: number, status: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/admin/leave/${id}`, { status }, this.getHeaders());
   }

@@ -5,217 +5,303 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 @Component({
   selector: 'app-manager-dashboard',
   template: `
-    <div class="container">
-      <h2>Dashboard Manajer</h2>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-gray-900">Dashboard Manajer</h1>
+          <p class="mt-2 text-gray-600">Kelola lokasi kantor, karyawan, dan lihat catatan absensi</p>
+        </div>
 
-      <div class="add-employee-section">
-        <h3>Atur Lokasi Kantor</h3>
-        <div *ngIf="officeLocation" class="current-location">
-          <p><strong>Lokasi Kantor Saat Ini:</strong></p>
-          <p>Nama: {{ officeLocation.name || 'Belum diatur' }}</p>
-          <p>Koordinat: {{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
-          <p>Radius yang Diizinkan: {{ officeLocation.allowed_radius_meters }} meter</p>
-          <div class="map-container">
-            <iframe 
-              [src]="getOfficeMapEmbed()" 
-              width="100%" 
-              height="300" 
-              style="border:0;" 
-              allowfullscreen="" 
-              loading="lazy">
-            </iframe>
+        <!-- Office Location Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Atur Lokasi Kantor
+          </h2>
+          
+          <div *ngIf="officeLocation" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border border-blue-200">
+            <p class="text-sm font-semibold text-gray-700 mb-3">Lokasi Kantor Saat Ini:</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <p class="text-xs text-gray-600">Nama</p>
+                <p class="font-semibold text-gray-900">{{ officeLocation.name || 'Belum diatur' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Koordinat</p>
+                <p class="font-semibold text-gray-900">{{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Radius yang Diizinkan</p>
+                <p class="font-semibold text-gray-900">{{ officeLocation.allowed_radius_meters }} meter</p>
+              </div>
+            </div>
+            <div class="rounded-lg overflow-hidden shadow-md">
+              <iframe 
+                [src]="getOfficeMapEmbed()" 
+                width="100%" 
+                height="300" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy">
+              </iframe>
+            </div>
+          </div>
+
+          <form class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lokasi</label>
+                <input 
+                  [(ngModel)]="officeData.name" 
+                  name="name"
+                  type="text" 
+                  placeholder="Kantor Pusat"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Radius yang Diizinkan (meter)</label>
+                <input 
+                  [(ngModel)]="officeData.allowed_radius_meters" 
+                  name="radius"
+                  type="number" 
+                  placeholder="100"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                <input 
+                  [(ngModel)]="officeData.latitude" 
+                  name="latitude"
+                  type="number" 
+                  step="any"
+                  placeholder="-6.200000"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                <input 
+                  [(ngModel)]="officeData.longitude" 
+                  name="longitude"
+                  type="number" 
+                  step="any"
+                  placeholder="106.816666"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+            </div>
+
+            <div class="flex gap-4">
+              <button 
+                (click)="getCurrentLocation()" 
+                type="button"
+                [disabled]="isGettingLocation"
+                class="flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-4 focus:ring-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+                <svg *ngIf="!isGettingLocation" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                <span *ngIf="isGettingLocation" class="inline-block w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                {{ isGettingLocation ? 'Mengambil Lokasi...' : 'Gunakan Lokasi Saat Ini' }}
+              </button>
+
+              <button 
+                (click)="toggleMapPicker()" 
+                type="button"
+                class="flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-700 focus:ring-4 focus:ring-purple-300 transition-all shadow-lg">
+                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                {{ showMapPicker ? 'Sembunyikan Peta' : 'Pilih di Peta' }}
+              </button>
+            </div>
+
+            <div *ngIf="showMapPicker" class="rounded-lg overflow-hidden shadow-md border-2 border-purple-200">
+              <iframe 
+                [src]="getPickerMapEmbed()" 
+                width="100%" 
+                height="400" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy">
+              </iframe>
+              <p class="text-xs text-gray-600 p-3 bg-gray-50">Klik peta di atas lalu salin koordinat ke form</p>
+            </div>
+
+            <div *ngIf="locationSuccess" class="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start">
+              <svg class="h-5 w-5 text-green-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-green-800">{{ locationSuccess }}</p>
+            </div>
+
+            <div *ngIf="locationError" class="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
+              <svg class="h-5 w-5 text-red-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-red-800">{{ locationError }}</p>
+            </div>
+
+            <button 
+              (click)="setOfficeLocation()" 
+              type="button"
+              class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-lg">
+              Simpan Lokasi Kantor
+            </button>
+
+            <div *ngIf="officeMessage" [class]="isOfficeError ? 'p-4 bg-red-50 border border-red-200 rounded-lg' : 'p-4 bg-green-50 border border-green-200 rounded-lg'">
+              <p [class]="isOfficeError ? 'text-sm text-red-800' : 'text-sm text-green-800'">{{ officeMessage }}</p>
+            </div>
+          </form>
+        </div>
+
+        <!-- Employees Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            Semua Karyawan
+          </h2>
+          
+          <div *ngIf="employees.length > 0" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pengguna</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peran</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let employee of employees" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ employee.id }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ employee.username }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="employee.role === 'manager' ? 'px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800' : 'px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800'">
+                      {{ employee.role }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="employees.length === 0" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <p class="mt-2 text-gray-600">Tidak ada karyawan ditemukan.</p>
           </div>
         </div>
-        <div class="form-group">
-          <label>Nama Kantor: </label>
-          <input [(ngModel)]="officeData.name" placeholder="contoh: Kantor Pusat" />
-        </div>
-        <div class="gps-picker-section">
-          <button class="gps-btn" (click)="getCurrentLocation()" [disabled]="isGettingLocation">
-            {{ isGettingLocation ? 'Mengambil Lokasi...' : '📍 Gunakan Lokasi Saat Ini' }}
-          </button>
-          <span *ngIf="locationError" class="error">{{ locationError }}</span>
-          <span *ngIf="locationSuccess" class="success">{{ locationSuccess }}</span>
-        </div>
-        <div class="form-group">
-          <label>Lintang: </label>
-          <input [(ngModel)]="officeData.latitude" type="number" step="0.000001" placeholder="contoh: -6.200000" />
-        </div>
-        <div class="form-group">
-          <label>Bujur: </label>
-          <input [(ngModel)]="officeData.longitude" type="number" step="0.000001" placeholder="contoh: 106.816666" />
-        </div>
-        <div class="form-group">
-          <button class="preview-btn" (click)="toggleMapPicker()" type="button">
-            {{ showMapPicker ? 'Sembunyikan Pemilih Peta' : '🗺️ Pilih Lokasi di Peta' }}
-          </button>
-        </div>
-        <div *ngIf="showMapPicker && officeData.latitude && officeData.longitude" class="map-picker">
-          <p><small>Klik pada peta untuk memilih lokasi baru, atau seret penanda</small></p>
-          <div class="map-container">
-            <iframe 
-              [src]="getPickerMapEmbed()" 
-              width="100%" 
-              height="400" 
-              style="border:0;" 
-              allowfullscreen="" 
-              loading="lazy">
-            </iframe>
+
+        <!-- Attendance Records Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Catatan Absensi
+          </h2>
+
+          <div *ngIf="records.length > 0" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID Karyawan</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pengguna</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peta</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <ng-container *ngFor="let record of records">
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.user_id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ record.user?.username || 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ record.clock_in_time | date:'medium' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {{ record.latitude }}, {{ record.longitude }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                      <button 
+                        (click)="toggleMap(record.id)" 
+                        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-300 transition-all text-xs font-semibold shadow">
+                        {{ selectedMapRecord === record.id ? 'Sembunyikan Peta' : 'Tampilkan Peta' }}
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="selectedMapRecord === record.id" class="bg-gray-50">
+                    <td colspan="5" class="px-6 py-4">
+                      <div class="rounded-lg overflow-hidden shadow-md">
+                        <iframe 
+                          [src]="getClockInMapEmbed(record.latitude, record.longitude)" 
+                          width="100%" 
+                          height="300" 
+                          style="border:0;" 
+                          allowfullscreen="" 
+                          loading="lazy">
+                        </iframe>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
           </div>
-          <p class="map-note"><small>Catatan: Setelah memilih lokasi di peta, salin koordinat dari URL atau penanda dan tempelkan di kolom di atas.</small></p>
+
+          <div *ngIf="records.length === 0" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            <p class="mt-2 text-gray-600">Tidak ada catatan absensi ditemukan.</p>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Radius yang Diizinkan (meter): </label>
-          <input [(ngModel)]="officeData.allowed_radius_meters" type="number" placeholder="contoh: 100" />
-        </div>
-        <button (click)="setOfficeLocation()">Simpan Lokasi Kantor</button>
-        <p *ngIf="officeMessage" [class.error]="isOfficeError" [class.success]="!isOfficeError">{{ officeMessage }}</p>
       </div>
-
-      <hr />
-
-      <div class="add-employee-section">
-        <h3>Tambah Karyawan Baru</h3>
-        <div class="form-group">
-          <label>Nama Pengguna: </label>
-          <input [(ngModel)]="newUser.username" placeholder="Nama Pengguna" />
-        </div>
-        <div class="form-group">
-          <label>Kata Sandi: </label>
-          <input [(ngModel)]="newUser.password" type="password" placeholder="Kata Sandi" />
-        </div>
-        <button (click)="createEmployee()">Buat Karyawan</button>
-        <p *ngIf="message" [class.error]="isError" [class.success]="!isError">{{ message }}</p>
-      </div>
-
-      <hr />
-
-      <h3>Semua Karyawan</h3>
-      <table border="1" cellspacing="0" cellpadding="5">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nama Pengguna</th>
-            <th>Peran</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let employee of employees">
-            <td>{{ employee.id }}</td>
-            <td>{{ employee.username }}</td>
-            <td>{{ employee.role }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div *ngIf="employees.length === 0">Tidak ada karyawan ditemukan.</div>
-
-      <hr />
-
-      <h3>Catatan Absensi</h3>
-      <table border="1" cellspacing="0" cellpadding="5">
-        <thead>
-          <tr>
-            <th>ID Karyawan</th>
-            <th>Nama Pengguna</th>
-            <th>Waktu</th>
-            <th>Lokasi</th>
-            <th>Tampilan Peta</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let record of records">
-            <tr>
-              <td>{{ record.user_id }}</td>
-              <td>{{ record.user?.username || 'N/A' }}</td>
-              <td>{{ record.clock_in_time | date:'medium' }}</td>
-              <td>
-                {{ record.latitude }}, {{ record.longitude }}
-              </td>
-              <td>
-                <button class="map-toggle-btn" (click)="toggleMap(record.id)">
-                  {{ selectedMapRecord === record.id ? 'Sembunyikan Peta' : 'Tampilkan Peta' }}
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="selectedMapRecord === record.id" class="map-row">
-              <td colspan="5">
-                <div class="map-container">
-                  <iframe 
-                    [src]="getClockInMapEmbed(record.latitude, record.longitude)" 
-                    width="100%" 
-                    height="300" 
-                    style="border:0;" 
-                    allowfullscreen="" 
-                    loading="lazy">
-                  </iframe>
-                </div>
-              </td>
-            </tr>
-          </ng-container>
-        </tbody>
-      </table>
-      <div *ngIf="records.length === 0">Tidak ada catatan absensi ditemukan.</div>
     </div>
   `,
-  styles: [`
-    .container { padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .add-employee-section { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; }
-    .current-location { background: #e3f2fd; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-    .current-location p { margin: 5px 0; }
-    .gps-picker-section { margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 4px; }
-    .gps-btn { padding: 8px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; margin-right: 10px; }
-    .gps-btn:hover:not(:disabled) { background-color: #218838; }
-    .gps-btn:disabled { background-color: #6c757d; cursor: not-allowed; }
-    .preview-btn { padding: 6px 12px; background-color: #17a2b8; color: white; border: none; cursor: pointer; border-radius: 4px; }
-    .preview-btn:hover { background-color: #138496; }
-    .map-picker { margin: 15px 0; padding: 10px; background: #e7f3ff; border-radius: 4px; }
-    .map-note { font-style: italic; color: #666; margin-top: 10px; }
-    .map-container { margin-top: 10px; border-radius: 4px; overflow: hidden; }
-    .map-row td { padding: 0 !important; }
-    .map-toggle-btn { padding: 4px 8px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 3px; font-size: 12px; }
-    .map-toggle-btn:hover { background-color: #218838; }
-    .form-group { margin-bottom: 10px; }
-    input { padding: 5px; margin-left: 10px; }
-    button { padding: 5px 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
-    .error { color: red; }
-    .success { color: green; }
-  `]
+  styles: []
 })
 export class ManagerDashboardComponent implements OnInit {
   records: any[] = [];
   employees: any[] = [];
-  newUser = { username: '', password: '' };
-  message = '';
-  isError = false;
+  officeData: any = {
+    name: '',
+    latitude: null,
+    longitude: null,
+    allowed_radius_meters: null
+  };
   officeLocation: any = null;
-  officeData = { name: '', latitude: 0, longitude: 0, allowed_radius_meters: 100 };
   officeMessage = '';
   isOfficeError = false;
   selectedMapRecord: number | null = null;
+  showMapPicker = false;
   isGettingLocation = false;
   locationError = '';
   locationSuccess = '';
-  showMapPicker = false;
 
-  constructor(private apiService: ApiService, private sanitizer: DomSanitizer) { }
+  constructor(
+    private apiService: ApiService,
+    private sanitizer: DomSanitizer
+  ) {}
 
-  ngOnInit() {
-    this.loadRecords();
+  ngOnInit(): void {
     this.loadOfficeLocation();
+    this.loadRecords();
     this.loadEmployees();
   }
 
   loadRecords() {
-    this.apiService.getAllRecords().subscribe({
+    this.apiService.getAttendanceRecords().subscribe({
       next: (res) => {
-        this.records = res.data;
+        this.records = res.data || [];
       },
       error: (err) => {
-        console.error('Gagal memuat catatan', err);
+        console.error('Error loading records:', err);
       }
     });
   }
@@ -223,37 +309,12 @@ export class ManagerDashboardComponent implements OnInit {
   loadEmployees() {
     this.apiService.getAllEmployees().subscribe({
       next: (res) => {
-        this.employees = res.data;
+        this.employees = res.data || [];
       },
       error: (err) => {
-        console.error('Gagal memuat karyawan', err);
+        console.error('Error loading employees:', err);
       }
     });
-  }
-
-  createEmployee() {
-    if (!this.newUser.username || !this.newUser.password) {
-      this.message = 'Mohon isi semua kolom';
-      this.isError = true;
-      return;
-    }
-
-    this.apiService.createEmployee(this.newUser).subscribe({
-      next: (res) => {
-        this.message = 'Karyawan berhasil dibuat!';
-        this.isError = false;
-        this.newUser = { username: '', password: '' };
-        this.loadEmployees(); // Refresh employee list
-      },
-      error: (err) => {
-        this.message = err.error?.error || 'Gagal membuat karyawan';
-        this.isError = true;
-      }
-    });
-  }
-
-  getMapLink(lat: number, long: number): string {
-    return `https://www.google.com/maps?q=${lat},${long}`;
   }
 
   getOfficeMapEmbed(): SafeResourceUrl {
@@ -303,6 +364,7 @@ export class ManagerDashboardComponent implements OnInit {
             break;
           default:
             this.locationError = 'Terjadi kesalahan yang tidak diketahui';
+            break;
         }
         setTimeout(() => this.locationError = '', 5000);
       },
@@ -329,7 +391,7 @@ export class ManagerDashboardComponent implements OnInit {
         if (res.data) {
           this.officeLocation = res.data;
           this.officeData = {
-            name: res.data.name || '',
+            name: res.data.name,
             latitude: res.data.latitude,
             longitude: res.data.longitude,
             allowed_radius_meters: res.data.allowed_radius_meters
@@ -337,7 +399,7 @@ export class ManagerDashboardComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Gagal memuat lokasi kantor', err);
+        console.log('No office location set yet');
       }
     });
   }
