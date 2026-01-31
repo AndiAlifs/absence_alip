@@ -1,9 +1,9 @@
 # Field Attendance System - User Stories
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Last Updated:** January 31, 2026  
 **Project:** Field Attendance System  
-**Status:** Production Ready
+**Status:** In Development
 
 ## Overview
 This document lists all implemented features of the Field Attendance System organized as user stories. The system provides geolocation-based attendance tracking with automatic proximity validation and manager approval workflows.
@@ -12,23 +12,24 @@ This document lists all implemented features of the Field Attendance System orga
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 2.0 | Jan 31, 2026 | Added 9 new stories (US-033 to US-041) for clock-in time, employee status, and daily dashboard | Product Team |
 | 1.2 | Jan 31, 2026 | Added US-032 (full name field support) | Product Team |
 | 1.1 | Jan 31, 2026 | Added US-031 (employee view office location) | Product Team |
 | 1.0 | Jan 31, 2026 | Initial release - 30 user stories documented | Product Team |
 
 ## Progress Summary
 
-- **Total User Stories:** 32
-- **Completed:** 32 (100%)
+- **Total User Stories:** 41
+- **Completed:** 32 (78%)
 - **In Progress:** 0
-- **Planned:** 0
+- **Planned:** 9 (22%)
 - **Blocked:** 0
 
 ---
 
 ## Quick Reference - User Stories by Role
 
-### 👤 Employee Features (7 stories)
+### 👤 Employee Features (11 stories)
 - [x] **US-001** - User can log in to the system with username and password to access role-specific features
 - [x] **US-004** - Employee can clock in using GPS location to automatically record attendance with location verification
 - [x] **US-005** - System automatically validates employee location and approves/pends attendance based on proximity to office
@@ -36,8 +37,12 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-027** - Employee can use browser geolocation to automatically capture current location without manual entry
 - [x] **US-028** - Employee can view their location on an interactive map to visually confirm location data
 - [x] **US-031** - Employee can view office location settings to see where they need to be for attendance approval
+- [ ] **US-035** - Employee can view their attendance record for today to check their status
+- [ ] **US-036** - Employee can see if they are on time, late, or pending approval for today's attendance
+- [ ] **US-037** - Employee can see their leave status for today (approved, pending, or not on leave)
+- [ ] **US-038** - Employee can see if they are marked absent pending approval
 
-### 👨‍💼 Manager Features (12 stories)
+### 👨‍💼 Manager Features (17 stories)
 - [x] **US-001** - Manager can log in to the system with username and password to access administrative features
 - [x] **US-007** - Manager can configure office location coordinates and allowed radius for attendance validation
 - [x] **US-008** - Manager can view all employee attendance records to monitor attendance patterns and history
@@ -50,8 +55,13 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-015** - Manager can update employee information including username, password, or role
 - [x] **US-016** - Manager can delete employee accounts to remove access for staff who have left
 - [x] **US-028** - Manager can view office location on an interactive map to visually confirm office location settings
+- [ ] **US-033** - Manager can set official clock-in time to determine late arrivals
+- [ ] **US-039** - Manager can view daily attendance dashboard showing today's status for all employees
+- [ ] **US-040** - Manager can see which employees have clocked in today (on time or late)
+- [ ] **US-041** - Manager can see which employees are on approved leave for today
+- [ ] **US-042** - Manager can see which employees are absent (haven't clocked in and not on leave)
 
-### ⚙️ System Features (13 stories)
+### ⚙️ System Features (14 stories)
 - [x] **US-002** - System provides API for user registration to add new employees and managers
 - [x] **US-003** - System automatically creates default admin account on first startup for initial setup
 - [x] **US-017** - System uses JWT tokens for authentication to secure API endpoints with stateless sessions
@@ -67,6 +77,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-029** - System loads configuration from environment variables for different deployment environments
 - [x] **US-030** - System allows cross-origin requests from frontend for proper communication
 - [x] **US-032** - System stores employee full names in addition to usernames for better identification
+- [ ] **US-034** - System calculates if employee is late based on configured clock-in time
 
 ---
 2: Employee Attendance Features
@@ -146,6 +157,83 @@ This document lists all implemented features of the Field Attendance System orga
 
 ## Epic 2: Employee Attendance Features
 
+### US-035: Employee View Today's Attendance Status
+**As an** employee  
+**I want to** view my attendance record for today  
+**So that** I can check if I have clocked in and see my current status
+
+**Acceptance Criteria:**
+- Employee can access their today's attendance record
+- Display shows clock-in time if already clocked in
+- Shows "Not Clocked In" if employee hasn't clocked in yet
+- Display includes distance from office and location coordinates
+- Shows approval status (approved, pending, rejected)
+- Easy to access from employee dashboard
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Routes:** `GET /api/my-attendance/today`
+
+---
+
+### US-036: Employee See Attendance Time Status
+**As an** employee  
+**I want to** see if I am on time or late for today's attendance  
+**So that** I know my attendance compliance status
+
+**Acceptance Criteria:**
+- System compares clock-in time with configured office time
+- Display shows "On Time" if clocked in before or at official time
+- Display shows "Late" with minutes/hours late if after official time
+- Shows "Pending Approval" if attendance is pending manager review
+- Status is clearly visible with color coding (green/yellow/red)
+- Works in conjunction with today's attendance view
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Depends On:** US-033, US-035
+
+---
+
+### US-037: Employee See Today's Leave Status
+**As an** employee  
+**I want to** see my leave status for today  
+**So that** I know if my time off has been approved or is still pending
+
+**Acceptance Criteria:**
+- System checks if today falls within any leave request date range
+- Display shows "On Approved Leave" if leave is approved for today
+- Display shows "Leave Pending" if leave request is pending approval
+- Display shows "Not on Leave" if no leave request for today
+- Shows leave reason and date range
+- Integrated with today's status dashboard
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Routes:** `GET /api/my-leave/today`
+
+---
+
+### US-038: Employee See Absence Pending Status
+**As an** employee  
+**I want to** see if I'm marked as absent pending approval  
+**So that** I understand my attendance status when I haven't clocked in from office location
+
+**Acceptance Criteria:**
+- System shows "Absent - Pending Approval" if employee has pending clock-in from outside radius
+- Shows "Absent" if employee hasn't clocked in and it's past official time
+- Shows "On Leave" if employee has approved leave for today
+- Shows "Clocked In" if attendance is recorded and approved
+- Clear messaging about what action is needed (if any)
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Depends On:** US-035, US-036, US-037
+
+---
+
+## Epic 2 (continued): Employee Attendance Features
+
 ### US-004: Clock-In with Geolocation
 **As an** employee  
 **I want to** clock in using my current GPS location  
@@ -201,7 +289,49 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
-## Epic 3: Manager Administrative Features
+## Epic 3: Time & Schedule Management
+
+### US-033: Manager Set Clock-In Time
+**As a** manager  
+**I want to** set the official clock-in time for the office  
+**So that** the system can determine if employees are late
+
+**Acceptance Criteria:**
+- Manager can set official clock-in time (e.g., 09:00 AM)
+- Time is stored in office settings (related to OfficeLocation)
+- Only one official time is maintained (can be updated)
+- Time format is HH:MM (24-hour format)
+- Setting is used to calculate late arrivals
+- Default time can be set during initial setup
+
+**Status:** 🔄 Planned  
+**Priority:** Critical  
+**Routes:** `POST /api/admin/clock-in-time`, `GET /api/admin/clock-in-time`  
+**Data Model:** Add `clock_in_time` field to OfficeLocation model
+
+---
+
+### US-034: System Calculate Late Arrival
+**As a** system  
+**I want to** automatically calculate if an employee is late based on clock-in time  
+**So that** attendance compliance can be tracked accurately
+
+**Acceptance Criteria:**
+- System retrieves configured clock-in time from settings
+- Compares actual clock-in time with official time
+- Calculates minutes/hours late
+- Stores late status with attendance record
+- Late calculation considers only time, not date
+- Grace period can be configured (optional: e.g., 5 minutes)
+
+**Status:** 🔄 Planned  
+**Priority:** Critical  
+**Implementation:** [attendance.go](backend/handlers/attendance.go) - modify ClockIn function  
+**Data Model:** Add `is_late` (boolean) and `minutes_late` (integer) to Attendance model
+
+---
+
+## Epic 4: Manager Administrative Features
 
 ### US-007: Configure Office Location
 **As a** manager  
@@ -386,7 +516,89 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
-## Epic 4: Security & Access Control
+## Epic 5: Daily Attendance Dashboard
+
+### US-039: Manager View Daily Attendance Dashboard
+**As a** manager  
+**I want to** view a daily attendance dashboard for today  
+**So that** I can see at-a-glance which employees are present, late, absent, or on leave
+
+**Acceptance Criteria:**
+- Dashboard shows all employees under manager's supervision
+- Display defaults to today's date
+- Shows summary counts: Total employees, Present, Late, On Leave, Absent
+- Table view with employee name, status, clock-in time (if applicable)
+- Status categories: "Present (On Time)", "Present (Late)", "On Leave", "Absent"
+- Auto-refreshes or has manual refresh button
+- Can be filtered by status category
+
+**Status:** 🔄 Planned  
+**Priority:** Critical  
+**Routes:** `GET /api/admin/daily-attendance`  
+**Components:** New component: `daily-dashboard.component.ts`
+
+---
+
+### US-040: Manager See Employees Who Clocked In
+**As a** manager  
+**I want to** see which employees have clocked in today  
+**So that** I can monitor attendance in real-time
+
+**Acceptance Criteria:**
+- List shows all employees who have clocked in for today
+- Displays clock-in time for each employee
+- Shows if employee is on time or late (with minutes late)
+- Shows approval status (approved/pending/rejected)
+- Displays distance from office location
+- Sorted by clock-in time (earliest first)
+- Includes employee full name and username
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Depends On:** US-039
+
+---
+
+### US-041: Manager See Employees On Leave
+**As a** manager  
+**I want to** see which employees are on approved leave for today  
+**So that** I can account for planned absences
+
+**Acceptance Criteria:**
+- List shows all employees with approved leave for today
+- Displays leave date range (start and end date)
+- Shows leave reason
+- Only shows approved leaves (not pending or rejected)
+- Clearly distinguishes from absent employees
+- Shows total count of employees on leave
+
+**Status:** 🔄 Planned  
+**Priority:** Important  
+**Depends On:** US-039
+
+---
+
+### US-042: Manager See Absent Employees
+**As a** manager  
+**I want to** see which employees are absent (haven't clocked in and not on leave)  
+**So that** I can follow up on unplanned absences
+
+**Acceptance Criteria:**
+- List shows employees who haven't clocked in for today
+- Excludes employees on approved leave
+- Shows last attendance date for context
+- Updates in real-time as employees clock in
+- Shows total count of absent employees
+- Allows manager to contact or mark employee
+- Clear distinction between "Not Yet Clocked In" (early morning) vs "Absent" (past official time)
+
+**Status:** 🔄 Planned  
+**Priority:** Critical  
+**Depends On:** US-039, US-033
+
+---
+
+## Epic 6: Security & Access Control
 
 ### US-017: JWT-based Authentication
 **As a** system  
@@ -468,7 +680,7 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
-## Epic 5: Data Models & Persistence
+## Epic 7: Data Models & Persistence
 
 ### US-021: User Data Model
 **As a** system  
@@ -561,7 +773,7 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
-## Epic 6: Geolocation & Distance Calculation
+## Epic 8: Geolocation & Distance Calculation
 
 ### US-026: Haversine Distance Calculation
 **As a** system  
@@ -612,7 +824,7 @@ This document lists all implemented features of the Field Attendance System orga
 
 ---
 
-## Epic 7: System Configuration
+## Epic 9: System Configuration
 
 ### US-029: Environment-Based Configuration
 **As a** system  
