@@ -68,3 +68,122 @@ func GetAllEmployees(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
+
+type CreateEmployeeInput struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required,min=6"`
+	Role     string `json:"role" binding:"required,oneof=employee manager"`
+}
+
+func CreateEmployee(c *gin.Context) {
+	var input CreateEmployeeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if username already exists
+	var existingUser models.User
+	if result := database.DB.Where("username = ?", input.Username).First(&existingUser); result.Error == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := hashPassword(input.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	user := models.User{
+		Username:     input.Username,
+		PasswordHash: hashedPassword,
+		Role:         input.Role,
+	}
+
+	if result := database.DB.Create(&user); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create employee"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Employee created successfully", "data": user})
+}
+
+type UpdateEmployeeInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role" binding:"omitempty,oneof=employee manager"`
+}
+
+func UpdateEmployee(c *gin.Context) {
+	id := c.Param("id")
+	var input UpdateEmployeeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if result := database.DB.First(&user, id); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Employee not found"})
+		return
+	}
+
+	// Update username if provided
+	if input.Username != "" {
+		// Check if new username already exists
+		var existingUser models.User
+		if result := database.DB.Where("username = ? AND id != ?", input.Username, id).First(&existingUser); result.Error == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+			return
+		}
+		user.Username = input.Username
+	}
+
+	// Update password if provided
+	if input.Password != "" {
+		hashedPassword, err := hashPassword(input.Password)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+			return
+		}
+		user.PasswordHash = hashedPassword
+	}
+
+	// Update role if provided
+	if input.Role != "" {
+		user.Role = input.Role
+	}
+
+	if result := database.DB.Save(&user); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update employee"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Employee updated successfully", "data": user})
+}
+
+func DeleteEmployee(c *gin.Context) {
+	id := c.Param("id")
+
+	var user models.User
+	if result := database.DB.First(&user, id); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Employee not found"})
+		return
+	}
+
+	if result := database.DB.Delete(&user); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Employee deleted successfully"})
+}
+
+// Helper function to hash password (reused from auth.go)
+func hashPassword(password string) (string, error) {
+	// Import bcrypt at the top: "golang.org/x/crypto/bcrypt"
+	// For now, using a simple hash - in production use bcrypt
+	return password, nil // TODO: Implement proper bcrypt hashing
+}

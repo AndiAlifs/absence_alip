@@ -56,6 +56,18 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/admin/employees`, this.getHeaders());
   }
 
+  createEmployeeData(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/employees`, userData, this.getHeaders());
+  }
+
+  updateEmployee(id: number, userData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/employees/${id}`, userData, this.getHeaders());
+  }
+
+  deleteEmployee(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/employees/${id}`, this.getHeaders());
+  }
+
   // Office Location
   getOfficeLocation(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admin/office-location`, this.getHeaders());

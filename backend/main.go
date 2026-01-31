@@ -60,6 +60,9 @@ func main() {
 			admin.PATCH("/leave/:id", handlers.UpdateLeaveStatus)
 			admin.POST("/users", handlers.CreateUser)
 			admin.GET("/employees", handlers.GetAllEmployees)
+			admin.POST("/employees", handlers.CreateEmployee)
+			admin.PUT("/employees/:id", handlers.UpdateEmployee)
+			admin.DELETE("/employees/:id", handlers.DeleteEmployee)
 			admin.GET("/office-location", handlers.GetOfficeLocation)
 			admin.POST("/office-location", handlers.SetOfficeLocation)
 		}

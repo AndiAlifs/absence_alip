@@ -160,12 +160,23 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
         <!-- Employees Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            Semua Karyawan
-          </h2>
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+              <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Manajemen Karyawan
+            </h2>
+            <button 
+              (click)="openAddEmployeeModal()" 
+              type="button"
+              class="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-lg">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Tambah Karyawan
+            </button>
+          </div>
           
           <div *ngIf="employees.length > 0" class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -174,6 +185,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Pengguna</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peran</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
@@ -185,6 +197,24 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                       {{ employee.role }}
                     </span>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <button 
+                      (click)="openEditEmployeeModal(employee)"
+                      class="inline-flex items-center px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all">
+                      <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button 
+                      (click)="confirmDeleteEmployee(employee)"
+                      class="inline-flex items-center px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all">
+                      <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Hapus
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -195,6 +225,105 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <p class="mt-2 text-gray-600">Tidak ada karyawan ditemukan.</p>
+          </div>
+        </div>
+
+        <!-- Add/Edit Employee Modal -->
+        <div *ngIf="showEmployeeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">{{ editingEmployee ? 'Edit Karyawan' : 'Tambah Karyawan Baru' }}</h3>
+            
+            <form class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
+                <input 
+                  [(ngModel)]="employeeForm.username" 
+                  name="username"
+                  type="text" 
+                  placeholder="Masukkan username"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Password {{ editingEmployee ? '(kosongkan jika tidak ingin mengubah)' : '' }}
+                </label>
+                <input 
+                  [(ngModel)]="employeeForm.password" 
+                  name="password"
+                  type="password" 
+                  [placeholder]="editingEmployee ? 'Masukkan password baru (opsional)' : 'Masukkan password (min. 6 karakter)'"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Peran</label>
+                <select 
+                  [(ngModel)]="employeeForm.role" 
+                  name="role"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                </select>
+              </div>
+
+              <div *ngIf="employeeModalError" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-sm text-red-800">{{ employeeModalError }}</p>
+              </div>
+
+              <div *ngIf="employeeModalSuccess" class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm text-green-800">{{ employeeModalSuccess }}</p>
+              </div>
+
+              <div class="flex gap-3 pt-4">
+                <button 
+                  (click)="closeEmployeeModal()" 
+                  type="button"
+                  class="flex-1 py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
+                  Batal
+                </button>
+                <button 
+                  (click)="saveEmployee()" 
+                  type="button"
+                  [disabled]="isSavingEmployee"
+                  class="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isSavingEmployee ? 'Menyimpan...' : 'Simpan' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div *ngIf="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+              <svg class="mx-auto h-12 w-12 text-red-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">Konfirmasi Hapus</h3>
+              <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus karyawan <strong>{{ employeeToDelete?.username }}</strong>? Tindakan ini tidak dapat dibatalkan.</p>
+
+              <div *ngIf="deleteError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-sm text-red-800">{{ deleteError }}</p>
+              </div>
+
+              <div class="flex gap-3">
+                <button 
+                  (click)="closeDeleteModal()" 
+                  type="button"
+                  class="flex-1 py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
+                  Batal
+                </button>
+                <button 
+                  (click)="deleteEmployee()" 
+                  type="button"
+                  [disabled]="isDeletingEmployee"
+                  class="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ isDeletingEmployee ? 'Menghapus...' : 'Hapus' }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -284,6 +413,22 @@ export class ManagerDashboardComponent implements OnInit {
   locationError = '';
   locationSuccess = '';
 
+  // Employee management properties
+  showEmployeeModal = false;
+  showDeleteModal = false;
+  editingEmployee: any = null;
+  employeeToDelete: any = null;
+  employeeForm: any = {
+    username: '',
+    password: '',
+    role: 'employee'
+  };
+  employeeModalError = '';
+  employeeModalSuccess = '';
+  deleteError = '';
+  isSavingEmployee = false;
+  isDeletingEmployee = false;
+
   constructor(
     private apiService: ApiService,
     private sanitizer: DomSanitizer
@@ -294,6 +439,129 @@ export class ManagerDashboardComponent implements OnInit {
     this.loadRecords();
     this.loadEmployees();
   }
+
+  // Employee Management Methods
+  openAddEmployeeModal() {
+    this.editingEmployee = null;
+    this.employeeForm = {
+      username: '',
+      password: '',
+      role: 'employee'
+    };
+    this.employeeModalError = '';
+    this.employeeModalSuccess = '';
+    this.showEmployeeModal = true;
+  }
+
+  openEditEmployeeModal(employee: any) {
+    this.editingEmployee = employee;
+    this.employeeForm = {
+      username: employee.username,
+      password: '',
+      role: employee.role
+    };
+    this.employeeModalError = '';
+    this.employeeModalSuccess = '';
+    this.showEmployeeModal = true;
+  }
+
+  closeEmployeeModal() {
+    this.showEmployeeModal = false;
+    this.editingEmployee = null;
+    this.employeeForm = {
+      username: '',
+      password: '',
+      role: 'employee'
+    };
+    this.employeeModalError = '';
+    this.employeeModalSuccess = '';
+  }
+
+  saveEmployee() {
+    this.employeeModalError = '';
+    this.employeeModalSuccess = '';
+
+    // Validation
+    if (!this.employeeForm.username) {
+      this.employeeModalError = 'Username wajib diisi';
+      return;
+    }
+
+    if (!this.editingEmployee && !this.employeeForm.password) {
+      this.employeeModalError = 'Password wajib diisi untuk karyawan baru';
+      return;
+    }
+
+    if (this.employeeForm.password && this.employeeForm.password.length < 6) {
+      this.employeeModalError = 'Password minimal 6 karakter';
+      return;
+    }
+
+    this.isSavingEmployee = true;
+
+    const payload: any = {
+      username: this.employeeForm.username,
+      role: this.employeeForm.role
+    };
+
+    if (this.employeeForm.password) {
+      payload.password = this.employeeForm.password;
+    }
+
+    const request = this.editingEmployee
+      ? this.apiService.updateEmployee(this.editingEmployee.id, payload)
+      : this.apiService.createEmployeeData(payload);
+
+    request.subscribe({
+      next: (response) => {
+        this.isSavingEmployee = false;
+        this.employeeModalSuccess = this.editingEmployee
+          ? 'Karyawan berhasil diperbarui!'
+          : 'Karyawan berhasil ditambahkan!';
+        
+        setTimeout(() => {
+          this.closeEmployeeModal();
+          this.loadEmployees();
+        }, 1500);
+      },
+      error: (error) => {
+        this.isSavingEmployee = false;
+        this.employeeModalError = error.error?.error || 'Gagal menyimpan karyawan';
+      }
+    });
+  }
+
+  confirmDeleteEmployee(employee: any) {
+    this.employeeToDelete = employee;
+    this.deleteError = '';
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.employeeToDelete = null;
+    this.deleteError = '';
+  }
+
+  deleteEmployee() {
+    if (!this.employeeToDelete) return;
+
+    this.isDeletingEmployee = true;
+    this.deleteError = '';
+
+    this.apiService.deleteEmployee(this.employeeToDelete.id).subscribe({
+      next: (response) => {
+        this.isDeletingEmployee = false;
+        this.closeDeleteModal();
+        this.loadEmployees();
+      },
+      error: (error) => {
+        this.isDeletingEmployee = false;
+        this.deleteError = error.error?.error || 'Gagal menghapus karyawan';
+      }
+    });
+  }
+
 
   loadRecords() {
     this.apiService.getAttendanceRecords().subscribe({
