@@ -7,17 +7,17 @@ import { ApiService } from '../../services/api.service';
   selector: 'app-login',
   template: `
     <div class="login-container">
-      <h2>Login</h2>
+      <h2>Masuk</h2>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <div>
-          <label>Username</label>
+          <label>Nama Pengguna</label>
           <input type="text" formControlName="username">
         </div>
         <div>
-          <label>Password</label>
+          <label>Kata Sandi</label>
           <input type="password" formControlName="password">
         </div>
-        <button type="submit" [disabled]="loginForm.invalid">Login</button>
+        <button type="submit" [disabled]="loginForm.invalid">Masuk</button>
         <p *ngIf="error" class="error">{{ error }}</p>
       </form>
     </div>

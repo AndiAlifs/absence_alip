@@ -6,15 +6,15 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   selector: 'app-manager-dashboard',
   template: `
     <div class="container">
-      <h2>Manager Dashboard</h2>
+      <h2>Dashboard Manajer</h2>
 
       <div class="add-employee-section">
-        <h3>Set Office Location</h3>
+        <h3>Atur Lokasi Kantor</h3>
         <div *ngIf="officeLocation" class="current-location">
-          <p><strong>Current Office Location:</strong></p>
-          <p>Name: {{ officeLocation.name || 'Not set' }}</p>
-          <p>Coordinates: {{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
-          <p>Allowed Radius: {{ officeLocation.allowed_radius_meters }} meters</p>
+          <p><strong>Lokasi Kantor Saat Ini:</strong></p>
+          <p>Nama: {{ officeLocation.name || 'Belum diatur' }}</p>
+          <p>Koordinat: {{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
+          <p>Radius yang Diizinkan: {{ officeLocation.allowed_radius_meters }} meter</p>
           <div class="map-container">
             <iframe 
               [src]="getOfficeMapEmbed()" 
@@ -27,31 +27,31 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
         </div>
         <div class="form-group">
-          <label>Office Name: </label>
-          <input [(ngModel)]="officeData.name" placeholder="e.g., Main Office" />
+          <label>Nama Kantor: </label>
+          <input [(ngModel)]="officeData.name" placeholder="contoh: Kantor Pusat" />
         </div>
         <div class="gps-picker-section">
           <button class="gps-btn" (click)="getCurrentLocation()" [disabled]="isGettingLocation">
-            {{ isGettingLocation ? 'Getting Location...' : '📍 Use Current Location' }}
+            {{ isGettingLocation ? 'Mengambil Lokasi...' : '📍 Gunakan Lokasi Saat Ini' }}
           </button>
           <span *ngIf="locationError" class="error">{{ locationError }}</span>
           <span *ngIf="locationSuccess" class="success">{{ locationSuccess }}</span>
         </div>
         <div class="form-group">
-          <label>Latitude: </label>
-          <input [(ngModel)]="officeData.latitude" type="number" step="0.000001" placeholder="e.g., -6.200000" />
+          <label>Lintang: </label>
+          <input [(ngModel)]="officeData.latitude" type="number" step="0.000001" placeholder="contoh: -6.200000" />
         </div>
         <div class="form-group">
-          <label>Longitude: </label>
-          <input [(ngModel)]="officeData.longitude" type="number" step="0.000001" placeholder="e.g., 106.816666" />
+          <label>Bujur: </label>
+          <input [(ngModel)]="officeData.longitude" type="number" step="0.000001" placeholder="contoh: 106.816666" />
         </div>
         <div class="form-group">
           <button class="preview-btn" (click)="toggleMapPicker()" type="button">
-            {{ showMapPicker ? 'Hide Map Picker' : '🗺️ Pick Location on Map' }}
+            {{ showMapPicker ? 'Sembunyikan Pemilih Peta' : '🗺️ Pilih Lokasi di Peta' }}
           </button>
         </div>
         <div *ngIf="showMapPicker && officeData.latitude && officeData.longitude" class="map-picker">
-          <p><small>Click on the map to select a new location, or drag the marker</small></p>
+          <p><small>Klik pada peta untuk memilih lokasi baru, atau seret penanda</small></p>
           <div class="map-container">
             <iframe 
               [src]="getPickerMapEmbed()" 
@@ -62,41 +62,41 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               loading="lazy">
             </iframe>
           </div>
-          <p class="map-note"><small>Note: After selecting a location on the map, copy the coordinates from the URL or marker and paste them in the fields above.</small></p>
+          <p class="map-note"><small>Catatan: Setelah memilih lokasi di peta, salin koordinat dari URL atau penanda dan tempelkan di kolom di atas.</small></p>
         </div>
         <div class="form-group">
-          <label>Allowed Radius (meters): </label>
-          <input [(ngModel)]="officeData.allowed_radius_meters" type="number" placeholder="e.g., 100" />
+          <label>Radius yang Diizinkan (meter): </label>
+          <input [(ngModel)]="officeData.allowed_radius_meters" type="number" placeholder="contoh: 100" />
         </div>
-        <button (click)="setOfficeLocation()">Save Office Location</button>
+        <button (click)="setOfficeLocation()">Simpan Lokasi Kantor</button>
         <p *ngIf="officeMessage" [class.error]="isOfficeError" [class.success]="!isOfficeError">{{ officeMessage }}</p>
       </div>
 
       <hr />
 
       <div class="add-employee-section">
-        <h3>Add New Employee</h3>
+        <h3>Tambah Karyawan Baru</h3>
         <div class="form-group">
-          <label>Username: </label>
-          <input [(ngModel)]="newUser.username" placeholder="Username" />
+          <label>Nama Pengguna: </label>
+          <input [(ngModel)]="newUser.username" placeholder="Nama Pengguna" />
         </div>
         <div class="form-group">
-          <label>Password: </label>
-          <input [(ngModel)]="newUser.password" type="password" placeholder="Password" />
+          <label>Kata Sandi: </label>
+          <input [(ngModel)]="newUser.password" type="password" placeholder="Kata Sandi" />
         </div>
-        <button (click)="createEmployee()">Create Employee</button>
+        <button (click)="createEmployee()">Buat Karyawan</button>
         <p *ngIf="message" [class.error]="isError" [class.success]="!isError">{{ message }}</p>
       </div>
 
       <hr />
 
-      <h3>All Employees</h3>
+      <h3>Semua Karyawan</h3>
       <table border="1" cellspacing="0" cellpadding="5">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Username</th>
-            <th>Role</th>
+            <th>Nama Pengguna</th>
+            <th>Peran</th>
           </tr>
         </thead>
         <tbody>
@@ -107,19 +107,19 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </tr>
         </tbody>
       </table>
-      <div *ngIf="employees.length === 0">No employees found.</div>
+      <div *ngIf="employees.length === 0">Tidak ada karyawan ditemukan.</div>
 
       <hr />
 
-      <h3>Attendance Records</h3>
+      <h3>Catatan Absensi</h3>
       <table border="1" cellspacing="0" cellpadding="5">
         <thead>
           <tr>
-            <th>Employee ID</th>
-            <th>Username</th>
-            <th>Time</th>
-            <th>Location</th>
-            <th>Map View</th>
+            <th>ID Karyawan</th>
+            <th>Nama Pengguna</th>
+            <th>Waktu</th>
+            <th>Lokasi</th>
+            <th>Tampilan Peta</th>
           </tr>
         </thead>
         <tbody>
@@ -133,7 +133,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               </td>
               <td>
                 <button class="map-toggle-btn" (click)="toggleMap(record.id)">
-                  {{ selectedMapRecord === record.id ? 'Hide Map' : 'Show Map' }}
+                  {{ selectedMapRecord === record.id ? 'Sembunyikan Peta' : 'Tampilkan Peta' }}
                 </button>
               </td>
             </tr>
@@ -154,7 +154,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </ng-container>
         </tbody>
       </table>
-      <div *ngIf="records.length === 0">No attendance records found.</div>
+      <div *ngIf="records.length === 0">Tidak ada catatan absensi ditemukan.</div>
     </div>
   `,
   styles: [`
@@ -215,7 +215,7 @@ export class ManagerDashboardComponent implements OnInit {
         this.records = res.data;
       },
       error: (err) => {
-        console.error('Failed to load records', err);
+        console.error('Gagal memuat catatan', err);
       }
     });
   }
@@ -226,27 +226,27 @@ export class ManagerDashboardComponent implements OnInit {
         this.employees = res.data;
       },
       error: (err) => {
-        console.error('Failed to load employees', err);
+        console.error('Gagal memuat karyawan', err);
       }
     });
   }
 
   createEmployee() {
     if (!this.newUser.username || !this.newUser.password) {
-      this.message = 'Please fill in all fields';
+      this.message = 'Mohon isi semua kolom';
       this.isError = true;
       return;
     }
 
     this.apiService.createEmployee(this.newUser).subscribe({
       next: (res) => {
-        this.message = 'Employee created successfully!';
+        this.message = 'Karyawan berhasil dibuat!';
         this.isError = false;
         this.newUser = { username: '', password: '' };
         this.loadEmployees(); // Refresh employee list
       },
       error: (err) => {
-        this.message = err.error?.error || 'Failed to create employee';
+        this.message = err.error?.error || 'Gagal membuat karyawan';
         this.isError = true;
       }
     });
@@ -276,7 +276,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.locationSuccess = '';
 
     if (!navigator.geolocation) {
-      this.locationError = 'Geolocation is not supported by your browser';
+      this.locationError = 'Geolokasi tidak didukung oleh browser Anda';
       this.isGettingLocation = false;
       return;
     }
@@ -285,7 +285,7 @@ export class ManagerDashboardComponent implements OnInit {
       (position) => {
         this.officeData.latitude = position.coords.latitude;
         this.officeData.longitude = position.coords.longitude;
-        this.locationSuccess = 'Location retrieved successfully!';
+        this.locationSuccess = 'Lokasi berhasil diambil!';
         this.isGettingLocation = false;
         setTimeout(() => this.locationSuccess = '', 3000);
       },
@@ -293,16 +293,16 @@ export class ManagerDashboardComponent implements OnInit {
         this.isGettingLocation = false;
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            this.locationError = 'Location permission denied';
+            this.locationError = 'Izin lokasi ditolak';
             break;
           case error.POSITION_UNAVAILABLE:
-            this.locationError = 'Location information unavailable';
+            this.locationError = 'Informasi lokasi tidak tersedia';
             break;
           case error.TIMEOUT:
-            this.locationError = 'Location request timed out';
+            this.locationError = 'Permintaan lokasi waktu habis';
             break;
           default:
-            this.locationError = 'An unknown error occurred';
+            this.locationError = 'Terjadi kesalahan yang tidak diketahui';
         }
         setTimeout(() => this.locationError = '', 5000);
       },
@@ -337,26 +337,26 @@ export class ManagerDashboardComponent implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Failed to load office location', err);
+        console.error('Gagal memuat lokasi kantor', err);
       }
     });
   }
 
   setOfficeLocation() {
     if (!this.officeData.latitude || !this.officeData.longitude || !this.officeData.allowed_radius_meters) {
-      this.officeMessage = 'Please fill in all required fields';
+      this.officeMessage = 'Mohon isi semua kolom yang diperlukan';
       this.isOfficeError = true;
       return;
     }
 
     this.apiService.setOfficeLocation(this.officeData).subscribe({
       next: (res) => {
-        this.officeMessage = 'Office location saved successfully!';
+        this.officeMessage = 'Lokasi kantor berhasil disimpan!';
         this.isOfficeError = false;
         this.loadOfficeLocation();
       },
       error: (err) => {
-        this.officeMessage = err.error?.error || 'Failed to save office location';
+        this.officeMessage = err.error?.error || 'Gagal menyimpan lokasi kantor';
         this.isOfficeError = true;
       }
     });

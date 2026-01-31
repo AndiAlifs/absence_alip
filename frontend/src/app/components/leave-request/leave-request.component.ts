@@ -6,21 +6,21 @@ import { ApiService } from '../../services/api.service';
   selector: 'app-leave-request',
   template: `
     <div class="container">
-      <h2>Submit Leave Request</h2>
+      <h2>Ajukan Permohonan Cuti</h2>
       <form [formGroup]="leaveForm" (ngSubmit)="onSubmit()">
         <div>
-          <label>Start Date</label>
+          <label>Tanggal Mulai</label>
           <input type="date" formControlName="start_date">
         </div>
         <div>
-          <label>End Date</label>
+          <label>Tanggal Selesai</label>
           <input type="date" formControlName="end_date">
         </div>
         <div>
-          <label>Reason</label>
+          <label>Alasan</label>
           <textarea formControlName="reason"></textarea>
         </div>
-        <button type="submit" [disabled]="leaveForm.invalid || submitting">Submit Request</button>
+        <button type="submit" [disabled]="leaveForm.invalid || submitting">Kirim Permohonan</button>
       </form>
 
       <div *ngIf="message" [class.error]="isError" [class.success]="!isError">
@@ -59,13 +59,13 @@ export class LeaveRequestComponent {
       
       this.apiService.submitLeave(this.leaveForm.value).subscribe({
         next: (res) => {
-          this.message = 'Leave request submitted successfully.';
+          this.message = 'Permohonan cuti berhasil diajukan.';
           this.isError = false;
           this.submitting = false;
           this.leaveForm.reset();
         },
         error: (err) => {
-          this.message = 'Failed to submit leave request.';
+          this.message = 'Gagal mengajukan permohonan cuti.';
           this.isError = true;
           this.submitting = false;
         }

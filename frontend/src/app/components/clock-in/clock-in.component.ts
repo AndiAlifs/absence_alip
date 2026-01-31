@@ -6,16 +6,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   selector: 'app-clock-in',
   template: `
     <div class="container">
-      <h2>Clock In</h2>
-      <div *ngIf="loading">Getting location...</div>
+      <h2>Absen Masuk</h2>
+      <div *ngIf="loading">Mengambil lokasi...</div>
       <div *ngIf="error" class="error">{{ error }}</div>
       
       <div *ngIf="location">
-        <p>Latitude: {{ location.latitude }}</p>
-        <p>Longitude: {{ location.longitude }}</p>
+        <p>Lintang: {{ location.latitude }}</p>
+        <p>Bujur: {{ location.longitude }}</p>
         
         <div class="map-container">
-          <h3>Your Current Location</h3>
+          <h3>Lokasi Anda Saat Ini</h3>
           <iframe 
             [src]="getMapEmbed()" 
             width="100%" 
@@ -27,7 +27,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         </div>
 
         <button (click)="submitClockIn()" [disabled]="submitting">
-          {{ submitting ? 'Submitting...' : 'Clock In Now' }}
+          {{ submitting ? 'Mengirim...' : 'Absen Sekarang' }}
         </button>
       </div>
 
@@ -68,12 +68,12 @@ export class ClockInComponent implements OnInit {
           this.loading = false;
         },
         (err) => {
-          this.error = 'Failed to get location. Please enable permissions.';
+          this.error = 'Gagal mendapatkan lokasi. Silakan aktifkan izin lokasi.';
           this.loading = false;
         }
       );
     } else {
-      this.error = 'Geolocation is not supported by this browser.';
+      this.error = 'Geolokasi tidak didukung oleh browser ini.';
       this.loading = false;
     }
   }
@@ -84,11 +84,11 @@ export class ClockInComponent implements OnInit {
     this.submitting = true;
     this.apiService.clockIn(this.location).subscribe({
       next: (res) => {
-        this.successMessage = 'Clock-in successful at ' + new Date().toLocaleTimeString();
+        this.successMessage = 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
         this.submitting = false;
       },
       error: (err) => {
-        this.error = err.error?.error || 'Failed to clock in.';
+        this.error = err.error?.error || 'Gagal melakukan absen.';
         this.submitting = false;
       }
     });
