@@ -22,6 +22,8 @@ type Attendance struct {
 	Longitude   float64   `gorm:"type:decimal(11,8)" json:"longitude"`
 	Status      string    `gorm:"type:enum('approved','pending','rejected');default:'approved'" json:"status"`
 	Distance    float64   `gorm:"type:decimal(10,2)" json:"distance"`
+	IsLate      bool      `gorm:"default:false" json:"is_late"`
+	MinutesLate int       `gorm:"default:0" json:"minutes_late"`
 	User        User      `gorm:"foreignKey:UserID" json:"user"`
 }
 
@@ -43,4 +45,5 @@ type OfficeLocation struct {
 	Longitude           float64 `gorm:"type:decimal(11,8);not null" json:"longitude"`
 	AllowedRadiusMeters float64 `gorm:"not null;default:100" json:"allowed_radius_meters"`
 	Name                string  `gorm:"type:varchar(255)" json:"name"`
+	ClockInTime         string  `gorm:"type:varchar(5)" json:"clock_in_time"`
 }

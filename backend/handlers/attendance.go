@@ -46,6 +46,26 @@ func ClockIn(c *gin.Context) {
 		status = "pending"
 	}
 
+	// Calculate if employee is late
+	isLate := false
+	minutesLate := 0
+	if officeLocation.ClockInTime != "" {
+		// Parse office clock-in time (format: "HH:MM")
+		officialTime, err := time.Parse("15:04", officeLocation.ClockInTime)
+		if err == nil {
+			// Get current time's hour and minute
+			now := time.Now()
+			actualTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
+			officialTimeToday := time.Date(now.Year(), now.Month(), now.Day(), officialTime.Hour(), officialTime.Minute(), 0, 0, now.Location())
+			
+			// Check if late
+			if actualTime.After(officialTimeToday) {
+				isLate = true
+				minutesLate = int(actualTime.Sub(officialTimeToday).Minutes())
+			}
+		}
+	}
+
 	attendance := models.Attendance{
 		UserID:      userID,
 		ClockInTime: time.Now(),
@@ -53,6 +73,8 @@ func ClockIn(c *gin.Context) {
 		Longitude:   input.Longitude,
 		Status:      status,
 		Distance:    distance,
+		IsLate:      isLate,
+		MinutesLate: minutesLate,
 	}
 
 	if result := database.DB.Create(&attendance); result.Error != nil {
@@ -71,5 +93,7 @@ func ClockIn(c *gin.Context) {
 		"distance_meters": distance,
 		"status":          status,
 		"needs_approval":  status == "pending",
+		"is_late":         isLate,
+		"minutes_late":    minutesLate,
 	})
 }

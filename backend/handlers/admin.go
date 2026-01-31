@@ -7,13 +7,14 @@ import (
 	"field-attendance-system/models"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetAllRecords(c *gin.Context) {
-	// Returns all employee attendance data for the manager.
+	// Returns all approved employee attendance data for the manager.
 	// We might want to preload User info to show names.
 	var attendances []models.Attendance
-	if result := database.DB.Preload("User").Find(&attendances); result.Error != nil {
+	if result := database.DB.Preload("User").Where("status = ?", "approved").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
 		return
 	}
@@ -191,9 +192,11 @@ func DeleteEmployee(c *gin.Context) {
 
 // Helper function to hash password (reused from auth.go)
 func hashPassword(password string) (string, error) {
-	// Import bcrypt at the top: "golang.org/x/crypto/bcrypt"
-	// For now, using a simple hash - in production use bcrypt
-	return password, nil // TODO: Implement proper bcrypt hashing
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 
 func GetPendingClockIns(c *gin.Context) {

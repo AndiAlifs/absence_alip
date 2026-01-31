@@ -14,6 +14,7 @@ type OfficeLocationInput struct {
 	Longitude           float64 `json:"longitude" binding:"required"`
 	AllowedRadiusMeters float64 `json:"allowed_radius_meters" binding:"required,min=0"`
 	Name                string  `json:"name"`
+	ClockInTime         string  `json:"clock_in_time"`
 }
 
 func GetOfficeLocation(c *gin.Context) {
@@ -47,6 +48,7 @@ func SetOfficeLocation(c *gin.Context) {
 			Longitude:           input.Longitude,
 			AllowedRadiusMeters: input.AllowedRadiusMeters,
 			Name:                input.Name,
+			ClockInTime:         input.ClockInTime,
 		}
 		if err := database.DB.Create(&office).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create office location"})
@@ -58,6 +60,7 @@ func SetOfficeLocation(c *gin.Context) {
 		office.Longitude = input.Longitude
 		office.AllowedRadiusMeters = input.AllowedRadiusMeters
 		office.Name = input.Name
+		office.ClockInTime = input.ClockInTime
 		if err := database.DB.Save(&office).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update office location"})
 			return

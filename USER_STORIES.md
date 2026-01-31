@@ -20,9 +20,9 @@ This document lists all implemented features of the Field Attendance System orga
 ## Progress Summary
 
 - **Total User Stories:** 41
-- **Completed:** 32 (78%)
+- **Completed:** 34 (83%)
 - **In Progress:** 0
-- **Planned:** 9 (22%)
+- **Planned:** 7 (17%)
 - **Blocked:** 0
 
 ---
@@ -55,7 +55,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-015** - Manager can update employee information including username, password, or role
 - [x] **US-016** - Manager can delete employee accounts to remove access for staff who have left
 - [x] **US-028** - Manager can view office location on an interactive map to visually confirm office location settings
-- [ ] **US-033** - Manager can set official clock-in time to determine late arrivals
+- [x] **US-033** - Manager can set official clock-in time to determine late arrivals
 - [ ] **US-039** - Manager can view daily attendance dashboard showing today's status for all employees
 - [ ] **US-040** - Manager can see which employees have clocked in today (on time or late)
 - [ ] **US-041** - Manager can see which employees are on approved leave for today
@@ -77,7 +77,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-029** - System loads configuration from environment variables for different deployment environments
 - [x] **US-030** - System allows cross-origin requests from frontend for proper communication
 - [x] **US-032** - System stores employee full names in addition to usernames for better identification
-- [ ] **US-034** - System calculates if employee is late based on configured clock-in time
+- [x] **US-034** - System calculates if employee is late based on configured clock-in time
 
 ---
 2: Employee Attendance Features
@@ -304,10 +304,10 @@ This document lists all implemented features of the Field Attendance System orga
 - Setting is used to calculate late arrivals
 - Default time can be set during initial setup
 
-**Status:** 🔄 Planned  
+**Status:** ✅ Implemented  
 **Priority:** Critical  
-**Routes:** `POST /api/admin/clock-in-time`, `GET /api/admin/clock-in-time`  
-**Data Model:** Add `clock_in_time` field to OfficeLocation model
+**Routes:** Integrated with `POST /api/admin/office-location`, `GET /api/office-location`  
+**Data Model:** Added `clock_in_time` field (VARCHAR(5)) to OfficeLocation model
 
 ---
 
@@ -324,10 +324,10 @@ This document lists all implemented features of the Field Attendance System orga
 - Late calculation considers only time, not date
 - Grace period can be configured (optional: e.g., 5 minutes)
 
-**Status:** 🔄 Planned  
+**Status:** ✅ Implemented  
 **Priority:** Critical  
-**Implementation:** [attendance.go](backend/handlers/attendance.go) - modify ClockIn function  
-**Data Model:** Add `is_late` (boolean) and `minutes_late` (integer) to Attendance model
+**Implementation:** [attendance.go](backend/handlers/attendance.go) - ClockIn function with time comparison logic  
+**Data Model:** Added `is_late` (boolean) and `minutes_late` (integer) to Attendance model
 
 ---
 

@@ -77,6 +77,15 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/admin/office-location`, data, this.getHeaders());
   }
 
+  // Clock-in Time
+  getClockInTime(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/clock-in-time`, this.getHeaders());
+  }
+
+  setClockInTime(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/clock-in-time`, data, this.getHeaders());
+  }
+
   // Pending Clock-ins
   getPendingClockIns(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admin/pending-clockins`, this.getHeaders());

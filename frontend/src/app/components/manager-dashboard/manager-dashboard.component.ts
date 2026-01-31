@@ -24,7 +24,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           
           <div *ngIf="officeLocation" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl mb-6 border border-blue-200">
             <p class="text-sm font-semibold text-gray-700 mb-3">Lokasi Kantor Saat Ini:</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <p class="text-xs text-gray-600">Nama</p>
                 <p class="font-semibold text-gray-900">{{ officeLocation.name || 'Belum diatur' }}</p>
@@ -36,6 +36,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <div>
                 <p class="text-xs text-gray-600">Radius yang Diizinkan</p>
                 <p class="font-semibold text-gray-900">{{ officeLocation.allowed_radius_meters }} meter</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-600">Waktu Clock-In</p>
+                <p class="font-semibold text-gray-900">{{ officeLocation.clock_in_time || 'Belum diatur' }}</p>
               </div>
             </div>
             <div class="rounded-lg overflow-hidden shadow-md">
@@ -51,7 +55,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
 
           <form class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lokasi</label>
                 <input 
@@ -68,6 +72,15 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   name="radius"
                   type="number" 
                   placeholder="100"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Waktu Clock-In Resmi</label>
+                <input 
+                  [(ngModel)]="officeData.clock_in_time" 
+                  name="clock_in_time"
+                  type="time" 
+                  placeholder="09:00"
                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
               </div>
             </div>
@@ -501,7 +514,8 @@ export class ManagerDashboardComponent implements OnInit {
     name: '',
     latitude: null,
     longitude: null,
-    allowed_radius_meters: null
+    allowed_radius_meters: null,
+    clock_in_time: '09:00'
   };
   officeLocation: any = null;
   officeMessage = '';
@@ -831,7 +845,8 @@ export class ManagerDashboardComponent implements OnInit {
             name: res.data.name,
             latitude: res.data.latitude,
             longitude: res.data.longitude,
-            allowed_radius_meters: res.data.allowed_radius_meters
+            allowed_radius_meters: res.data.allowed_radius_meters,
+            clock_in_time: res.data.clock_in_time || '09:00'
           };
         }
       },
