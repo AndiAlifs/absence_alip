@@ -7,121 +7,165 @@ A geolocation-based attendance tracking system with automatic proximity validati
 
 ### Backend Structure (Go)
 - **Module name**: `field-attendance-system` (used in all imports)
-- **Entry point**: [backend/main.go](backend/main.go) - seeds admin user on startup (`admin:admin123`)
-- **Database**: GORM auto-migration on startup; connection configured via env vars with sensible defaults (root:password@127.0.0.1:3306/attendance_db)
-- **Auth**: JWT tokens with 24h expiry ([backend/auth/jwt.go](backend/auth/jwt.go)), middleware chain: `AuthMiddleware()` → `ManagerMiddleware()` for admin routes
+- **Entry point**: [backend/main.go](backend/main.go) - seeds admin user on startup via `seedAdminUser()`
+- **Database**: GORM auto-migration on startup; connection via env vars with defaults (`root:password@127.0.0.1:3306/attendance_db`)
+- **Auth**: JWT tokens with 24h expiry ([backend/auth/jwt.go](backend/auth/jwt.go))
+  - Middleware chain: `AuthMiddleware()` → `ManagerMiddleware()` for admin routes
+  - JWT secret from `JWT_SECRET` env var, fallback to `"super-secret-key-default"`
 - **CORS**: Hardcoded to allow `localhost:4200` and production IP `43.163.107.154`
 
 ### Frontend Structure (Angular 16)
-- **Router**: Role-based navigation - employees → `/clock-in`, managers → `/admin`
+- **Router**: Role-based navigation - employees → `/clock-in`, managers → `/admin` (no route guards beyond AuthGuard)
 - **Auth**: JWT stored in `localStorage`, added to all requests via `ApiService.getHeaders()`
-- **API Base URL**: Hardcoded to `http://localhost:8080/api` in [api.service.ts](frontend/src/app/services/api.service.ts)
-- **Styling**: TailwindCSS configured
+- **API Base URL**: Set via `environment.apiUrl` (defaults to `http://localhost:8080/api`)
+- **Styling**: TailwindCSS with utility-first approach
+- **Languages**: Mixed English/Indonesian - UI labels in Indonesian, code in English
 
-### Core Business Logic: Geolocation Validation
+### Core Business Logic: Geolocation + Lateness Validation
 **Critical workflow** in [handlers/attendance.go](backend/handlers/attendance.go):
-1. Employee sends `{latitude, longitude}` from browser
-2. Backend retrieves `OfficeLocation` settings (lat/long/radius)
-3. Haversine distance calculation ([utils/distance.go](backend/utils/distance.go)) determines if within radius
-4. **Auto-approval**: distance ≤ `allowed_radius_meters` → `status="approved"`
-5. **Pending review**: distance > radius → `status="pending"`, requires manager action
+1. Employee sends `{latitude, longitude}` from browser's geolocation API
+2. Backend retrieves `OfficeLocation` settings (lat/long/radius/clock_in_time)
+3. **Distance check**: Haversine formula ([utils/distance.go](backend/utils/distance.go)) calculates meters from office
+   - Within `allowed_radius_meters` → `status="approved"`
+   - Outside radius → `status="pending"` (requires manager approval)
+4. **Lateness check**: Compares current time to `OfficeLocation.ClockInTime` (format: `"HH:MM"`)
+   - Sets `is_late=true` and `minutes_late` if clock-in after official time
+5. Creates `Attendance` record with all calculated fields
 
-This dual-status pattern is central to the system - always preserve both auto and manual approval paths.
+**Key pattern**: Dual-status system (auto-approve vs pending) is fundamental - preserve both paths when modifying.
 
 ## Database Models ([models/models.go](backend/models/models.go))
 
-### Key Enums (MySQL)
+### Key Enums (MySQL `ENUM` type)
 - `User.Role`: `'employee'|'manager'` (default: `'employee'`)
 - `Attendance.Status`: `'approved'|'pending'|'rejected'` (default: `'approved'`)
 - `LeaveRequest.Status`: `'pending'|'approved'|'rejected'` (default: `'pending'`)
 
-### Relations
-- `Attendance.UserID` → `User` (preloaded in admin queries)
-- `LeaveRequest.UserID` → `User` (JSON tag `"-"` hides from API)
-- `OfficeLocation`: Singleton table (only ID=1 used)
+### Critical Fields
+- **Coordinates**: `decimal(10,8)` for latitude, `decimal(11,8)` for longitude (high precision required)
+- **Distance**: `decimal(10,2)` in meters (not kilometers)
+- **ClockInTime**: `varchar(5)` storing `"HH:MM"` format (e.g., `"09:00"`)
 
-## Development Commands
+### Relations & Foreign Keys
+- `Attendance.UserID` → `User` (preloaded in admin queries via `Preload("User")`)
+- `LeaveRequest.UserID` → `User` (JSON tag `"-"` hides user object from API response)
+- `OfficeLocation`: **Singleton pattern** - only ID=1 used, must be seeded before clock-ins work
 
-### Backend
+## Development Workflows
+
+### Backend Setup
 ```bash
 cd backend
-go mod tidy              # Install dependencies
-go run main.go           # Start server on :8080
+go mod tidy              # Install dependencies (first time only)
+go run main.go           # Start server on :8080 (auto-seeds admin user)
 ```
-**Environment**: Uses `godotenv` - create `.env` with `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`, or override with `MYSQL_DSN`. Set `JWT_SECRET` or defaults to `"super-secret-key-default"`.
+**Environment variables** (via `.env` or system):
+- `MYSQL_DSN` - Full connection string (overrides individual DB_* vars)
+- `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` - Individual components
+- `JWT_SECRET` - Token signing key (fallback: `"super-secret-key-default"`)
 
-### Frontend
+### Frontend Setup
 ```bash
 cd frontend
 npm install              # Install dependencies
-npm start                # Runs `ng serve` on :4200
-ng build                 # Production build
+npm start                # Runs `ng serve --open` on :4200
+ng build                 # Production build to dist/
 ```
 
 ### Database Setup
 ```sql
 CREATE DATABASE attendance_db;
 ```
-Schema auto-migrates. Manual migration available in [backend/migration.sql](backend/migration.sql).
+- Auto-migration runs on server startup (all models in [models.go](backend/models/models.go))
+- Manual schema available in [backend/migration.sql](backend/migration.sql) (for reference/disaster recovery)
+- **First-run admin seed**: `admin:admin123` (role: manager) created automatically
 
-## Route Structure
+## API Route Structure
 
 ### Public Routes
-- `POST /api/login` - Returns JWT token
-- `POST /api/register` - User creation (no frontend UI implemented)
+- `POST /api/login` - Returns `{token, user}` (token is JWT)
+- `POST /api/register` - User creation (NO frontend UI, use cURL/Postman)
 
-### Employee Routes (requires JWT)
-- `POST /api/clock-in` - Geolocation capture with auto-status
+### Employee Routes (requires `AuthMiddleware()`)
+- `POST /api/clock-in` - Geolocation capture, auto-calculates distance/lateness
 - `POST /api/leave` - Leave request submission
+- `GET /api/my-attendance/today` - Today's clock-in record
+- `GET /api/my-leave/today` - Today's leave status
+- `GET /api/office-location` - View office settings (public to employees)
 
-### Manager Routes (requires JWT + role="manager")
+### Manager Routes (requires `AuthMiddleware()` + `ManagerMiddleware()`)
 All under `/api/admin/*`:
-- `GET /records` - All attendance with user details
+- `GET /records` - All attendance records with user preload
 - `GET /leaves` - All leave requests
-- `PATCH /leave/:id` - Approve/reject leaves
-- `GET /pending-clockins` - Clock-ins needing review
+- `PATCH /leave/:id` - Approve/reject leave (`{status: "approved"|"rejected"}`)
+- `GET /pending-clockins` - Clock-ins with `status="pending"`
 - `PATCH /clockin/:id` - Approve/reject attendance
-- `GET|POST /office-location` - Configure office coordinates/radius
-- Employee CRUD: `GET|POST /employees`, `PUT|DELETE /employees/:id`
+- `GET|POST /office-location` - Configure office lat/long/radius/clock-in time
+- `GET|POST /employees` - List/create employees
+- `PUT|DELETE /employees/:id` - Update/delete employee
+- `GET /daily-attendance` - Dashboard showing today's attendance summary
 
-## Code Conventions
+## Code Conventions & Patterns
 
-### Go
-- **Error handling**: Return JSON `{"error": "..."}` with appropriate HTTP status
-- **Middleware**: Extract userID/role from JWT, set in context with `c.Set()`
-- **Distance**: Always in **meters** (stored as `decimal(10,2)`)
-- **Coordinates**: `decimal(10,8)` for latitude, `decimal(11,8)` for longitude
+### Go Backend
+- **Error responses**: Always `c.JSON(status, gin.H{"error": "message"})` (use Indonesian for user-facing messages)
+- **Middleware context**: Set data with `c.Set("userID", id)`, retrieve with `c.MustGet("userID").(uint)`
+- **Distance units**: Always **meters** (never kilometers), stored as `decimal(10,2)`
+- **JSON binding**: Use `binding:"required"` tags for validation, handle errors with 400 Bad Request
+- **Database queries**: Use GORM's `Preload()` for relations, avoid N+1 queries
 
-### Angular
-- **Guards**: `AuthGuard` checks token existence, redirects to `/login` if missing
-- **Date handling**: Use `type="date"` inputs, backend expects `time.Time` JSON format
-- **Error messages**: Many use **Indonesian** (e.g., "Lokasi kantor belum diatur")
+### Angular Frontend
+- **Auth pattern**: `AuthGuard` checks `localStorage.getItem('token')`, redirects to `/login` if missing
+- **API calls**: All through `ApiService`, which auto-adds `Authorization: Bearer <token>` header
+- **Date inputs**: Use `type="date"` HTML5 inputs, backend receives as `time.Time` in JSON
+- **Error messages**: Indonesian for UI alerts (e.g., "Lokasi kantor belum diatur", "Berhasil melakukan clock-in")
+- **Component inline templates**: Large templates embedded in `.ts` files (no separate `.html` for manager dashboard)
 
-### Cross-cutting
-- **ID fields**: Always `uint` in Go, `number` in TypeScript
-- **Time zones**: Backend uses `parseTime=True&loc=Local` in MySQL DSN
-- **Foreign keys**: GORM auto-creates constraints, cascade deletes not configured
+### Cross-cutting Concerns
+- **ID types**: `uint` in Go models ↔ `number` in TypeScript
+- **Time zones**: Backend uses `parseTime=True&loc=Local` in MySQL DSN (server local time)
+- **Foreign key constraints**: GORM auto-creates, but **no cascade deletes** configured
+- **Coordinate precision**: Use 8 decimals for lat, 11 for long (~1cm accuracy)
 
-## Common Modifications
+## Common Modification Patterns
 
 ### Adding New Attendance Rules
-1. Modify [handlers/attendance.go](backend/handlers/attendance.go) `ClockIn()` function
-2. Consider adding fields to `Attendance` model (requires migration)
-3. Update `distance` calculation logic or add secondary validation checks
+1. **Backend**: Edit `ClockIn()` in [handlers/attendance.go](backend/handlers/attendance.go)
+2. **Model changes**: Add field to `Attendance` struct in [models.go](backend/models/models.go)
+3. **Migration**: GORM auto-migrates on restart, or update [migration.sql](backend/migration.sql)
+4. **Frontend**: Update `ClockInComponent` to display new field
 
 ### New Manager Features
-1. Add route in [main.go](backend/main.go) under `admin.GET/POST/etc`
-2. Create handler in [handlers/admin.go](backend/handlers/admin.go)
-3. Add method to [api.service.ts](frontend/src/app/services/api.service.ts)
-4. Call from [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+1. **Route**: Add to `admin` group in [main.go](backend/main.go)
+2. **Handler**: Create function in [handlers/admin.go](backend/handlers/admin.go)
+3. **Frontend service**: Add method to [api.service.ts](frontend/src/app/services/api.service.ts)
+4. **UI**: Update [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
 
 ### Changing Office Location Logic
-Edit `OfficeLocation` model in [models.go](backend/models/models.go) and handlers in [office.go](backend/handlers/office.go). Currently supports single office only (ID=1 singleton pattern).
+- Currently **singleton pattern** (ID=1 only) enforced in [handlers/office.go](backend/handlers/office.go)
+- To support multiple offices: change `OfficeLocation` model, update `ClockIn()` to select correct office by employee assignment
 
-## Testing Credentials
-Default seeded admin (created on first startup):
-- Username: `admin`
-- Password: `admin123`
-- Role: `manager`
+## Deployment Notes
+- **Production**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Tencent Cloud/VPS setup
+- **Build process**: 
+  - Backend: `go build -o attendance-server main.go`
+  - Frontend: `ng build --configuration production` → outputs to `dist/`
+- **Service**: Systemd service file in `attendance.service` (runs backend on port 8080)
+- **Reverse proxy**: Nginx config in `nginx.conf` (serves Angular static files, proxies `/api` to backend)
 
-Create additional users via `POST /api/register` (use cURL/Postman - no registration UI).
+## Testing & Debugging
+
+### Default Credentials
+- **Admin user**: `admin` / `admin123` (role: `manager`) - auto-seeded on first startup
+- **Create employees**: Use `POST /api/register` via Postman/cURL (no registration UI exists)
+
+### Testing Geolocation
+- Use browser DevTools → Sensors → Location override to test different coordinates
+- Office location must be configured first (manager → "Pengaturan Lokasi Kantor" section)
+- Check console for geolocation errors (permission denied, timeout)
+
+### Common Gotchas
+- **Office location not set**: Clock-in fails with "Lokasi kantor belum diatur" error
+- **CORS errors**: If frontend can't reach backend, check CORS origins in [main.go](backend/main.go)
+- **JWT expiry**: Tokens expire after 24 hours, user must re-login
+- **No registration UI**: Must create users via API directly (intended design)
