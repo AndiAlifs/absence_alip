@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -13,10 +14,37 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	dsn := os.Getenv("MYSQL_DSN")
-	if dsn == "" {
-		// Fallback for local development or sandbox if not set
-		dsn = "user:password@tcp(127.0.0.1:3306)/attendance_db?charset=utf8mb4&parseTime=True&loc=Local"
+	// Get individual environment variables
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	// Set defaults for local development
+	if dbUser == "" {
+		dbUser = "root"
+	}
+	if dbPassword == "" {
+		dbPassword = "password"
+	}
+	if dbHost == "" {
+		dbHost = "127.0.0.1"
+	}
+	if dbPort == "" {
+		dbPort = "3306"
+	}
+	if dbName == "" {
+		dbName = "attendance_db"
+	}
+
+	// Construct DSN
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	// Allow override with full MYSQL_DSN if provided
+	if customDSN := os.Getenv("MYSQL_DSN"); customDSN != "" {
+		dsn = customDSN
 	}
 
 	var err error
