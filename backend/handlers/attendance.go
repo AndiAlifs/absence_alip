@@ -25,6 +25,13 @@ func ClockIn(c *gin.Context) {
 
 	userID := c.MustGet("userID").(uint)
 
+	// Verify user exists
+	var user models.User
+	if result := database.DB.First(&user, userID); result.Error != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User tidak ditemukan. Silakan login ulang."})
+		return
+	}
+
 	// Get office location settings
 	var officeLocation models.OfficeLocation
 	if result := database.DB.First(&officeLocation); result.Error != nil {
@@ -57,7 +64,7 @@ func ClockIn(c *gin.Context) {
 			now := time.Now()
 			actualTime := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
 			officialTimeToday := time.Date(now.Year(), now.Month(), now.Day(), officialTime.Hour(), officialTime.Minute(), 0, 0, now.Location())
-			
+
 			// Check if late
 			if actualTime.After(officialTimeToday) {
 				isLate = true
