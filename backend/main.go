@@ -65,6 +65,8 @@ func main() {
 			admin.DELETE("/employees/:id", handlers.DeleteEmployee)
 			admin.GET("/office-location", handlers.GetOfficeLocation)
 			admin.POST("/office-location", handlers.SetOfficeLocation)
+			admin.GET("/pending-clockins", handlers.GetPendingClockIns)
+			admin.PATCH("/clockin/:id", handlers.UpdateClockInStatus)
 		}
 	}
 

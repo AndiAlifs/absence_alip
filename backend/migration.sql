@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS attendances (
     clock_in_time DATETIME NOT NULL,
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
+    status ENUM('approved', 'pending', 'rejected') DEFAULT 'approved',
+    distance DECIMAL(10, 2),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

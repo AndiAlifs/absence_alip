@@ -187,3 +187,46 @@ func hashPassword(password string) (string, error) {
 	// For now, using a simple hash - in production use bcrypt
 	return password, nil // TODO: Implement proper bcrypt hashing
 }
+
+func GetPendingClockIns(c *gin.Context) {
+	// Get all pending clock-in requests
+	var attendances []models.Attendance
+	if result := database.DB.Preload("User").Where("status = ?", "pending").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pending clock-ins"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": attendances})
+}
+
+type UpdateClockInStatusInput struct {
+	Status string `json:"status" binding:"required,oneof=approved rejected"`
+}
+
+func UpdateClockInStatus(c *gin.Context) {
+	id := c.Param("id")
+	var input UpdateClockInStatusInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var attendance models.Attendance
+	if result := database.DB.First(&attendance, id); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Clock-in record not found"})
+		return
+	}
+
+	if attendance.Status != "pending" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only pending clock-ins can be updated"})
+		return
+	}
+
+	attendance.Status = input.Status
+	if result := database.DB.Save(&attendance); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update clock-in status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Clock-in status updated successfully", "data": attendance})
+}

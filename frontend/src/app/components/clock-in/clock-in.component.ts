@@ -132,9 +132,20 @@ export class ClockInComponent implements OnInit {
     if (!this.location) return;
 
     this.submitting = true;
+    this.error = '';
+    this.successMessage = '';
+    
     this.apiService.clockIn(this.location).subscribe({
       next: (res) => {
-        this.successMessage = 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
+        const status = res.status || res.data?.status;
+        const needsApproval = res.needs_approval;
+        
+        if (needsApproval || status === 'pending') {
+          this.successMessage = res.message || 'Clock-in dicatat. Menunggu persetujuan manajer karena lokasi terlalu jauh dari kantor.';
+        } else {
+          this.successMessage = res.message || 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
+        }
+        
         this.submitting = false;
       },
       error: (err) => {

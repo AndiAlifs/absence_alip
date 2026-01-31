@@ -40,15 +40,10 @@ func ClockIn(c *gin.Context) {
 		officeLocation.Longitude,
 	)
 
-	// Check if employee is within allowed radius
+	// Determine status based on distance
+	status := "approved"
 	if distance > officeLocation.AllowedRadiusMeters {
-		c.JSON(http.StatusForbidden, gin.H{
-			"error":           "Jarak Terlalu Jauh dari Lokasi Kantor",
-			"distance_meters": distance,
-			"allowed_meters":  officeLocation.AllowedRadiusMeters,
-			"office_location": officeLocation.Name,
-		})
-		return
+		status = "pending"
 	}
 
 	attendance := models.Attendance{
@@ -56,6 +51,8 @@ func ClockIn(c *gin.Context) {
 		ClockInTime: time.Now(),
 		Latitude:    input.Latitude,
 		Longitude:   input.Longitude,
+		Status:      status,
+		Distance:    distance,
 	}
 
 	if result := database.DB.Create(&attendance); result.Error != nil {
@@ -63,9 +60,16 @@ func ClockIn(c *gin.Context) {
 		return
 	}
 
+	message := "Berhasil melakukan clock-in"
+	if status == "pending" {
+		message = "Clock-in dicatat. Menunggu persetujuan manajer karena lokasi terlalu jauh dari kantor."
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":         "Berhasil melakukan clock-in",
+		"message":         message,
 		"data":            attendance,
 		"distance_meters": distance,
+		"status":          status,
+		"needs_approval":  status == "pending",
 	})
 }

@@ -19,6 +19,8 @@ type Attendance struct {
 	ClockInTime time.Time `gorm:"not null" json:"clock_in_time"`
 	Latitude    float64   `gorm:"type:decimal(10,8)" json:"latitude"`
 	Longitude   float64   `gorm:"type:decimal(11,8)" json:"longitude"`
+	Status      string    `gorm:"type:enum('approved','pending','rejected');default:'approved'" json:"status"`
+	Distance    float64   `gorm:"type:decimal(10,2)" json:"distance"`
 	User        User      `gorm:"foreignKey:UserID" json:"user"`
 }
 
