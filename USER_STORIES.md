@@ -12,13 +12,14 @@ This document lists all implemented features of the Field Attendance System orga
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.2 | Jan 31, 2026 | Added US-032 (full name field support) | Product Team |
 | 1.1 | Jan 31, 2026 | Added US-031 (employee view office location) | Product Team |
 | 1.0 | Jan 31, 2026 | Initial release - 30 user stories documented | Product Team |
 
 ## Progress Summary
 
-- **Total User Stories:** 31
-- **Completed:** 31 (100%)
+- **Total User Stories:** 32
+- **Completed:** 32 (100%)
 - **In Progress:** 0
 - **Planned:** 0
 - **Blocked:** 0
@@ -50,7 +51,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-016** - Manager can delete employee accounts to remove access for staff who have left
 - [x] **US-028** - Manager can view office location on an interactive map to visually confirm office location settings
 
-### ⚙️ System Features (12 stories)
+### ⚙️ System Features (13 stories)
 - [x] **US-002** - System provides API for user registration to add new employees and managers
 - [x] **US-003** - System automatically creates default admin account on first startup for initial setup
 - [x] **US-017** - System uses JWT tokens for authentication to secure API endpoints with stateless sessions
@@ -65,6 +66,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-026** - System calculates accurate distance between GPS coordinates using Haversine formula
 - [x] **US-029** - System loads configuration from environment variables for different deployment environments
 - [x] **US-030** - System allows cross-origin requests from frontend for proper communication
+- [x] **US-032** - System stores employee full names in addition to usernames for better identification
 
 ---
 2: Employee Attendance Features
@@ -332,8 +334,9 @@ This document lists all implemented features of the Field Attendance System orga
 **So that** new staff can access the system
 
 **Acceptance Criteria:**
-- Form accepts username, password (minimum 6 characters), and role
+- Form accepts username, full name (optional), password (minimum 6 characters), and role
 - Username must be unique
+- Full name can be provided for better employee identification
 - Password is hashed before storage
 - Role can be 'employee' or 'manager'
 - Success/error message is displayed
@@ -347,11 +350,12 @@ This document lists all implemented features of the Field Attendance System orga
 
 ### US-015: Update Employee Information
 **As a** manager  
-**I want to** update employee username, password, or role  
+**I want to** update employee username, full name, password, or role  
 **So that** I can maintain accurate user information
 
 **Acceptance Criteria:**
 - Manager can update username (must remain unique)
+- Manager can update full name for better identification
 - Manager can update password (hashed before storage)
 - Manager can change role between 'employee' and 'manager'
 - All fields are optional (only provided fields are updated)
@@ -447,6 +451,21 @@ This document lists all implemented features of the Field Attendance System orga
 **Status:** ✅ Implemented  
 **Implementation:** [auth.guard.ts](frontend/src/app/auth.guard.ts)
 
+### US-032: Employee Full Name Support
+**As a** system  
+**I want to** store employee full names in addition to usernames  
+**So that** users can be identified by their real names instead of just usernames
+
+**Acceptance Criteria:**
+- User model includes optional FullName field (varchar 255)
+- Full name can be provided during employee creation
+- Full name can be updated via employee update endpoint
+- Full name is stored and returned in API responses
+- System works correctly with or without full name (optional field)
+
+**Status:** ✅ Implemented  
+**Implementation:** [models.go](backend/models/models.go), [admin.go](backend/handlers/admin.go)
+
 ---
 
 ## Epic 5: Data Models & Persistence
@@ -459,6 +478,7 @@ This document lists all implemented features of the Field Attendance System orga
 **Schema:**
 - ID (primary key)
 - Username (unique, required)
+- FullName (varchar 255, optional)
 - PasswordHash (bcrypt hashed, required)
 - Role (enum: 'employee' or 'manager', default 'employee')
 
@@ -613,22 +633,22 @@ This document lists all implemented features of the Field Attendance System orga
 **Implemented:** 31 (100%)  
 **Pending:** 0  
 
+**Total User Stories:** 32  
+**Implemented:** 32 (100%)  
+**Pending:** 0  
+
 **Epics Breakdown:**
 1. ✅ Authentication & Authorization - 4 stories (100%)
 2. ✅ Employee Attendance Features - 4 stories (100%)
 3. ✅ Manager Administrative Features - 10 stories (100%)
 4. ✅ Security & Access Control - 4 stories (100%)
-5. ✅ Data Models & Persistence - 5 stories (100%)
+5. ✅ Data Models & Persistence - 6 stories (100%)
 6. ✅ Geolocation & Distance Calculation - 3 stories (100%)
 7. ✅ System Configuration - 2 stories (100%)
 
 **Features by Priority:**
-- **Critical (Must-Have):** 19
----
-
-## Summary Statistics
-
-**Total User Stories:** 30  
+- **Critical (Must-Have):** 19 stories - All implemented ✅
+- **Important (Should-Have):** 9 stories - All implemented ✅
 **Implemented:** 30 (100%)  
 **Pending:** 0  
 
@@ -951,6 +971,7 @@ Response:
 Request:
 {
   "username": "string",
+  "full_name": "string", // optional
   "password": "string",
   "role": "employee|manager"
 }
@@ -967,6 +988,7 @@ Response:
 Request:
 {
   "username": "string", // optional
+  "full_name": "string", // optional
   "password": "string", // optional
   "role": "employee|manager" // optional
 }
