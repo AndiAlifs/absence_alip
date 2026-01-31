@@ -30,6 +30,10 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/clock-in`, data, this.getHeaders());
   }
 
+  getTodayAttendance(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/my-attendance/today`, this.getHeaders());
+  }
+
   // Leave
   submitLeave(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/leave`, data, this.getHeaders());

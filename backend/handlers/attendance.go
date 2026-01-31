@@ -104,3 +104,29 @@ func ClockIn(c *gin.Context) {
 		"minutes_late":    minutesLate,
 	})
 }
+
+// GetTodayAttendance returns today's attendance record for the logged-in user
+func GetTodayAttendance(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	// Get today's start and end time
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+
+	var attendance models.Attendance
+	result := database.DB.Where("user_id = ? AND clock_in_time BETWEEN ? AND ?", userID, startOfDay, endOfDay).First(&attendance)
+
+	if result.Error != nil {
+		// No attendance record for today
+		c.JSON(http.StatusOK, gin.H{
+			"data":    nil,
+			"message": "Belum melakukan clock-in hari ini",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": attendance,
+	})
+}

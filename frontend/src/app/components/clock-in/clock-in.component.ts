@@ -7,6 +7,38 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   template: `
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div class="max-w-4xl mx-auto">
+        <!-- Today's Attendance Status Card -->
+        <div *ngIf="todayAttendance" class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Status Absensi Hari Ini
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-600 mb-1">Waktu Clock-In</p>
+              <p class="text-lg font-semibold text-gray-900">{{ todayAttendance.clock_in_time | date:'HH:mm' }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+              <p class="text-xs text-gray-600 mb-1">Status</p>
+              <span [class]="todayAttendance.status === 'approved' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800' : todayAttendance.status === 'pending' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800' : 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800'">
+                {{ todayAttendance.status === 'approved' ? 'Disetujui' : todayAttendance.status === 'pending' ? 'Menunggu' : 'Ditolak' }}
+              </span>
+            </div>
+            <div [class]="todayAttendance.is_late ? 'bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg' : 'bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg'">
+              <p class="text-xs text-gray-600 mb-1">Ketepatan Waktu</p>
+              <p [class]="todayAttendance.is_late ? 'text-lg font-semibold text-red-700' : 'text-lg font-semibold text-green-700'">
+                {{ todayAttendance.is_late ? 'Terlambat ' + todayAttendance.minutes_late + ' menit' : 'Tepat Waktu' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!todayAttendance" class="bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-500 p-4 rounded-lg mb-6">
+          <p class="text-sm text-orange-800 font-medium">Anda belum melakukan clock-in hari ini</p>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-xl p-8">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Absen Masuk</h2>
           
@@ -132,12 +164,14 @@ export class ClockInComponent implements OnInit {
   showConfirmation = false;
   distanceFromOffice: number | null = null;
   officeLocation: any = null;
+  todayAttendance: any = null;
 
   constructor(private apiService: ApiService, private sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.getLocation();
     this.loadOfficeLocation();
+    this.loadTodayAttendance();
   }
 
   loadOfficeLocation() {
@@ -147,6 +181,17 @@ export class ClockInComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load office location:', error);
+      }
+    });
+  }
+
+  loadTodayAttendance() {
+    this.apiService.getTodayAttendance().subscribe({
+      next: (response) => {
+        this.todayAttendance = response.data;
+      },
+      error: (error) => {
+        console.error('Failed to load today attendance:', error);
       }
     });
   }
@@ -237,6 +282,8 @@ export class ClockInComponent implements OnInit {
           this.successMessage = res.message || 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
         }
         
+        // Reload today's attendance to show updated status
+        this.loadTodayAttendance();
         this.submitting = false;
       },
       error: (err) => {

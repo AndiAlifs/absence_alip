@@ -20,9 +20,9 @@ This document lists all implemented features of the Field Attendance System orga
 ## Progress Summary
 
 - **Total User Stories:** 41
-- **Completed:** 34 (83%)
+- **Completed:** 35 (85%)
 - **In Progress:** 0
-- **Planned:** 7 (17%)
+- **Planned:** 6 (15%)
 - **Blocked:** 0
 
 ---
@@ -37,7 +37,7 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] **US-027** - Employee can use browser geolocation to automatically capture current location without manual entry
 - [x] **US-028** - Employee can view their location on an interactive map to visually confirm location data
 - [x] **US-031** - Employee can view office location settings to see where they need to be for attendance approval
-- [ ] **US-035** - Employee can view their attendance record for today to check their status
+- [x] **US-035** - Employee can view their attendance record for today to check their status
 - [ ] **US-036** - Employee can see if they are on time, late, or pending approval for today's attendance
 - [ ] **US-037** - Employee can see their leave status for today (approved, pending, or not on leave)
 - [ ] **US-038** - Employee can see if they are marked absent pending approval
@@ -170,9 +170,10 @@ This document lists all implemented features of the Field Attendance System orga
 - Shows approval status (approved, pending, rejected)
 - Easy to access from employee dashboard
 
-**Status:** 🔄 Planned  
+**Status:** ✅ Implemented  
 **Priority:** Important  
-**Routes:** `GET /api/my-attendance/today`
+**Routes:** `GET /api/my-attendance/today`  
+**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)
 
 ---
 

@@ -51,6 +51,7 @@ func main() {
 		protected.POST("/clock-in", handlers.ClockIn)
 		protected.POST("/leave", handlers.CreateLeaveRequest)
 		protected.GET("/office-location", handlers.GetOfficeLocation)
+		protected.GET("/my-attendance/today", handlers.GetTodayAttendance)
 
 		// Manager routes
 		admin := protected.Group("/admin")
