@@ -23,8 +23,8 @@ This document lists all implemented and planned features of the Field Attendance
 ## Progress Summary
 
 - **Total User Stories:** 67
-- **Completed:** 40 (60%)
-- **Partially Completed:** 1 (1%) - US-031 (Backend ready, UI display missing)
+- **Completed:** 41 (61%)
+- **Partially Completed:** 0
 - **Backend Only (No UI):** 2 (3%) - US-011, US-012 (Leave management UI missing)
 - **In Progress:** 0
 - **Planned:** 24 (36%)
@@ -41,7 +41,7 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] [**US-006**](#us-006-submit-leave-request) - Employee can submit leave requests with start date, end date, and reason for manager approval
 - [x] [**US-027**](#us-027-browser-geolocation-integration) - Employee can use browser geolocation to automatically capture current location without manual entry
 - [x] [**US-028**](#us-028-map-visualization) - Employee can view their location on an interactive map to visually confirm location data
-- [ ] [**US-031**](#us-031-employee-view-office-location) - Employee can view office location settings to see where they need to be for attendance approval (⚠️ Partially Implemented - Backend ✅, UI Display ❌)
+- [x] [**US-031**](#us-031-employee-view-office-location) - Employee can view office location settings to see where they need to be for attendance approval
 - [x] [**US-035**](#us-035-employee-view-todays-attendance-status) - Employee can view their attendance record for today to check their status
 - [x] [**US-036**](#us-036-employee-see-attendance-time-status) - Employee can see if they are on time, late, or pending approval for today's attendance
 - [x] [**US-037**](#us-037-employee-see-todays-leave-status) - Employee can see their leave status for today (approved, pending, or not on leave)
@@ -124,41 +124,32 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] Backend endpoint returns office name, coordinates, allowed radius, and clock-in time
 - [x] Authentication required for this endpoint (uses employee token)
 - [x] Data is loaded in clock-in component for distance calculation
-- [ ] **INCOMPLETE:** Display office location information visibly in employee UI
-- [ ] **INCOMPLETE:** Show office name, coordinates, and allowed radius to employee
-- [ ] **INCOMPLETE:** Help employee understand proximity requirements before clock-in
+- [x] Display office location information visibly in employee UI
+- [x] Show office name, coordinates, and allowed radius to employee
+- [x] Help employee understand proximity requirements before clock-in
 
-**Status:** ⚠️ Partially Implemented (Backend ✅, Frontend UI Display ❌)  
+**Status:** ✅ Completed  
 **Routes:** `GET /api/office-location`  
 **Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)  
 **Implementation Details:**
 - ✅ Backend: `GetOfficeLocation()` handler in [office.go](backend/handlers/office.go) returns office data
 - ✅ Frontend Service: `getOfficeLocation()` method in [api.service.ts](frontend/src/app/services/api.service.ts)
 - ✅ Data Loading: Clock-in component loads office location via `loadOfficeLocation()`
-- ✅ Internal Use: Data used for distance calculation and validation
-- ❌ **Missing UI Display:** Office location information not shown to employees in the UI
-- ❌ Employees cannot see office name, coordinates, radius, or clock-in time
+- ✅ Distance Calculation: Automatic distance calculation when both location and office location are available
+- ✅ UI Display: Office location information card shows all relevant details to employees
+- ✅ Real-time Distance: Employee sees their current distance from office with status indicator
 
-**What Works:**
-- Employee API call successfully retrieves office location data
-- Distance from office is calculated and shown in confirmation dialog when outside radius
-- Office location data is used internally for proximity validation
+**Features:**
+- Employee can view office name, exact coordinates, allowed radius, and official clock-in time
+- Real-time distance calculation from employee's current location to office
+- Visual indicator showing whether employee is within allowed radius (green checkmark) or outside (orange warning)
+- Information displayed in teal-colored card positioned before the clock-in form
+- Distance updates automatically when location or office settings change
 
-**What's Missing:**
-- No visible information card showing office location details to employees
-- Employees cannot proactively see where they need to be before attempting clock-in
-- No display of office name, exact coordinates, allowed radius, or official clock-in time
-
-**To Complete:**
-Add an information card in the clock-in page template that displays:
-```
-📍 Office Location Information
-- Office Name: [name]
-- Coordinates: [latitude], [longitude]
-- Allowed Radius: [radius] meters
-- Official Clock-In Time: [clock_in_time]
-- Your Distance: [calculated on location capture]
-```
+**UI Components:**
+- Office information card with 4 fields: Office Name, Coordinates, Allowed Radius, Clock-In Time
+- Dynamic distance display showing current distance in meters
+- Status indicators: "✓ Dalam radius" (within radius) or "⚠ Di luar radius (perlu persetujuan)" (outside, needs approval)
 
 **Note:** Available to all authenticated users, not just managers
 

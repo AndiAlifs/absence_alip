@@ -39,6 +39,43 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           <p class="text-sm text-orange-800 font-medium">Anda belum melakukan clock-in hari ini</p>
         </div>
 
+        <!-- Office Location Information Card -->
+        <div *ngIf="officeLocation" class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-teal-500">
+          <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            📍 Informasi Lokasi Kantor
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Nama Kantor</p>
+              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.office_name || 'Kantor Pusat' }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Koordinat</p>
+              <p class="text-xs font-semibold text-gray-900">{{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Radius Diizinkan</p>
+              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.allowed_radius_meters }} meter</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+              <p class="text-xs text-gray-600 mb-1">Waktu Clock-In</p>
+              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.clock_in_time }}</p>
+            </div>
+          </div>
+          <div *ngIf="location && distanceFromOffice !== null" class="mt-4 bg-white p-4 rounded-lg shadow">
+            <p class="text-xs text-gray-600 mb-1">Jarak Anda dari Kantor</p>
+            <p class="text-lg font-semibold" [class.text-green-700]="distanceFromOffice <= officeLocation.allowed_radius_meters" [class.text-orange-700]="distanceFromOffice > officeLocation.allowed_radius_meters">
+              {{ distanceFromOffice.toFixed(2) }} meter
+              <span *ngIf="distanceFromOffice <= officeLocation.allowed_radius_meters" class="text-sm text-green-600 ml-2">✓ Dalam radius</span>
+              <span *ngIf="distanceFromOffice > officeLocation.allowed_radius_meters" class="text-sm text-orange-600 ml-2">⚠ Di luar radius (perlu persetujuan)</span>
+            </p>
+          </div>
+        </div>
+
         <!-- Today's Leave Status Card -->
         <div *ngIf="todayLeave" class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-purple-500">
           <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
@@ -206,6 +243,8 @@ export class ClockInComponent implements OnInit {
     this.apiService.getOfficeLocation().subscribe({
       next: (response) => {
         this.officeLocation = response.data;
+        // Calculate distance if location is already loaded
+        this.calculateDistanceFromOffice();
       },
       error: (error) => {
         console.error('Failed to load office location:', error);
@@ -245,6 +284,8 @@ export class ClockInComponent implements OnInit {
             longitude: position.coords.longitude
           };
           this.loading = false;
+          // Calculate distance from office if office location is loaded
+          this.calculateDistanceFromOffice();
         },
         (err) => {
           this.error = 'Gagal mendapatkan lokasi. Silakan aktifkan izin lokasi.';
@@ -272,22 +313,28 @@ export class ClockInComponent implements OnInit {
     return earthRadiusMeters * c;
   }
 
+  calculateDistanceFromOffice() {
+    if (this.location && this.officeLocation) {
+      this.distanceFromOffice = this.calculateDistance(
+        this.location.latitude,
+        this.location.longitude,
+        this.officeLocation.latitude,
+        this.officeLocation.longitude
+      );
+    }
+  }
+
   checkAndSubmitClockIn() {
     if (!this.location || !this.officeLocation) {
       this.submitClockIn();
       return;
     }
 
-    // Calculate distance from office
-    this.distanceFromOffice = this.calculateDistance(
-      this.location.latitude,
-      this.location.longitude,
-      this.officeLocation.latitude,
-      this.officeLocation.longitude
-    );
+    // Recalculate distance to ensure it's up to date
+    this.calculateDistanceFromOffice();
 
     // Check if outside office radius
-    if (this.distanceFromOffice > this.officeLocation.allowed_radius_meters) {
+    if (this.distanceFromOffice && this.distanceFromOffice > this.officeLocation.allowed_radius_meters) {
       this.showConfirmation = true;
     } else {
       this.submitClockIn();
