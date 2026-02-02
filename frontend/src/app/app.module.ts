@@ -9,6 +9,7 @@ import { LoginComponent } from './components/login/login.component';
 import { ClockInComponent } from './components/clock-in/clock-in.component';
 import { LeaveRequestComponent } from './components/leave-request/leave-request.component';
 import { ManagerDashboardComponent } from './components/manager-dashboard/manager-dashboard.component';
+import { OfficeManagementComponent } from './components/office-management/office-management.component';
 import { AuthGuard } from './auth.guard';
 
 const routes: Routes = [
@@ -17,6 +18,7 @@ const routes: Routes = [
   { path: 'clock-in', component: ClockInComponent, canActivate: [AuthGuard] },
   { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard] },
   { path: 'admin', component: ManagerDashboardComponent, canActivate: [AuthGuard] },
+  { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];
 
@@ -33,7 +35,8 @@ const routes: Routes = [
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    RouterModule.forRoot(routes)
+    RouterModule.forRoot(routes),
+    OfficeManagementComponent
   ],
   providers: [AuthGuard],
   bootstrap: [AppComponent]

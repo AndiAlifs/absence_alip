@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"field-attendance-system/database"
@@ -27,38 +28,74 @@ func ClockIn(c *gin.Context) {
 
 	// Verify user exists
 	var user models.User
-	if result := database.DB.First(&user, userID); result.Error != nil {
+	if result := database.DB.Preload("Office").First(&user, userID); result.Error != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User tidak ditemukan. Silakan login ulang."})
 		return
 	}
 
-	// Get office location settings
-	var officeLocation models.OfficeLocation
-	if result := database.DB.First(&officeLocation); result.Error != nil {
+	// Get employee's manager
+	var manager models.User
+	if err := database.DB.Where("role = ?", "manager").First(&manager).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Manager tidak ditemukan"})
+		return
+	}
+
+	// **CRITICAL: Get ALL offices managed by the manager (up to 4)**
+	var managerOffices []models.OfficeLocation
+	database.DB.
+		Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
+		Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", manager.ID, true).
+		Find(&managerOffices)
+
+	if len(managerOffices) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Lokasi kantor belum diatur. Silakan hubungi manajer Anda."})
 		return
 	}
 
-	// Calculate distance between employee and office
-	distance := utils.CalculateDistance(
-		input.Latitude,
-		input.Longitude,
-		officeLocation.Latitude,
-		officeLocation.Longitude,
-	)
+	// Check distance against ALL manager's offices
+	var closestOffice *models.OfficeLocation
+	var minDistance float64 = -1
+	var isWithinRadius bool = false
 
-	// Determine status based on distance
-	status := "approved"
-	if distance > officeLocation.AllowedRadiusMeters {
-		status = "pending"
+	for i := range managerOffices {
+		office := &managerOffices[i]
+		distance := utils.CalculateDistance(
+			input.Latitude,
+			input.Longitude,
+			office.Latitude,
+			office.Longitude,
+		)
+
+		if minDistance == -1 || distance < minDistance {
+			minDistance = distance
+			closestOffice = office
+		}
+
+		if distance <= office.AllowedRadiusMeters {
+			isWithinRadius = true
+			closestOffice = office
+			minDistance = distance
+			break // Found a valid office, no need to check others
+		}
+	}
+
+	// Determine status
+	status := "pending"
+	var approvedOfficeID *uint
+
+	if isWithinRadius {
+		status = "approved"
+		approvedOfficeID = &closestOffice.ID
 	}
 
 	// Calculate if employee is late
 	isLate := false
 	minutesLate := 0
-	if officeLocation.ClockInTime != "" {
+	clockInTime := time.Now()
+
+	if closestOffice != nil && closestOffice.ClockInTime != "" {
 		// Parse office clock-in time (format: "HH:MM")
-		officialTime, err := time.Parse("15:04", officeLocation.ClockInTime)
+		officialTime, err := time.Parse("15:04", closestOffice.ClockInTime)
 		if err == nil {
 			// Get current time's hour and minute
 			now := time.Now()
@@ -74,14 +111,15 @@ func ClockIn(c *gin.Context) {
 	}
 
 	attendance := models.Attendance{
-		UserID:      userID,
-		ClockInTime: time.Now(),
-		Latitude:    input.Latitude,
-		Longitude:   input.Longitude,
-		Status:      status,
-		Distance:    distance,
-		IsLate:      isLate,
-		MinutesLate: minutesLate,
+		UserID:           userID,
+		ClockInTime:      clockInTime,
+		Latitude:         input.Latitude,
+		Longitude:        input.Longitude,
+		Status:           status,
+		Distance:         minDistance,
+		IsLate:           isLate,
+		MinutesLate:      minutesLate,
+		ApprovedOfficeID: approvedOfficeID,
 	}
 
 	if result := database.DB.Create(&attendance); result.Error != nil {
@@ -93,15 +131,19 @@ func ClockIn(c *gin.Context) {
 	if status == "pending" {
 		message = "Clock-in dicatat. Menunggu persetujuan manajer karena lokasi terlalu jauh dari kantor."
 	}
+	if isLate {
+		message += " - Terlambat " + strconv.Itoa(minutesLate) + " menit"
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":         message,
 		"data":            attendance,
-		"distance_meters": distance,
+		"distance_meters": minDistance,
 		"status":          status,
 		"needs_approval":  status == "pending",
 		"is_late":         isLate,
 		"minutes_late":    minutesLate,
+		"office_used":     closestOffice.Name,
 	})
 }
 

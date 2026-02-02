@@ -108,4 +108,40 @@ export class ApiService {
   getDailyAttendance(): Observable<any> {
     return this.http.get(`${this.apiUrl}/admin/daily-attendance`, this.getHeaders());
   }
+
+  // Office Management
+  getOffices(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/offices`, this.getHeaders());
+  }
+
+  getMyOffices(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/my-offices`, this.getHeaders());
+  }
+
+  createOffice(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/offices`, data, this.getHeaders());
+  }
+
+  updateOffice(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/offices/${id}`, data, this.getHeaders());
+  }
+
+  assignOfficeToManager(managerId: number, officeId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/offices/assign`, 
+      { manager_id: managerId, office_id: officeId }, 
+      this.getHeaders()
+    );
+  }
+
+  unassignOfficeFromManager(managerId: number, officeId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/offices/unassign`, 
+      { manager_id: managerId, office_id: officeId }, 
+      this.getHeaders()
+    );
+  }
+
+  // For employees to see valid offices
+  getEmployeeOffices(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/my-offices`, this.getHeaders());
+  }
 }

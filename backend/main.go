@@ -24,10 +24,17 @@ func main() {
 	database.Connect()
 
 	// Auto-migrate models
-	database.DB.AutoMigrate(&models.OfficeLocation{})
+	database.DB.AutoMigrate(
+		&models.User{},
+		&models.Attendance{},
+		&models.LeaveRequest{},
+		&models.OfficeLocation{},
+		&models.ManagerOffice{},
+	)
 
-	// Seed admin user
+	// Seed admin user and default office assignment
 	seedAdminUser()
+	seedDefaultOfficeAssignment()
 
 	r := gin.Default()
 
@@ -53,6 +60,7 @@ func main() {
 		protected.GET("/office-location", handlers.GetOfficeLocation)
 		protected.GET("/my-attendance/today", handlers.GetTodayAttendance)
 		protected.GET("/my-leave/today", handlers.GetTodayLeave)
+		protected.GET("/my-offices", handlers.GetEmployeeOffices)
 
 		// Manager routes
 		admin := protected.Group("/admin")
@@ -70,6 +78,14 @@ func main() {
 			admin.GET("/pending-clockins", handlers.GetPendingClockIns)
 			admin.PATCH("/clockin/:id", handlers.UpdateClockInStatus)
 			admin.GET("/daily-attendance", handlers.GetDailyAttendanceDashboard)
+
+			// Office Management Routes
+			admin.GET("/offices", handlers.GetAllOffices)
+			admin.POST("/offices", handlers.CreateOffice)
+			admin.PUT("/offices/:id", handlers.UpdateOffice)
+			admin.GET("/my-offices", handlers.GetManagerOffices)
+			admin.POST("/offices/assign", handlers.AssignOfficeToManager)
+			admin.POST("/offices/unassign", handlers.UnassignOfficeFromManager)
 		}
 	}
 
@@ -99,6 +115,7 @@ func seedAdminUser() {
 		FullName:     "Administrator",
 		PasswordHash: string(hashedPassword),
 		Role:         "manager",
+		IsSuperAdmin: true,
 	}
 
 	if err := database.DB.Create(&adminUser).Error; err != nil {
@@ -109,5 +126,28 @@ func seedAdminUser() {
 	log.Println("✓ Admin user created successfully")
 	log.Println("  Username: admin")
 	log.Println("  Password: admin123")
-	log.Println("  Role: manager")
+	log.Println("  Role: manager (Super Admin)")
+}
+
+func seedDefaultOfficeAssignment() {
+	// Assign first office to super admin manager
+	var office models.OfficeLocation
+	if err := database.DB.First(&office).Error; err == nil {
+		var admin models.User
+		if err := database.DB.Where("role = ? AND is_super_admin = ?", "manager", true).First(&admin).Error; err == nil {
+			// Check if assignment already exists
+			var existingAssignment models.ManagerOffice
+			if err := database.DB.Where("manager_id = ? AND office_id = ?", admin.ID, office.ID).
+				First(&existingAssignment).Error; err != nil {
+				// Create assignment
+				assignment := models.ManagerOffice{
+					ManagerID: admin.ID,
+					OfficeID:  office.ID,
+				}
+				if err := database.DB.Create(&assignment).Error; err == nil {
+					log.Println("✓ Default office assigned to admin")
+				}
+			}
+		}
+	}
 }
