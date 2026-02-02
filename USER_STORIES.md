@@ -1,17 +1,19 @@
 # Field Attendance System - User Stories
 
-**Version:** 2.1  
-**Last Updated:** January 31, 2026  
+**Version:** 3.1  
+**Last Updated:** February 2, 2026  
 **Project:** Field Attendance System  
 **Status:** In Development
 
 ## Overview
-This document lists all implemented features of the Field Attendance System organized as user stories. The system provides geolocation-based attendance tracking with automatic proximity validation and manager approval workflows.
+This document lists all implemented and planned features of the Field Attendance System organized as user stories. The system provides geolocation-based attendance tracking with automatic proximity validation and manager approval workflows.
 
 ## Document Change Log
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 3.1 | Feb 2, 2026 | Added US-067 (dedicated office management page), updated multi-office to 1-4 offices | Product Team |
+| 3.0 | Feb 1, 2026 | Added 23 new planned stories (US-044 to US-066) for Reporting, Multi-Office, and Leave Management | Product Team |
 | 2.1 | Jan 31, 2026 | Added US-043 (expandable/collapsible dashboard cards) | Product Team |
 | 2.0 | Jan 31, 2026 | Added 9 new stories (US-033 to US-041) for clock-in time, employee status, and daily dashboard | Product Team |
 | 1.2 | Jan 31, 2026 | Added US-032 (full name field support) | Product Team |
@@ -20,17 +22,17 @@ This document lists all implemented features of the Field Attendance System orga
 
 ## Progress Summary
 
-- **Total User Stories:** 42
-- **Completed:** 42 (100%)
+- **Total User Stories:** 67
+- **Completed:** 43 (64%)
 - **In Progress:** 0
-- **Planned:** 0 (0%)
+- **Planned:** 24 (36%)
 - **Blocked:** 0
 
 ---
 
 ## Quick Reference - User Stories by Role
 
-### 👤 Employee Features (11 stories)
+### 👤 Employee Features (19 stories)
 - [x] [**US-001**](#us-001-user-login) - User can log in to the system with username and password to access role-specific features
 - [x] [**US-004**](#us-004-clock-in-with-geolocation) - Employee can clock in using GPS location to automatically record attendance with location verification
 - [x] [**US-005**](#us-005-automatic-proximity-validation) - System automatically validates employee location and approves/pends attendance based on proximity to office
@@ -42,8 +44,16 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] [**US-036**](#us-036-employee-see-attendance-time-status) - Employee can see if they are on time, late, or pending approval for today's attendance
 - [x] [**US-037**](#us-037-employee-see-todays-leave-status) - Employee can see their leave status for today (approved, pending, or not on leave)
 - [x] [**US-038**](#us-038-employee-see-absence-pending-status) - Employee can see if they are marked absent pending approval
+- [ ] [**US-044**](#us-044-employee-view-personal-attendance-history) - Employee can view attendance history for past periods to track performance
+- [ ] [**US-045**](#us-045-employee-optional-clock-out) - Employee can optionally clock out at end of day to track work hours
+- [ ] [**US-046**](#us-046-employee-view-leave-balance) - Employee can view remaining leave balance by type to plan time off
+- [ ] [**US-047**](#us-047-employee-submit-leave-with-type) - Employee can submit leave requests with specific leave type (annual, sick, etc.)
+- [ ] [**US-048**](#us-048-employee-view-work-hours-summary) - Employee can view total work hours for current month
+- [ ] [**US-049**](#us-049-employee-view-location-history) - Employee can view their clock-in locations on map for past records
+- [ ] [**US-050**](#us-050-employee-see-assigned-office) - Employee can see which office locations they can clock in from
+- [ ] [**US-051**](#us-051-employee-browser-notification-reminder) - Employee receives browser notification if not clocked in by official time
 
-### 👨‍💼 Manager Features (18 stories)
+### 👨‍💼 Manager Features (32 stories)
 - [x] [**US-001**](#us-001-user-login) - Manager can log in to the system with username and password to access administrative features
 - [x] [**US-007**](#us-007-configure-office-location) - Manager can configure office location coordinates and allowed radius for attendance validation
 - [x] [**US-008**](#us-008-view-all-attendance-records) - Manager can view all employee attendance records to monitor attendance patterns and history
@@ -62,8 +72,21 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] [**US-041**](#us-041-manager-see-employees-on-leave) - Manager can see which employees are on approved leave for today
 - [x] [**US-042**](#us-042-manager-see-absent-employees) - Manager can see which employees are absent (haven't clocked in and not on leave)
 - [x] [**US-043**](#us-043-expandablecollapsible-dashboard-cards) - Manager can expand/collapse dashboard cards to manage screen space efficiently
+- [ ] [**US-052**](#us-052-manager-generate-monthly-attendance-report) - Manager can generate comprehensive monthly attendance reports
+- [ ] [**US-053**](#us-053-manager-export-attendance-data) - Manager can export attendance data to Excel/CSV format
+- [ ] [**US-054**](#us-054-manager-view-employee-performance-metrics) - Manager can view individual employee attendance performance metrics
+- [ ] [**US-055**](#us-055-manager-view-location-tracking-report) - Manager can view employee location tracking and patterns report
+- [ ] [**US-056**](#us-056-manager-configure-leave-types) - Manager can configure different leave types and annual quotas
+- [ ] [**US-057**](#us-057-manager-view-leave-balance-report) - Manager can view all employees' leave balances by type
+- [ ] [**US-058**](#us-058-manager-manage-multiple-offices) - Manager can create and manage 1-4 office locations
+- [ ] [**US-059**](#us-059-manager-assign-employees-to-office) - Manager can assign employees to specific office locations
+- [ ] [**US-060**](#us-060-manager-view-office-specific-reports) - Manager can filter reports by office location
+- [ ] [**US-061**](#us-061-manager-view-pending-approvals-notification) - Manager sees browser notification for pending approvals
+- [ ] [**US-062**](#us-062-manager-view-work-hours-report) - Manager can view total work hours report for all employees
+- [ ] [**US-063**](#us-063-manager-set-leave-balance-per-employee) - Manager can manually adjust leave balance for specific employees
+- [ ] [**US-067**](#us-067-manager-dedicated-office-management-page) - Manager has dedicated page for comprehensive office management
 
-### ⚙️ System Features (14 stories)
+### ⚙️ System Features (16 stories)
 - [x] [**US-002**](#us-002-user-registration) - System provides API for user registration to add new employees and managers
 - [x] [**US-003**](#us-003-default-admin-user) - System automatically creates default admin account on first startup for initial setup
 - [x] [**US-017**](#us-017-jwt-based-authentication) - System uses JWT tokens for authentication to secure API endpoints with stateless sessions
@@ -78,6 +101,11 @@ This document lists all implemented features of the Field Attendance System orga
 - [x] [**US-026**](#us-026-haversine-distance-calculation) - System calculates accurate distance between GPS coordinates using Haversine formula
 - [x] [**US-029**](#us-029-environment-based-configuration) - System loads configuration from environment variables for different deployment environments
 - [x] [**US-030**](#us-030-cors-configuration) - System allows cross-origin requests from frontend for proper communication
+- [x] [**US-032**](#us-032-employee-full-name-support) - System stores employee full names in addition to usernames for better identification
+- [x] [**US-034**](#us-034-system-calculate-late-arrival) - System calculates if employee is late based on configured clock-in time
+- [ ] [**US-064**](#us-064-system-calculate-work-hours) - System calculates work hours between clock-in and clock-out times
+- [ ] [**US-065**](#us-065-system-multi-manager-access-control) - System allows managers to handle 1-4 offices with proper access control
+- [ ] [**US-066**](#us-066-system-browser-notification-api) - System uses browser Notification API for employee reminders
 - [x] [**US-032**](#us-032-employee-full-name-support) - System stores employee full names in addition to usernames for better identification
 - [x] [**US-034**](#us-034-system-calculate-late-arrival) - System calculates if employee is late based on configured clock-in time
 
@@ -1300,3 +1328,71 @@ Response:
   "message": "Employee deleted successfully"
 }
 ```
+---
+
+## 🏢 Epic 10: Office Management UI/UX (New - Planned)
+
+### US-067: Manager Dedicated Office Management Page
+**As a** manager  
+**I want to** access a dedicated office management page separate from the dashboard  
+**So that** I can comprehensively manage 1-4 office locations without cluttering the dashboard
+
+**Acceptance Criteria:**
+- **Separate page/route:** `/admin/offices` (not embedded in dashboard)
+- Navigation link from manager dashboard to Office Management
+- Office Management page includes:
+  - **Office List View:** Table/cards showing all manager's assigned offices (1-4)
+  - **Add New Office:** Button to create office (super admin only)
+  - **Edit Office:** Form to update office details (name, coordinates, radius, clock-in time)
+  - **Assign to Manager:** Assign/unassign offices to managers (1-4 limit enforced)
+  - **View on Map:** Interactive map showing all offices with markers
+  - **Office Statistics:** Employees assigned, attendance records, pending approvals per office
+- Dashboard only shows office selector dropdown (no detailed configuration)
+- Uses interactive map for selecting coordinates (Leaflet)
+- Form validation:
+  - Prevents removing manager's last office
+  - Prevents assigning more than 4 offices to a manager
+  - Validates required fields (name, coordinates, radius)
+- Breadcrumb navigation: Dashboard > Office Management
+- Responsive design for mobile devices
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 5-6 days  
+**Dependencies:** US-058 (Multi-Office Database)  
+**Routes (Frontend):** `/admin/offices`  
+**Routes (Backend):** Same as US-058 APIs  
+**Components (Proposed):**
+- `office-management.component.ts` - Main office management page
+- `office-form.component.ts` - Add/edit office form
+- `office-list.component.ts` - List of offices
+- `office-map.component.ts` - Map view of all offices  
+**Technical Notes:**
+- Remove office configuration section from `manager-dashboard.component.ts`
+- Keep only office selector dropdown in dashboard for filtering
+- Lazy load office management module for better performance
+- Use Angular reactive forms for validation
+- Integrate Leaflet map with click-to-select coordinates
+
+**UI Layout Suggestion:**
+```
+┌─────────────────────────────────────────────────────────┐
+│  Office Management                    [+ Add New Office] │
+├─────────────────────────────────────────────────────────┤
+│  My Assigned Offices: 2 of 4                            │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────┐  ┌─────────────┐                       │
+│ │ Office A    │  │ Office B    │                       │
+│ │ 123 Main St │  │ 456 Park Av │                       │
+│ │ 50m radius  │  │ 100m radius │                       │
+│ │ 25 employees│  │ 18 employees│                       │
+│ │ [Edit] [Map]│  │ [Edit] [Map]│                       │
+│ └─────────────┘  └─────────────┘                       │
+├─────────────────────────────────────────────────────────┤
+│  Map View (All Offices)                                 │
+│  [Interactive Leaflet Map with office markers]          │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
