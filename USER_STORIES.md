@@ -707,7 +707,720 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 6: Security & Access Control
+## Epic 6: Reporting & Analytics (New - Planned)
+
+### US-044: Employee View Personal Attendance History
+**As an** employee  
+**I want to** view my attendance history for the past 30, 60, or 90 days  
+**So that** I can track my attendance record and identify patterns
+
+**Acceptance Criteria:**
+- Employee can select time period (30/60/90 days or custom date range)
+- Display list of all attendance records with date, clock-in time, status
+- Show late arrivals with minutes late
+- Display location distance from office
+- Include summary metrics: total days, on-time %, late %
+- Optional: Chart/graph visualization of attendance patterns
+- Can filter by status (approved, pending, rejected)
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 3-5 days  
+**Routes (Proposed):** `GET /api/my-attendance/history?period=30|60|90&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+
+---
+
+### US-045: Employee Optional Clock-Out
+**As an** employee  
+**I want to** optionally clock out at the end of my work day with geolocation  
+**So that** my total work hours can be tracked accurately
+
+**Acceptance Criteria:**
+- Clock-out button available after employee has clocked in
+- Captures clock-out time and location (lat/long)
+- Validates location against office radius (optional - can clock out from anywhere)
+- Cannot clock out without first clocking in
+- Can only clock out once per day
+- Displays confirmation message after successful clock-out
+- Shows calculated work hours after clock-out
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Work Hours Tracking  
+**Estimated Effort:** 2-3 days  
+**Routes (Proposed):** `POST /api/clock-out`  
+**Technical Notes:**
+- Add to Attendance model: `clock_out_time`, `clock_out_latitude`, `clock_out_longitude`, `work_hours_decimal`
+- Calculate work hours as difference between clock-in and clock-out
+- Optional: Support half-day if clock-out before certain time
+
+---
+
+### US-046: Employee View Leave Balance
+**As an** employee  
+**I want to** view my remaining leave balance by leave type  
+**So that** I can plan my time off effectively
+
+**Acceptance Criteria:**
+- Display leave balance for each leave type (annual, sick, emergency, etc.)
+- Show total allocated days and remaining days
+- Display used days for current year
+- Show pending leave requests that would affect balance
+- Update in real-time when leave is approved
+- Clear visual representation (progress bars or charts)
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Leave Management  
+**Estimated Effort:** 3-4 days  
+**Dependencies:** US-056 (Leave Types Configuration)  
+**Routes (Proposed):** `GET /api/my-leave/balance`  
+**Technical Notes:**
+- Requires new `leave_balances` table with user_id, leave_type_id, allocated, used, remaining
+- Auto-calculate remaining = allocated - used
+- Reset annually based on company policy
+
+---
+
+### US-047: Employee Submit Leave with Type
+**As an** employee  
+**I want to** submit leave requests with specific leave type (annual, sick, emergency, etc.)  
+**So that** my leave is categorized correctly and deducted from appropriate balance
+
+**Acceptance Criteria:**
+- Leave request form includes leave type dropdown
+- System validates sufficient leave balance before submission
+- Prevents submission if balance insufficient (with clear error message)
+- Shows projected balance after leave request
+- Leave types populated from manager configuration
+- Includes start date, end date, leave type, and reason
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Leave Management  
+**Estimated Effort:** 2-3 days  
+**Dependencies:** US-056 (Leave Types), US-046 (Leave Balance)  
+**Routes (Proposed):** Modify `POST /api/leave` to include `leave_type_id`
+
+---
+
+### US-048: Employee View Work Hours Summary
+**As an** employee  
+**I want to** view my total work hours for the current month  
+**So that** I can track my working time and verify payroll
+
+**Acceptance Criteria:**
+- Display total work hours for current month
+- Show breakdown by week
+- List individual daily work hours
+- Show days where clock-out was missing (incomplete records)
+- Include average daily work hours
+- Option to view previous months
+- Export summary as PDF or Excel
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 3-4 days  
+**Dependencies:** US-045 (Clock-Out)  
+**Routes (Proposed):** `GET /api/my-work-hours?month=YYYY-MM`
+
+---
+
+### US-049: Employee View Location History
+**As an** employee  
+**I want to** view my clock-in locations on a map for past attendance records  
+**So that** I can verify my location data
+
+**Acceptance Criteria:**
+- Display interactive map with markers for each clock-in location
+- Each marker shows date, time, and distance from office
+- Can filter by date range
+- Color-coded markers based on approval status (green=approved, yellow=pending, red=rejected)
+- Shows office location for reference
+- Can click marker to see detailed information
+- Option to view as list or map
+
+**Status:** 📋 Planned  
+**Priority:** Low  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 4-5 days  
+**Dependencies:** US-044 (Attendance History)  
+**Technical Notes:**
+- Reuse existing Leaflet map integration
+- Add clustering for multiple markers
+
+---
+
+### US-050: Employee See Assigned Office
+**As an** employee  
+**I want to** see which office locations I can clock in from  
+**So that** I know where to clock in for automatic approval
+
+**Acceptance Criteria:**
+- Display primary assigned office name, address, and coordinates
+- **Show ALL office locations managed by employee's manager (1-4 offices)**
+- Show all valid office locations on map with markers
+- Display allowed radius for auto-approval for each office
+- Show official clock-in time for each office
+- Label primary office vs other valid offices
+- Message: "You can clock in from any of these locations for auto-approval"
+- If unassigned, show message to contact manager
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 3 days  
+**Dependencies:** US-058 (Multi-Office), US-059 (Employee Assignment)  
+**Routes (Proposed):** `GET /api/my-offices` (plural - returns all valid offices for employee, max 4)
+
+---
+
+### US-051: Employee Browser Notification Reminder
+**As an** employee  
+**I want to** receive a browser notification if I haven't clocked in by official time  
+**So that** I don't forget to record my attendance
+
+**Acceptance Criteria:**
+- Request notification permission on first login
+- Send browser notification at official clock-in time if not clocked in
+- Notification includes message: "Reminder: Please clock in for attendance"
+- Click notification to navigate to clock-in page
+- Option to enable/disable notifications in user settings
+- Respects browser notification settings
+- Only sends if browser tab is open or service worker active
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** User Experience Enhancement  
+**Estimated Effort:** 2-3 days  
+**Technical Notes:**
+- Use browser Notification API (no third-party service)
+- Implement service worker for background notifications
+- Check current time vs office clock-in time
+- Query if user has attendance record for today
+
+---
+
+## Epic 7: Manager Reporting & Analytics (New - Planned)
+
+### US-052: Manager Generate Monthly Attendance Report
+**As a** manager  
+**I want to** generate comprehensive monthly attendance reports for all employees  
+**So that** I can analyze attendance patterns and make data-driven decisions
+
+**Acceptance Criteria:**
+- Select month and year for report generation
+- Report includes for each employee:
+  - Total working days
+  - Days present (on-time and late)
+  - Days late with average lateness
+  - Days absent
+  - Days on leave
+  - Attendance rate percentage
+- Summary statistics for entire team
+- Visual charts: attendance trends, late arrival patterns
+- Export to PDF or Excel format
+- Can filter by office location (if multi-office)
+- Can filter by specific employees or departments
+
+**Status:** 📋 Planned  
+**Priority:** Critical  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 5-7 days  
+**Routes (Proposed):** `GET /api/admin/reports/monthly-attendance?month=YYYY-MM&office_id=X`  
+**Technical Notes:**
+- Generate report server-side for better performance
+- Use library like `excelize` (Go) for Excel export
+- Cache report results for common queries
+
+---
+
+### US-053: Manager Export Attendance Data
+**As a** manager  
+**I want to** export attendance data to Excel/CSV format  
+**So that** I can perform custom analysis or integrate with payroll systems
+
+**Acceptance Criteria:**
+- Export all attendance records or filtered subset
+- Include all fields: employee name, date, clock-in time, clock-out time, work hours, status, distance, location
+- Support Excel (.xlsx) and CSV formats
+- Include leave requests in separate sheet/file
+- Can select date range for export
+- Can filter by employee, office, or status
+- Downloaded file named with timestamp: "Attendance_Export_YYYY-MM-DD.xlsx"
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 3-4 days  
+**Routes (Proposed):** `GET /api/admin/export/attendance?format=xlsx|csv&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+
+---
+
+### US-054: Manager View Employee Performance Metrics
+**As a** manager  
+**I want to** view individual employee attendance performance metrics  
+**So that** I can identify top performers and address attendance issues
+
+**Acceptance Criteria:**
+- Select employee to view detailed performance
+- Display metrics:
+  - Attendance rate (% of working days)
+  - On-time rate (% of clock-ins before official time)
+  - Average lateness (in minutes)
+  - Total late days this month/year
+  - Leave usage (days used vs allocated)
+  - Pending approvals
+  - Location compliance (% within office radius)
+- Historical trend charts (last 3-6 months)
+- Comparison with team average
+- Highlight improvements or declines
+- Option to export employee-specific report
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 4-5 days  
+**Routes (Proposed):** `GET /api/admin/employee/:id/performance?period=30|60|90`
+
+---
+
+### US-055: Manager View Location Tracking Report
+**As a** manager  
+**I want to** view employee location tracking patterns and statistics  
+**So that** I can monitor field work and ensure location accuracy
+
+**Acceptance Criteria:**
+- View all employee clock-in locations on interactive map
+- Filter by date range, employee, or office
+- Color-coded markers by approval status
+- Show statistics:
+  - Average distance from office
+  - % within radius vs outside radius
+  - Most common clock-in locations
+  - Unusual location patterns (outliers)
+- Heatmap view showing clock-in density
+- Export location data with coordinates
+- Privacy note displayed (location tracking purpose)
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 5-6 days  
+**Routes (Proposed):** `GET /api/admin/reports/location-tracking?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`  
+**Technical Notes:**
+- Use Leaflet heatmap plugin
+- Implement clustering for performance with many markers
+
+---
+
+### US-056: Manager Configure Leave Types
+**As a** manager  
+**I want to** configure different leave types (annual, sick, emergency, unpaid) with annual quotas  
+**So that** leave can be categorized and tracked separately
+
+**Acceptance Criteria:**
+- Create new leave types with name, description, color code
+- Set annual quota (default days allocated per employee per year)
+- Mark if leave type requires manager approval or auto-approved
+- Set if leave type is paid or unpaid
+- Mark if leave type requires documentation/proof
+- Enable/disable leave types
+- Cannot delete leave type if it has been used in leave requests
+- System comes with default leave types:
+  - Annual Leave (12 days)
+  - Sick Leave (12 days)
+  - Emergency Leave (3 days)
+  - Unpaid Leave (unlimited)
+
+**Status:** 📋 Planned  
+**Priority:** Critical  
+**Epic:** Leave Management  
+**Estimated Effort:** 3-4 days  
+**Routes (Proposed):** 
+- `GET /api/admin/leave-types`
+- `POST /api/admin/leave-types`
+- `PUT /api/admin/leave-types/:id`
+- `DELETE /api/admin/leave-types/:id`  
+**Technical Notes:**
+- Add `leave_types` table: id, name, description, annual_quota, requires_approval, is_paid, color, is_active
+- Update LeaveRequest model to include `leave_type_id`
+
+---
+
+### US-057: Manager View Leave Balance Report
+**As a** manager  
+**I want to** view all employees' leave balances by type  
+**So that** I can monitor leave usage and plan team coverage
+
+**Acceptance Criteria:**
+- Display table with all employees and their leave balances
+- Columns for each leave type showing: allocated, used, remaining
+- Sort by employee name, department, or remaining balance
+- Filter by leave type or office location
+- Highlight employees with low remaining balance (warning threshold)
+- Show pending leave requests that would affect balance
+- Export to Excel/CSV
+- Annual reset function for new year
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Leave Management  
+**Estimated Effort:** 4-5 days  
+**Dependencies:** US-056 (Leave Types)  
+**Routes (Proposed):** `GET /api/admin/reports/leave-balances`
+
+---
+
+### US-061: Manager View Pending Approvals Notification
+**As a** manager  
+**I want to** see browser notification when new pending approvals arrive  
+**So that** I can review and respond promptly
+
+**Acceptance Criteria:**
+- Browser notification when new pending clock-in created
+- Browser notification when new leave request submitted
+- Notification shows employee name and type (clock-in or leave)
+- Click notification to navigate to pending approvals section
+- Notification count badge on manager dashboard
+- Option to enable/disable notifications
+- Checks for new approvals every 5 minutes
+- Only shows if manager dashboard is open
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** User Experience Enhancement  
+**Estimated Effort:** 2-3 days  
+**Technical Notes:**
+- Use browser Notification API (no third-party service)
+- Polling or WebSocket for real-time updates
+- Store last check timestamp to detect new records
+
+---
+
+### US-062: Manager View Work Hours Report
+**As a** manager  
+**I want to** view total work hours report for all employees  
+**So that** I can monitor productivity and approve overtime
+
+**Acceptance Criteria:**
+- Select date range for report (week, month, custom)
+- Display for each employee:
+  - Total work hours
+  - Average daily work hours
+  - Days with overtime (>8 hours)
+  - Days with undertime (<8 hours)
+  - Incomplete records (missing clock-out)
+- Summary statistics for team total hours
+- Filter by office location
+- Export to Excel for payroll processing
+- Highlight employees with excessive overtime
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Reporting & Analytics  
+**Estimated Effort:** 4-5 days  
+**Dependencies:** US-045 (Clock-Out), US-064 (Work Hours Calculation)  
+**Routes (Proposed):** `GET /api/admin/reports/work-hours?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+
+---
+
+### US-063: Manager Set Leave Balance Per Employee
+**As a** manager  
+**I want to** manually adjust leave balance for specific employees  
+**So that** I can handle special cases or corrections
+
+**Acceptance Criteria:**
+- View current leave balance for employee by type
+- Add or subtract days from specific leave type
+- Provide reason for manual adjustment (audit trail)
+- Cannot set negative balance
+- Adjustment immediately reflects in employee's balance
+- Adjustment logged with manager name, date, reason
+- View adjustment history for employee
+- Common use cases: carry-forward unused leave, compensation for extra work, correction of errors
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** Leave Management  
+**Estimated Effort:** 3 days  
+**Dependencies:** US-056, US-057  
+**Routes (Proposed):** 
+- `POST /api/admin/employees/:id/leave-balance/adjust`
+- `GET /api/admin/employees/:id/leave-balance/history`  
+**Technical Notes:**
+- Add `leave_balance_adjustments` table for audit trail
+- Recalculate remaining balance after each adjustment
+
+---
+
+## Epic 8: Multi-Office Management (New - Planned)
+
+### US-058: Manager Manage Multiple Offices
+**As a** manager  
+**I want to** create and manage multiple office locations (HQ, branches, remote sites)  
+**So that** employees at different locations can clock in appropriately
+
+**Acceptance Criteria:**
+- Create multiple office locations with:
+  - Office name
+  - Address (optional)
+  - Latitude and longitude
+  - Allowed radius (meters)
+  - Official clock-in time
+  - Time zone (for multi-region support)
+- Edit existing office locations
+- Delete office (only if no employees or managers assigned)
+- Set one office as default
+- View all offices in list and on map
+- Each office has unique ID
+- **Manager can be assigned to 1-4 office locations (minimum 1, maximum 4)**
+- Manager can switch between their assigned offices in dashboard
+- Manager must have at least one office assigned
+
+**Status:** 📋 Planned  
+**Priority:** Critical  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 4-5 days  
+**Routes (Proposed):**
+- `GET /api/admin/offices` - Returns all offices (super admin) or manager's assigned offices
+- `POST /api/admin/offices` - Create office (super admin only)
+- `PUT /api/admin/offices/:id` - Update office (if manager has access)
+- `DELETE /api/admin/offices/:id` - Delete office (super admin only)
+- `GET /api/admin/my-offices` - Get current manager's assigned offices  
+**Technical Notes:**
+- Modify OfficeLocation model to remove singleton constraint
+- Add `manager_offices` junction table (manager_id, office_id) with constraints:
+  - Minimum 1 office per manager (at least one required)
+  - Maximum 4 offices per manager
+  - CHECK constraint: COUNT(office_id) BETWEEN 1 AND 4 per manager_id
+- Add office management UI to manager dashboard
+- Migration script to convert existing office location to first multi-office record
+
+---
+
+### US-059: Manager Assign Employees to Office
+**As a** manager  
+**I want to** assign employees to specific office locations  
+**So that** their attendance is validated against the correct office coordinates
+
+**Acceptance Criteria:**
+- Assign employee to primary office during creation or editing
+- Bulk assign multiple employees to same office
+- Reassign employee from one office to another
+- View employee list grouped by office
+- Employee assigned to one primary office
+- **Employee gets auto-approved if within radius of ANY office their manager manages**
+- Unassigned employees use default office or cannot clock in
+- Assignment change takes effect immediately
+- Show office assignment in employee details
+- Manager can only assign employees to offices they manage
+
+**Status:** 📋 Planned  
+**Priority:** Critical  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 3-4 days  
+**Dependencies:** US-058 (Multi-Office)  
+**Routes (Proposed):**
+- Modify `POST /api/admin/employees` and `PUT /api/admin/employees/:id` to include `office_id`
+- `PATCH /api/admin/employees/bulk-assign` for bulk assignment  
+**Technical Notes:**
+- Add `office_id` foreign key to User model (employee's primary office)
+- **CRITICAL: Update attendance ClockIn logic to check employee location against ALL offices their manager has access to**
+- Auto-approve if within radius of any manager's office (not just primary office)
+- Store which office location was used for approval in attendance record
+
+---
+
+### US-060: Manager View Office-Specific Reports
+**As a** manager  
+**I want to** filter all reports and dashboards by office location  
+**So that** I can analyze performance per branch or site
+
+**Acceptance Criteria:**
+- Office filter dropdown available on all report pages
+- Daily attendance dashboard can filter by office
+- Monthly reports can be generated per office
+- Leave balance report can filter by office
+- Location tracking report defaults to office-specific view
+- "All Offices" option to view aggregated data
+- Office filter selection persists during session
+- Report titles indicate selected office
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 3-4 days  
+**Dependencies:** US-058, US-059  
+**Technical Notes:**
+- Add office_id query parameter to all report endpoints
+- Frontend: Add office selector component to manager dashboard
+- Store selected office in session storage
+
+---
+
+## Epic 9: System Enhancements (New - Planned)
+
+### US-064: System Calculate Work Hours
+**As a** system  
+**I want to** automatically calculate work hours between clock-in and clock-out times  
+**So that** work hours tracking is accurate and automated
+
+**Acceptance Criteria:**
+- Calculate work hours when employee clocks out
+- Store as decimal value (e.g., 8.5 hours)
+- Subtract break time if configured (e.g., 1 hour lunch break)
+- Handle cases where clock-out is next day (overnight shifts)
+- Mark records with missing clock-out as "incomplete"
+- Recalculate if clock-out time is updated
+- Use attendance record's clock-in and clock-out timestamps
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** System Enhancement  
+**Estimated Effort:** 2-3 days  
+**Dependencies:** US-045 (Clock-Out)  
+**Technical Notes:**
+- Add `work_hours_decimal` field to Attendance model
+- Add `break_duration_minutes` to OfficeLocation model (default: 60)
+- Formula: work_hours = (clock_out - clock_in - break_duration) / 60
+
+---
+
+### US-065: System Multi-Manager Access Control
+**As a** system  
+**I want to** support managers assigned to up to 4 offices with proper access control  
+**So that** managers can handle multiple branches while maintaining security
+
+**Acceptance Criteria:**
+- **Manager must be assigned to 1-4 office locations (minimum: 1, maximum: 4)**
+- Manager can view/manage employees from ALL their assigned offices
+- Manager sees combined attendance, leave requests, and reports from all managed offices
+- Super admin role can view all offices and employees
+- Manager assigned to office(s) during account creation or by super admin
+- Cannot remove manager's last office (must have at least 1)
+- Reports and dashboards show data from all manager's assigned offices
+- Pending approvals show from all manager's assigned offices
+- Manager can approve attendance/leave only for employees in their managed offices
+- Office selector in dashboard to filter view by specific office (when managing multiple)
+- **Attendance auto-approval works if employee within radius of ANY of manager's offices (up to 4)**
+
+**Status:** 📋 Planned  
+**Priority:** Critical  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 5-6 days  
+**Dependencies:** US-058, US-059  
+**Technical Notes:**
+- Add `manager_offices` junction table (manager_id, office_id) with constraints:
+  - CHECK: COUNT(office_id) >= 1 (minimum 1 office required)
+  - CHECK: COUNT(office_id) <= 4 (maximum 4 offices allowed)
+  - Validation in application layer before database insert/delete
+- Add `is_super_admin` boolean to User model
+- Update all manager endpoints to filter by office access using JOIN on manager_offices
+- Middleware to check manager's office permissions
+- **ClockIn handler: Loop through all manager's offices (up to 4) to check proximity before setting status to 'pending'**
+
+---
+
+### US-066: System Browser Notification API
+**As a** system  
+**I want to** use browser Notification API for employee and manager reminders  
+**So that** users receive timely alerts without third-party services
+
+**Acceptance Criteria:**
+- Request notification permission on first dashboard visit
+- Store permission status in user preferences
+- Send notifications for:
+  - Employee: clock-in reminder at official time
+  - Manager: new pending approvals
+- Notifications only sent if permission granted
+- Service worker for background notifications (optional)
+- Fallback to in-app notifications if browser doesn't support
+- Respect user's browser notification settings
+- Clear notification when user interacts with dashboard
+
+**Status:** 📋 Planned  
+**Priority:** Medium  
+**Epic:** System Enhancement  
+**Estimated Effort:** 3-4 days  
+**Technical Notes:**
+- Use `Notification API` (Web API standard)
+- Check `Notification.permission` status
+- Implement notification service in Angular
+- Optional: Service worker for offline notification queueing
+
+---
+
+## Epic 10: Office Management UI/UX (New - Planned)
+
+### US-067: Manager Dedicated Office Management Page
+**As a** manager  
+**I want to** access a dedicated office management page separate from the dashboard  
+**So that** I can comprehensively manage 1-4 office locations without cluttering the dashboard
+
+**Acceptance Criteria:**
+- **Separate page/route:** `/admin/offices` (not embedded in dashboard)
+- Navigation link from manager dashboard to Office Management
+- Office Management page includes:
+  - **Office List View:** Table/cards showing all manager's assigned offices (1-4)
+  - **Add New Office:** Button to create office (super admin only)
+  - **Edit Office:** Form to update office details (name, coordinates, radius, clock-in time)
+  - **Assign to Manager:** Assign/unassign offices to managers (1-4 limit enforced)
+  - **View on Map:** Interactive map showing all offices with markers
+  - **Office Statistics:** Employees assigned, attendance records, pending approvals per office
+- Dashboard only shows office selector dropdown (no detailed configuration)
+- Uses interactive map for selecting coordinates (Leaflet)
+- Form validation:
+  - Prevents removing manager's last office
+  - Prevents assigning more than 4 offices to a manager
+  - Validates required fields (name, coordinates, radius)
+- Breadcrumb navigation: Dashboard > Office Management
+- Responsive design for mobile devices
+
+**Status:** 📋 Planned  
+**Priority:** High  
+**Epic:** Multi-Office Management  
+**Estimated Effort:** 5-6 days  
+**Dependencies:** US-058 (Multi-Office Database)  
+**Routes (Frontend):** `/admin/offices`  
+**Routes (Backend):** Same as US-058 APIs  
+**Components (Proposed):**
+- `office-management.component.ts` - Main office management page
+- `office-form.component.ts` - Add/edit office form
+- `office-list.component.ts` - List of offices
+- `office-map.component.ts` - Map view of all offices  
+**Technical Notes:**
+- Remove office configuration section from `manager-dashboard.component.ts`
+- Keep only office selector dropdown in dashboard for filtering
+- Lazy load office management module for better performance
+- Use Angular reactive forms for validation
+- Integrate Leaflet map with click-to-select coordinates
+
+**UI Layout Suggestion:**
+```
+┌─────────────────────────────────────────────────────────┐
+│  Office Management                    [+ Add New Office] │
+├─────────────────────────────────────────────────────────┤
+│  My Assigned Offices: 2 of 4                            │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────┐  ┌─────────────┐                       │
+│ │ Office A    │  │ Office B    │                       │
+│ │ 123 Main St │  │ 456 Park Av │                       │
+│ │ 50m radius  │  │ 100m radius │                       │
+│ │ 25 employees│  │ 18 employees│                       │
+│ │ [Edit] [Map]│  │ [Edit] [Map]│                       │
+│ └─────────────┘  └─────────────┘                       │
+├─────────────────────────────────────────────────────────┤
+│  Map View (All Offices)                                 │
+│  [Interactive Leaflet Map with office markers]          │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Epic 11: Security & Access Control
 
 ### US-017: JWT-based Authentication
 **As a** system  
@@ -789,7 +1502,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 7: Data Models & Persistence
+## Epic 12: Data Models & Persistence
 
 ### US-021: User Data Model
 **As a** system  
@@ -882,7 +1595,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 8: Geolocation & Distance Calculation
+## Epic 13: Geolocation & Distance Calculation
 
 ### US-026: Haversine Distance Calculation
 **As a** system  
@@ -933,7 +1646,23 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 9: System Configuration
+## Epic 14: System Configuration
+
+### US-030: CORS Configuration
+**As a** system  
+**I want to** allow cross-origin requests from frontend  
+**So that** API communication works properly
+
+**Acceptance Criteria:**
+- CORS middleware configured
+- Allows requests from localhost:4200 (development)
+- Allows requests from production domain
+- Supports preflight requests
+
+**Status:** ✅ Implemented  
+**Implementation:** [main.go](backend/main.go)
+
+---
 
 ### US-029: Environment-Based Configuration
 **As a** system  
@@ -986,6 +1715,132 @@ This document lists all implemented and planned features of the Field Attendance
 - **Critical (Must-Have):** 18 stories - All implemented ✅
 - **Important (Should-Have):** 8 stories - All implemented ✅
 - **Nice-to-Have:** 5 stories - 4 implemented ✅, 1 planned 🔄
+
+---
+
+## Implementation Roadmap
+
+### **Phase 1: Leave Management Foundation** (Priority: Critical)
+**Estimated Timeline:** 2-3 weeks  
+**User Stories:**
+1. US-056: Manager Configure Leave Types (3-4 days)
+2. US-046: Employee View Leave Balance (3-4 days)
+3. US-047: Employee Submit Leave with Type (2-3 days)
+4. US-057: Manager View Leave Balance Report (4-5 days)
+5. US-063: Manager Set Leave Balance Per Employee (3 days)
+
+**Business Value:**
+- Enables proper leave tracking and categorization
+- Reduces manual leave balance management
+- Provides transparency for employees and managers
+- Foundation for payroll integration
+
+---
+
+### **Phase 2: Multi-Office Support** (Priority: Critical)
+**Estimated Timeline:** 2-3 weeks  
+**User Stories:**
+1. US-058: Manager Manage Multiple Offices - 1 to 4 offices per manager (4-5 days)
+2. US-059: Manager Assign Employees to Office (3-4 days)
+3. US-050: Employee See Assigned Office - Shows all manager's offices (3 days)
+4. US-060: Manager View Office-Specific Reports (3-4 days)
+5. US-065: System Multi-Manager Access Control - 1-4 offices constraint (5-6 days)
+6. US-067: Manager Dedicated Office Management Page (5-6 days)
+
+**Business Value:**
+- Supports business expansion to multiple locations
+- Enables decentralized management
+- Accurate location validation per office
+- Scalable architecture for growth
+
+---
+
+### **Phase 3: Reporting & Analytics** (Priority: High)
+**Estimated Timeline:** 3-4 weeks  
+**User Stories:**
+1. US-052: Manager Generate Monthly Attendance Report (5-7 days)
+2. US-053: Manager Export Attendance Data (3-4 days)
+3. US-054: Manager View Employee Performance Metrics (4-5 days)
+4. US-055: Manager View Location Tracking Report (5-6 days)
+5. US-044: Employee View Personal Attendance History (3-5 days)
+
+**Business Value:**
+- Data-driven decision making
+- Performance monitoring and improvement
+- Payroll integration support
+- Compliance and audit trail
+
+---
+
+### **Phase 4: Work Hours Tracking** (Priority: High)
+**Estimated Timeline:** 1-2 weeks  
+**User Stories:**
+1. US-045: Employee Optional Clock-Out (2-3 days)
+2. US-064: System Calculate Work Hours (2-3 days)
+3. US-048: Employee View Work Hours Summary (3-4 days)
+4. US-062: Manager View Work Hours Report (4-5 days)
+
+**Business Value:**
+- Accurate work hours for payroll
+- Overtime tracking and management
+- Employee productivity insights
+- Fair compensation verification
+
+---
+
+### **Phase 5: User Experience Enhancements** (Priority: Medium)
+**Estimated Timeline:** 1-2 weeks  
+**User Stories:**
+1. US-066: System Browser Notification API (3-4 days)
+2. US-051: Employee Browser Notification Reminder (2-3 days)
+3. US-061: Manager View Pending Approvals Notification (2-3 days)
+4. US-049: Employee View Location History (4-5 days)
+
+**Business Value:**
+- Improved user engagement
+- Reduced forgotten clock-ins
+- Faster manager response time
+- Better user satisfaction
+
+---
+
+## Success Metrics
+
+### Leave Management
+- **Target:** 90% of leave requests categorized by type
+- **Metric:** Reduction in manual leave balance tracking time by 80%
+- **KPI:** Employee satisfaction with leave transparency
+
+### Multi-Office Support
+- **Target:** Support for 4 office locations per manager
+- **Metric:** Each office has dedicated manager (or shared across max 4)
+- **KPI:** Accurate attendance validation per office location
+
+### Reporting & Analytics
+- **Target:** Monthly reports generated in <5 seconds
+- **Metric:** 100% of managers use reports for decision-making
+- **KPI:** Reduced time spent on manual attendance tracking by 70%
+
+### Work Hours Tracking
+- **Target:** 80% clock-out adoption rate (since optional)
+- **Metric:** Accurate payroll data for 95% of employees
+- **KPI:** Reduced payroll processing errors
+
+---
+
+## Future Considerations (Beyond Current Scope)
+
+### Additional Features to Consider Later:
+- **Mobile App:** Native iOS/Android apps for better geolocation and offline support
+- **Biometric Integration:** Face recognition or fingerprint for identity verification
+- **Shift Management:** Support for different shift schedules and rotating shifts
+- **Holiday Calendar:** Automatic handling of public holidays and company events
+- **Department Management:** Organize employees by departments for better reporting
+- **Approver Hierarchy:** Multi-level approval workflow for leave requests
+- **Integration APIs:** REST APIs for payroll system integration
+- **Audit Logs:** Comprehensive audit trail for all system changes
+- **Employee Self-Service:** Portal for employees to update personal information
+- **Performance Reviews:** Integration with HR performance management
 
 ---
 
