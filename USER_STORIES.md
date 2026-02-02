@@ -23,7 +23,9 @@ This document lists all implemented and planned features of the Field Attendance
 ## Progress Summary
 
 - **Total User Stories:** 67
-- **Completed:** 43 (64%)
+- **Completed:** 40 (60%)
+- **Partially Completed:** 1 (1%) - US-031 (Backend ready, UI display missing)
+- **Backend Only (No UI):** 2 (3%) - US-011, US-012 (Leave management UI missing)
 - **In Progress:** 0
 - **Planned:** 24 (36%)
 - **Blocked:** 0
@@ -39,7 +41,7 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] [**US-006**](#us-006-submit-leave-request) - Employee can submit leave requests with start date, end date, and reason for manager approval
 - [x] [**US-027**](#us-027-browser-geolocation-integration) - Employee can use browser geolocation to automatically capture current location without manual entry
 - [x] [**US-028**](#us-028-map-visualization) - Employee can view their location on an interactive map to visually confirm location data
-- [x] [**US-031**](#us-031-employee-view-office-location) - Employee can view office location settings to see where they need to be for attendance approval
+- [ ] [**US-031**](#us-031-employee-view-office-location) - Employee can view office location settings to see where they need to be for attendance approval (⚠️ Partially Implemented - Backend ✅, UI Display ❌)
 - [x] [**US-035**](#us-035-employee-view-todays-attendance-status) - Employee can view their attendance record for today to check their status
 - [x] [**US-036**](#us-036-employee-see-attendance-time-status) - Employee can see if they are on time, late, or pending approval for today's attendance
 - [x] [**US-037**](#us-037-employee-see-todays-leave-status) - Employee can see their leave status for today (approved, pending, or not on leave)
@@ -59,8 +61,8 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] [**US-008**](#us-008-view-all-attendance-records) - Manager can view all employee attendance records to monitor attendance patterns and history
 - [x] [**US-009**](#us-009-view-pending-clock-ins) - Manager can view pending clock-in requests to review attendance from employees outside allowed radius
 - [x] [**US-010**](#us-010-approve-or-reject-clock-in) - Manager can approve or reject pending clock-in requests for manual attendance validation
-- [x] [**US-011**](#us-011-view-all-leave-requests) - Manager can view all employee leave requests to review and manage time-off requests
-- [x] [**US-012**](#us-012-approve-or-reject-leave-request) - Manager can approve or reject leave requests to manage team availability and time-off
+- [ ] [**US-011**](#us-011-view-all-leave-requests) - Manager can view all employee leave requests to review and manage time-off requests (⚠️ Backend Only - UI Missing)
+- [ ] [**US-012**](#us-012-approve-or-reject-leave-request) - Manager can approve or reject leave requests to manage team availability and time-off (⚠️ Backend Only - UI Missing)
 - [x] [**US-013**](#us-013-view-all-employees) - Manager can view a list of all employees to see who has system access and their roles
 - [x] [**US-014**](#us-014-create-new-employee) - Manager can create new employee accounts to provide system access for new staff
 - [x] [**US-015**](#us-015-update-employee-information) - Manager can update employee information including username, password, or role
@@ -118,13 +120,46 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I know where I need to be for my attendance to be automatically approved
 
 **Acceptance Criteria:**
-- Employee can access office location information
-- Display office name, coordinates, and allowed radius
-- No authentication required for this endpoint (or uses employee token)
-- Information helps employee understand proximity requirements
+- [x] Employee can access office location information via API
+- [x] Backend endpoint returns office name, coordinates, allowed radius, and clock-in time
+- [x] Authentication required for this endpoint (uses employee token)
+- [x] Data is loaded in clock-in component for distance calculation
+- [ ] **INCOMPLETE:** Display office location information visibly in employee UI
+- [ ] **INCOMPLETE:** Show office name, coordinates, and allowed radius to employee
+- [ ] **INCOMPLETE:** Help employee understand proximity requirements before clock-in
 
-**Status:** ✅ Implemented  
+**Status:** ⚠️ Partially Implemented (Backend ✅, Frontend UI Display ❌)  
 **Routes:** `GET /api/office-location`  
+**Components:** [clock-in.component.ts](frontend/src/app/components/clock-in/clock-in.component.ts)  
+**Implementation Details:**
+- ✅ Backend: `GetOfficeLocation()` handler in [office.go](backend/handlers/office.go) returns office data
+- ✅ Frontend Service: `getOfficeLocation()` method in [api.service.ts](frontend/src/app/services/api.service.ts)
+- ✅ Data Loading: Clock-in component loads office location via `loadOfficeLocation()`
+- ✅ Internal Use: Data used for distance calculation and validation
+- ❌ **Missing UI Display:** Office location information not shown to employees in the UI
+- ❌ Employees cannot see office name, coordinates, radius, or clock-in time
+
+**What Works:**
+- Employee API call successfully retrieves office location data
+- Distance from office is calculated and shown in confirmation dialog when outside radius
+- Office location data is used internally for proximity validation
+
+**What's Missing:**
+- No visible information card showing office location details to employees
+- Employees cannot proactively see where they need to be before attempting clock-in
+- No display of office name, exact coordinates, allowed radius, or official clock-in time
+
+**To Complete:**
+Add an information card in the clock-in page template that displays:
+```
+📍 Office Location Information
+- Office Name: [name]
+- Coordinates: [latitude], [longitude]
+- Allowed Radius: [radius] meters
+- Official Clock-In Time: [clock_in_time]
+- Your Distance: [calculated on location capture]
+```
+
 **Note:** Available to all authenticated users, not just managers
 
 ---
@@ -463,14 +498,33 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I can review and manage time-off requests
 
 **Acceptance Criteria:**
-- Display all leave requests from all employees
-- Show employee name, start date, end date, reason, and status
-- Include pending, approved, and rejected requests
-- Requests include user details for context
+- [x] Backend endpoint returns all leave requests with user details
+- [ ] **MISSING:** Frontend method to fetch leave requests (`getAllLeaveRequests()` in api.service.ts)
+- [ ] **MISSING:** UI section in manager dashboard to display leave requests
+- [ ] **MISSING:** Table showing employee name, start date, end date, reason, and status
+- [ ] **MISSING:** Display pending, approved, and rejected requests
 
-**Status:** ✅ Implemented  
-**Routes:** `GET /api/admin/leaves`  
-**Components:** [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+**Status:** ⚠️ Backend Only (No UI)  
+**Routes:** `GET /api/admin/leaves` ✅ (Backend ready)  
+**Backend:** [admin.go](backend/handlers/admin.go) - `GetAllLeaveRequests()` ✅  
+**Frontend:** ❌ Not implemented  
+
+**What Works:**
+- ✅ Backend API endpoint exists and returns all leave requests
+- ✅ Leave data includes user details via Preload("User")
+
+**What's Missing:**
+- ❌ No `getAllLeaveRequests()` method in `api.service.ts`
+- ❌ No Leave Requests section in manager dashboard
+- ❌ No UI table/list to display leave requests
+- ❌ Manager cannot see leave requests in the dashboard
+
+**To Complete:**
+1. Add `getAllLeaveRequests()` method to api.service.ts
+2. Add Leave Requests section to manager-dashboard.component.ts
+3. Create table showing all leave requests with status badges
+4. Make section expandable/collapsible like other dashboard cards
+5. Add refresh functionality
 
 ---
 
@@ -480,15 +534,40 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I can manage team availability and time-off
 
 **Acceptance Criteria:**
-- Manager can approve leave request (status changes to "approved")
-- Manager can reject leave request (status changes to "rejected")
-- System validates leave request exists
-- Success message is displayed after action
-- List refreshes to show updated status
+- [x] Backend validates leave request exists
+- [x] Backend updates status to "approved" or "rejected"
+- [x] API method exists in frontend service
+- [ ] **MISSING:** UI buttons to approve/reject leave requests
+- [ ] **MISSING:** Leave request list/table in manager dashboard
+- [ ] **MISSING:** Success message display
+- [ ] **MISSING:** List refresh after status update
 
-**Status:** ✅ Implemented  
-**Routes:** `PATCH /api/admin/leave/:id`  
-**Components:** [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+**Status:** ⚠️ Backend Only (No UI)  
+**Routes:** `PATCH /api/admin/leave/:id` ✅ (Backend ready)  
+**Backend:** [admin.go](backend/handlers/admin.go) - `UpdateLeaveStatus()` ✅  
+**API Service:** [api.service.ts](frontend/src/app/services/api.service.ts) - `updateLeaveStatus()` ✅  
+**Frontend UI:** ❌ Not implemented  
+
+**What Works:**
+- ✅ Backend endpoint for updating leave status
+- ✅ API service method `updateLeaveStatus(id, status)` exists
+- ✅ Backend validates leave request exists
+- ✅ Backend returns success message
+
+**What's Missing:**
+- ❌ No Leave Requests section in manager dashboard UI
+- ❌ No approve/reject buttons in the interface
+- ❌ Manager cannot actually approve/reject leaves through UI
+- ❌ No visual feedback when status changes
+- ❌ Depends on US-011 implementation first
+
+**To Complete:**
+1. Implement US-011 first (display leave requests)
+2. Add Approve/Reject buttons to each leave request row
+3. Call `updateLeaveStatus()` on button click
+4. Show success/error messages
+5. Refresh leave requests list after update
+6. Add confirmation dialog for reject action
 
 ---
 
