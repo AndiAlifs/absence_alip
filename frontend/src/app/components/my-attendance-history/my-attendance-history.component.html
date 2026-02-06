@@ -81,7 +81,7 @@
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ record.distance?.toFixed(2) }} meter
+                  {{ record.distance.toFixed(2) }} meter
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span [class]="getStatusBadgeClass(record.status)" 
@@ -134,7 +134,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Jarak:</span>
-                <span class="font-medium text-gray-900">{{ record.distance?.toFixed(2) }} m</span>
+                <span class="font-medium text-gray-900">{{ record.distance.toFixed(2) }} m</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Keterlambatan:</span>

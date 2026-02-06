@@ -44,6 +44,8 @@ type LeaveRequest struct {
 	EndDate   time.Time `gorm:"type:date;not null" json:"end_date"`
 	Reason    string    `gorm:"type:text" json:"reason"`
 	Status    string    `gorm:"type:enum('pending','approved','rejected');default:'pending'" json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 	User      User      `gorm:"foreignKey:UserID" json:"-"`
 }
 
