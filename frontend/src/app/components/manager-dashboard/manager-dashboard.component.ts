@@ -22,6 +22,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               📋 Laporan Absensi
             </button>
             <button 
+              (click)="goToLeaveManagement()" 
+              class="px-6 py-3 bg-pink-600 text-white font-semibold rounded-lg hover:bg-pink-700 focus:ring-4 focus:ring-pink-300 transition-all shadow-lg flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              📅 Kelola Cuti
+            </button>
+            <button 
               (click)="goToOfficeManagement()" 
               class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-300 transition-all shadow-lg flex items-center">
               <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,96 +400,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
           </div>
         </div>
-
-        <!-- Leave Requests Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="toggleLeaveRequests()">
-            <div class="flex items-center">
-              <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Permohonan Cuti
-            </div>
-            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isLeaveRequestsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </h2>
-
-          <div *ngIf="isLeaveRequestsExpanded" class="transition-all duration-200">
-            <div *ngIf="leaveRequests.length > 0" class="space-y-4">
-              <div *ngFor="let leave of leaveRequests" class="border-l-4 rounded-lg p-6 shadow-md transition-all"
-                   [ngClass]="{
-                     'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-500': leave.status === 'pending',
-                     'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500': leave.status === 'approved',
-                     'bg-gradient-to-r from-red-50 to-rose-50 border-red-500': leave.status === 'rejected'
-                   }">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p class="text-xs text-gray-600 mb-1">Karyawan</p>
-                    <p class="font-bold text-gray-900">{{ leave.user?.full_name || leave.user?.username || 'Unknown' }}</p>
-                    <p *ngIf="leave.user?.full_name" class="text-xs text-gray-500">{{ leave.user?.username }}</p>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-600 mb-1">Status</p>
-                    <span [class]="getLeaveStatusClass(leave.status)">
-                      {{ getLeaveStatusText(leave.status) }}
-                    </span>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-600 mb-1">Tanggal Mulai</p>
-                    <p class="font-semibold text-gray-900">{{ leave.start_date | date:'dd MMM yyyy' }}</p>
-                  </div>
-                  <div>
-                    <p class="text-xs text-gray-600 mb-1">Tanggal Selesai</p>
-                    <p class="font-semibold text-gray-900">{{ leave.end_date | date:'dd MMM yyyy' }}</p>
-                  </div>
-                  <div class="md:col-span-2">
-                    <p class="text-xs text-gray-600 mb-1">Alasan</p>
-                    <p class="text-gray-900">{{ leave.reason }}</p>
-                  </div>
-                </div>
-
-                <div *ngIf="leave.status === 'pending'" class="flex gap-3 mt-4">
-                  <button 
-                    (click)="approveLeave(leave.id)"
-                    [disabled]="processingLeave === leave.id"
-                    class="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ processingLeave === leave.id ? 'Menyetujui...' : 'Setujui' }}
-                  </button>
-                  <button 
-                    (click)="rejectLeave(leave.id)"
-                    [disabled]="processingLeave === leave.id"
-                    class="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ processingLeave === leave.id ? 'Menolak...' : 'Tolak' }}
-                  </button>
-                </div>
-
-                <div *ngIf="leaveMessage[leave.id]" class="mt-3 p-3 rounded-lg" 
-                     [class.bg-green-100]="!leaveError[leave.id]"
-                     [class.bg-red-100]="leaveError[leave.id]">
-                  <p class="text-sm" 
-                     [class.text-green-800]="!leaveError[leave.id]"
-                     [class.text-red-800]="leaveError[leave.id]">
-                    {{ leaveMessage[leave.id] }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div *ngIf="leaveRequests.length === 0" class="text-center py-12">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p class="mt-2 text-gray-600">Tidak ada permohonan cuti.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   `,
@@ -490,7 +408,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 export class ManagerDashboardComponent implements OnInit {
   employees: any[] = [];
   pendingClockIns: any[] = [];
-  leaveRequests: any[] = [];
   officeData: any = {
     name: '',
     latitude: null,
@@ -533,11 +450,6 @@ export class ManagerDashboardComponent implements OnInit {
   clockInMessage: { [key: number]: string } = {};
   clockInError: { [key: number]: boolean } = {};
 
-  // Leave management properties
-  processingLeave: number | null = null;
-  leaveMessage: { [key: number]: string } = {};
-  leaveError: { [key: number]: boolean } = {};
-
   // Daily attendance dashboard properties
   dailyAttendance: any[] = [];
   dailySummary: any = {
@@ -552,7 +464,6 @@ export class ManagerDashboardComponent implements OnInit {
   isOfficeLocationExpanded = true;
   isEmployeesExpanded = true;
   isPendingClockInsExpanded = true;
-  isLeaveRequestsExpanded = true;
 
   constructor(
     private apiService: ApiService,
@@ -565,7 +476,6 @@ export class ManagerDashboardComponent implements OnInit {
     this.loadPendingClockIns();
     this.loadDailyAttendance();
     this.loadOfficeCount();
-    this.loadLeaveRequests();
   }
 
   // Pending Clock-in Methods
@@ -892,87 +802,6 @@ export class ManagerDashboardComponent implements OnInit {
     this.isPendingClockInsExpanded = !this.isPendingClockInsExpanded;
   }
 
-  toggleLeaveRequests() {
-    this.isLeaveRequestsExpanded = !this.isLeaveRequestsExpanded;
-  }
-
-  // Leave Management Methods
-  loadLeaveRequests() {
-    this.apiService.getAllLeaveRequests().subscribe({
-      next: (response) => {
-        this.leaveRequests = response.data || [];
-      },
-      error: (error) => {
-        console.error('Failed to load leave requests:', error);
-      }
-    });
-  }
-
-  approveLeave(id: number) {
-    this.processingLeave = id;
-    this.leaveMessage[id] = '';
-    this.leaveError[id] = false;
-
-    this.apiService.updateLeaveStatus(id, 'approved').subscribe({
-      next: (response) => {
-        this.processingLeave = null;
-        this.leaveMessage[id] = 'Cuti berhasil disetujui!';
-        this.leaveError[id] = false;
-        
-        setTimeout(() => {
-          this.loadLeaveRequests();
-          this.loadDailyAttendance();
-        }, 1500);
-      },
-      error: (error) => {
-        this.processingLeave = null;
-        this.leaveMessage[id] = error.error?.error || 'Gagal menyetujui cuti';
-        this.leaveError[id] = true;
-      }
-    });
-  }
-
-  rejectLeave(id: number) {
-    this.processingLeave = id;
-    this.leaveMessage[id] = '';
-    this.leaveError[id] = false;
-
-    this.apiService.updateLeaveStatus(id, 'rejected').subscribe({
-      next: (response) => {
-        this.processingLeave = null;
-        this.leaveMessage[id] = 'Cuti ditolak.';
-        this.leaveError[id] = false;
-        
-        setTimeout(() => {
-          this.loadLeaveRequests();
-        }, 1500);
-      },
-      error: (error) => {
-        this.processingLeave = null;
-        this.leaveMessage[id] = error.error?.error || 'Gagal menolak cuti';
-        this.leaveError[id] = true;
-      }
-    });
-  }
-
-  getLeaveStatusClass(status: string): string {
-    switch(status) {
-      case 'approved': return 'px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800';
-      case 'rejected': return 'px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800';
-      case 'pending': return 'px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800';
-      default: return 'px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800';
-    }
-  }
-
-  getLeaveStatusText(status: string): string {
-    switch(status) {
-      case 'approved': return 'Disetujui';
-      case 'rejected': return 'Ditolak';
-      case 'pending': return 'Menunggu';
-      default: return status;
-    }
-  }
-
   // Office Management Navigation
   loadOfficeCount() {
     this.apiService.getMyOffices().subscribe({
@@ -992,6 +821,10 @@ export class ManagerDashboardComponent implements OnInit {
 
   goToReports() {
     window.location.href = '/admin/reports';
+  }
+
+  goToLeaveManagement() {
+    window.location.href = '/admin/leaves';
   }
 
   // Office Filter Methods

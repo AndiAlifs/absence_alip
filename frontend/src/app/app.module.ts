@@ -12,6 +12,7 @@ import { LeaveRequestComponent } from './components/leave-request/leave-request.
 import { LeaveHistoryComponent } from './components/leave-history/leave-history.component';
 import { ManagerDashboardComponent } from './components/manager-dashboard/manager-dashboard.component';
 import { OfficeManagementComponent } from './components/office-management/office-management.component';
+import { LeaveManagementComponent } from './components/leave-management/leave-management.component';
 import { AttendanceReportsComponent } from './components/attendance-reports/attendance-reports.component';
 import { MyAttendanceHistoryComponent } from './components/my-attendance-history/my-attendance-history.component';
 import { AuthGuard } from './auth.guard';
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'admin', component: ManagerDashboardComponent, canActivate: [AuthGuard] },
   { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard] },
   { path: 'admin/reports', component: AttendanceReportsComponent, canActivate: [AuthGuard] },
+  { path: 'admin/leaves', component: LeaveManagementComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];
 
@@ -39,7 +41,8 @@ const routes: Routes = [
     LeaveRequestComponent,
     ManagerDashboardComponent,
     AttendanceReportsComponent,
-    MyAttendanceHistoryComponent
+    MyAttendanceHistoryComponent,
+    LeaveManagementComponent
   ],
   imports: [
     BrowserModule,
