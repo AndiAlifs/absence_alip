@@ -12,10 +12,10 @@ A geolocation-based attendance tracking system with automatic proximity validati
 
 ### Backend Structure (Go)
 - **Module name**: `field-attendance-system` (used in all imports)
-- **Entry point**: [backend/main.go](backend/main.go) - seeds admin user on startup via `seedAdminUser()` and `seedDefaultOfficeAssignment()`
+- **Entry point**: [backend/main.go](../backend/main.go) - seeds database on startup via `seed.RunAll()`
 - **Database**: GORM auto-migration on startup; connection via env vars with defaults (`root:password@127.0.0.1:3306/attendance_db`)
   - Auto-migrates 5 models: `User`, `Attendance`, `LeaveRequest`, `OfficeLocation`, `ManagerOffice`
-- **Auth**: JWT tokens with 24h expiry ([backend/auth/jwt.go](backend/auth/jwt.go))
+- **Auth**: JWT tokens with 24h expiry ([backend/auth/jwt.go](../backend/auth/jwt.go))
   - Middleware chain: `AuthMiddleware()` → `ManagerMiddleware()` for admin routes
   - JWT secret from `JWT_SECRET` env var, fallback to `"super-secret-key-default"`
 - **CORS**: Hardcoded to allow `localhost:4200` and production IP `43.163.107.154`
@@ -28,7 +28,7 @@ A geolocation-based attendance tracking system with automatic proximity validati
 - **Languages**: Mixed English/Indonesian - UI labels in Indonesian, code in English
 
 ### Core Business Logic: Multi-Office Geolocation Validation
-**Critical workflow** in [handlers/attendance.go](backend/handlers/attendance.go) - ClockIn() function:
+**Critical workflow** in [backend/handlers/attendance.go](../backend/handlers/attendance.go) - ClockIn() function:
 
 ```go
 // 1. Get ALL manager's offices via JOIN
@@ -69,7 +69,7 @@ for i := range managerOffices {
 - **Distance units**: ALWAYS meters (decimal(10,2)), never kilometers
 - **Early exit**: Break loop immediately when valid office found (performance optimization)
 
-## Database Models ([models/models.go](backend/models/models.go))
+## Database Models ([backend/models/models.go](../backend/models/models.go))
 
 ### Key Enums (MySQL `ENUM` type)
 - `User.Role`: `'employee'|'manager'` (default: `'employee'`)
@@ -96,7 +96,7 @@ for i := range managerOffices {
   - 4 maximum (cannot assign 5th office)
 - `User.OfficeID` → `OfficeLocation` (employee's primary office, currently for reference only)
   - **Note**: Not used in clock-in validation - employees checked against manager's offices
-- `User.IsSuperAdmin`: Boolean flag, true for first admin (`seedAdminUser()` sets this)
+- `User.IsSuperAdmin`: Boolean flag, true for first admin (`seed.SeedSuperAdmins()` sets this)
 
 ## Development Workflows
 
@@ -125,14 +125,15 @@ CREATE DATABASE attendance_db;
 ```
 - **Auto-migration**: Runs on server startup for all 5 models (User, Attendance, LeaveRequest, OfficeLocation, ManagerOffice)
   - GORM creates tables + foreign keys automatically
-  - Manual schema in [backend/migration.sql](backend/migration.sql) for reference
-- **Seeding** (runs on every startup, checks for existing records):
-  1. `seedAdminUser()`: Creates admin user if not exists
-     - Username: `admin`, Password: `admin123`
+  - Manual schema in [backend/migration.sql](../backend/migration.sql) for reference
+- **Seeding** (runs on every startup via `seed.RunAll()`, checks for existing records):
+  1. `SeedSuperAdmins()`: Creates 2 super admin users if not exists
+     - Username: `admin` / `admin2`, Password: `admin` / `admin2`
      - Role: `manager`, `IsSuperAdmin: true`
-  2. `seedDefaultOfficeAssignment()`: Auto-assigns first office to admin
-     - Checks if office exists and admin exists
-     - Creates `ManagerOffice` record linking them
+  2. `SeedOffices()`: Creates 4 office locations (Kendari, Jakarta, Palopo, Makassar)
+  3. `SeedDefaultOfficeAssignment()`: Auto-assigns all 4 offices to first admin
+  4. `SeedEmployees()`: Creates 5 employees (`karyawan1-5`)
+  5. `SeedAttendanceRecords()`: Generates sample attendance data
 - **Migration pattern**: GORM auto-migration preferred over manual SQL (add fields to structs, restart server)
 
 ## API Route Structure
@@ -160,14 +161,15 @@ All under `/api/admin/*`:
 - `PUT|DELETE /employees/:id` - Update/delete employee
 - `GET /daily-attendance` - Dashboard showing today's attendance summary
 
-**Office Management Routes** ([handlers/office_management.go](backend/handlers/office_management.go)):
+**Office Management Routes** ([backend/handlers/office_management.go](../backend/handlers/office_management.go)):
 - `GET /offices` - Permission-based filtering:
   - Super admin: ALL offices (`WHERE is_active = true`)
   - Regular manager: Only assigned (`JOIN manager_offices WHERE manager_id = ?, is_active = true`)
-- `POST /offices` - Create office (super admin only, checks `user.IsSuperAdmin`)
+- `POST /offices` - Create office (any manager, auto-assigns to creator, checks 4-office limit)
 - `PUT /offices/:id` - Update office with permission check:
   - Super admin: Can update ANY office
   - Regular manager: Only if assigned to that office (`JOIN manager_offices`)
+- `DELETE /offices/:id` - Soft delete (`is_active = false`), enforces min 1 office constraint
 - `GET /my-offices` - Returns manager's assigned offices with count for UI badge
 - `POST /offices/assign` - Super admin assigns office to manager:
   - **Enforces max 4 offices**: `COUNT(*) FROM manager_offices WHERE manager_id = ? >= 4` → error
@@ -240,28 +242,28 @@ All under `/api/admin/*`:
 ## Common Modification Patterns
 
 ### Adding New Attendance Rules
-1. **Backend**: Edit `ClockIn()` in [handlers/attendance.go](backend/handlers/attendance.go)
-2. **Model changes**: Add field to `Attendance` struct in [models.go](backend/models/models.go)
-3. **Migration**: GORM auto-migrates on restart, or update [migration.sql](backend/migration.sql)
+1. **Backend**: Edit `ClockIn()` in [backend/handlers/attendance.go](../backend/handlers/attendance.go)
+2. **Model changes**: Add field to `Attendance` struct in [backend/models/models.go](../backend/models/models.go)
+3. **Migration**: GORM auto-migrates on restart, or update [backend/migration.sql](../backend/migration.sql)
 4. **Frontend**: Update `ClockInComponent` to display new field
 
 ### New Manager Features
-1. **Route**: Add to `admin` group in [main.go](backend/main.go)
+1. **Route**: Add to `admin` group in [backend/main.go](../backend/main.go)
    ```go
    admin := protected.Group("/admin")
    admin.Use(auth.ManagerMiddleware())
    admin.GET("/your-endpoint", handlers.YourHandler)
    ```
-2. **Handler**: Create function in [handlers/admin.go](backend/handlers/admin.go) or new file
+2. **Handler**: Create function in [backend/handlers/admin.go](../backend/handlers/admin.go) or new file
    - Always check `userID := c.MustGet("userID").(uint)` from middleware
    - Use Indonesian error messages for user-facing responses
-3. **Frontend service**: Add method to [api.service.ts](frontend/src/app/services/api.service.ts)
+3. **Frontend service**: Add method to [frontend/src/app/services/api.service.ts](../frontend/src/app/services/api.service.ts)
    ```typescript
    yourMethod(data: any): Observable<any> {
      return this.http.post(`${this.apiUrl}/admin/your-endpoint`, data, this.getHeaders());
    }
    ```
-4. **UI**: Update [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+4. **UI**: Update [frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts](../frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
    - Inline template: Add HTML directly in `template:` string
    - Use TailwindCSS utility classes for styling
 
@@ -305,7 +307,7 @@ if count <= 1 {
 }
 ```
 
-**UI Workflow** ([office-management.component.ts](frontend/src/app/components/office-management/office-management.component.ts)):
+**UI Workflow** ([frontend/src/app/components/office-management/office-management.component.ts](../frontend/src/app/components/office-management/office-management.component.ts)):
 1. Manager clicks "Kelola Kantor" button in dashboard (shows "X of 4" badge)
 2. Navigates to `/admin/offices` - displays office cards with map previews
 3. **Add Office**: Modal form with validation (name, address, lat/long, radius, clock-in time)
@@ -314,7 +316,7 @@ if count <= 1 {
 6. **Delete Office**: Soft delete (`is_active = false`), enforces min 1 office constraint
 
 ## Deployment Notes
-- **Production**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Tencent Cloud/VPS setup
+- **Production**: See [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) for Tencent Cloud/VPS setup
 - **Build process**: 
   - Backend: `go build -o attendance-server main.go`
   - Frontend: `ng build --configuration production` → outputs to `dist/`
@@ -324,8 +326,11 @@ if count <= 1 {
 ## Testing & Debugging
 
 ### Default Credentials
-- **Admin user**: `admin` / `admin123` (role: `manager`) - auto-seeded on first startup
-- **Create employees**: Use `POST /api/register` via Postman/cURL (no registration UI exists)
+- **Super admins**: 
+  - `admin` / `admin` (role: `manager`, IsSuperAdmin: true)
+  - `admin2` / `admin2` (role: `manager`, IsSuperAdmin: true)
+- **Employees**: `karyawan1-5` / `karyawan1-5` (role: `employee`) - auto-seeded
+- **Create more users**: Use `POST /api/register` via Postman/cURL (no registration UI exists)
 
 ### Testing Geolocation
 - Use browser DevTools → Sensors → Location override to test different coordinates
@@ -335,10 +340,10 @@ if count <= 1 {
 ### Common Gotchas
 - **Office location not set**: Clock-in fails with "Lokasi kantor belum diatur" error
   - Solution: Manager must have at least 1 assigned office (check `ManagerOffice` table)
-- **CORS errors**: If frontend can't reach backend, check CORS origins in [main.go](backend/main.go)
+- **CORS errors**: If frontend can't reach backend, check CORS origins in [backend/main.go](../backend/main.go)
   - Hardcoded: `localhost:4200` and `43.163.107.154`
 - **JWT expiry**: Tokens expire after 24 hours, user must re-login
-  - Check `GenerateToken()` in [backend/auth/jwt.go](backend/auth/jwt.go)
+  - Check `GenerateToken()` in [backend/auth/jwt.go](../backend/auth/jwt.go)
 - **No registration UI**: Must create users via API directly (intended design)
   - Use `POST /api/register` with Postman/cURL
 - **Standalone component errors**: If `OfficeManagementComponent` not found:
