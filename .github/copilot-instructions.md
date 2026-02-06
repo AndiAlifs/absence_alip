@@ -27,24 +27,57 @@ A geolocation-based attendance tracking system with automatic proximity validati
 - **Styling**: TailwindCSS with utility-first approach
 - **Languages**: Mixed English/Indonesian - UI labels in Indonesian, code in English
 
-### Core Business Logic: Geolocation + Lateness Validation
-**Critical workflow** in [handlers/attendance.go](backend/handlers/attendance.go):
-1. Employee sends `{latitude, longitude}` from browser's geolocation API
-2. Backend retrieves manager's assigned offices (via `ManagerOffice` junction table)
-3. **Multi-office distance check**: Haversine formula ([utils/distance.go](backend/utils/distance.go)) calculates meters from EACH office
-   - Within `allowed_radius_meters` of ANY office → `status="approved"`, records `approved_office_id`
-   - Outside ALL offices' radius → `status="pending"` (requires manager approval)
-4. **Lateness check**: Uses CLOSEST office's `ClockInTime` (format: `"HH:MM"`)
-   - Sets `is_late=true` and `minutes_late` if clock-in after official time
-5. Creates `Attendance` record with all calculated fields + office reference
+### Core Business Logic: Multi-Office Geolocation Validation
+**Critical workflow** in [handlers/attendance.go](backend/handlers/attendance.go) - ClockIn() function:
 
-**Key pattern**: Dual-status system (auto-approve vs pending) is fundamental - preserve both paths when modifying.
+```go
+// 1. Get ALL manager's offices via JOIN
+var managerOffices []models.OfficeLocation
+database.DB.
+    Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
+    Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", manager.ID, true).
+    Find(&managerOffices)
+
+// 2. Check distance against EACH office, find closest
+for i := range managerOffices {
+    distance := utils.CalculateDistance(lat, long, office.Latitude, office.Longitude)
+    if distance <= office.AllowedRadiusMeters {
+        isWithinRadius = true
+        closestOffice = office
+        break // Auto-approve at FIRST valid office
+    }
+}
+```
+
+**Algorithm flow**:
+1. Employee sends `{latitude, longitude}` from browser geolocation
+2. Backend fetches **ALL** manager's assigned offices (1-4 offices from `ManagerOffice` junction)
+3. **Distance validation**: Loop through each office, calculate Haversine distance in meters
+   - **Short-circuit optimization**: Break on FIRST office within radius → `status="approved"`
+   - Track closest office for lateness calculation even if outside all radii
+4. **Status determination**:
+   - Within ANY office radius → `status="approved"`, `approved_office_id` = that office
+   - Outside ALL offices → `status="pending"` (manager must manually approve)
+5. **Lateness calculation**: Uses closest office's `clock_in_time` ("HH:MM" format)
+   - Parse official time, compare to current time
+   - Set `is_late=true` and `minutes_late` if after official time
+6. Create `Attendance` record with all calculated fields
+
+**Critical patterns**:
+- **Dual-status system**: Auto-approve vs pending - preserve BOTH paths when modifying
+- **Office reference**: Always record `approved_office_id` when auto-approved
+- **Distance units**: ALWAYS meters (decimal(10,2)), never kilometers
+- **Early exit**: Break loop immediately when valid office found (performance optimization)
 
 ## Database Models ([models/models.go](backend/models/models.go))
 
 ### Key Enums (MySQL `ENUM` type)
 - `User.Role`: `'employee'|'manager'` (default: `'employee'`)
+  - Note: Super admin is `role='manager' AND is_super_admin=true`
 - `Attendance.Status`: `'approved'|'pending'|'rejected'` (default: `'approved'`)
+  - `approved`: Auto-approved (within radius) or manager-approved
+  - `pending`: Awaiting manager review (outside all office radii)
+  - `rejected`: Manager explicitly rejected
 - `LeaveRequest.Status`: `'pending'|'approved'|'rejected'` (default: `'pending'`)
 
 ### Critical Fields
@@ -55,11 +88,15 @@ A geolocation-based attendance tracking system with automatic proximity validati
 ### Relations & Foreign Keys
 - `Attendance.UserID` → `User` (preloaded in admin queries via `Preload("User")`)
 - `Attendance.ApprovedOfficeID` → `OfficeLocation` (tracks which office validated the clock-in)
+  - **Important**: Nullable pointer `*uint` - only set when auto-approved, null when pending
 - `LeaveRequest.UserID` → `User` (JSON tag `"-"` hides user object from API response)
 - `ManagerOffice`: Junction table linking managers to 1-4 offices (many-to-many)
-  - Enforces 1 minimum, 4 maximum offices per manager
-- `User.OfficeID` → `OfficeLocation` (employee's primary office assignment)
-- `User.IsSuperAdmin`: First admin user has this set to `true` on seed
+  - **No DB constraints** - limits enforced at application level in handlers
+  - 1 minimum (cannot unassign last office)
+  - 4 maximum (cannot assign 5th office)
+- `User.OfficeID` → `OfficeLocation` (employee's primary office, currently for reference only)
+  - **Note**: Not used in clock-in validation - employees checked against manager's offices
+- `User.IsSuperAdmin`: Boolean flag, true for first admin (`seedAdminUser()` sets this)
 
 ## Development Workflows
 
@@ -86,9 +123,17 @@ ng build                 # Production build to dist/
 ```sql
 CREATE DATABASE attendance_db;
 ```
-- Auto-migration runs on server startup (all models in [models.go](backend/models/models.go))
-- Manual schema available in [backend/migration.sql](backend/migration.sql) (for reference/disaster recovery)
-- **First-run admin seed**: `admin:admin123` (role: manager) created automatically
+- **Auto-migration**: Runs on server startup for all 5 models (User, Attendance, LeaveRequest, OfficeLocation, ManagerOffice)
+  - GORM creates tables + foreign keys automatically
+  - Manual schema in [backend/migration.sql](backend/migration.sql) for reference
+- **Seeding** (runs on every startup, checks for existing records):
+  1. `seedAdminUser()`: Creates admin user if not exists
+     - Username: `admin`, Password: `admin123`
+     - Role: `manager`, `IsSuperAdmin: true`
+  2. `seedDefaultOfficeAssignment()`: Auto-assigns first office to admin
+     - Checks if office exists and admin exists
+     - Creates `ManagerOffice` record linking them
+- **Migration pattern**: GORM auto-migration preferred over manual SQL (add fields to structs, restart server)
 
 ## API Route Structure
 
@@ -116,31 +161,75 @@ All under `/api/admin/*`:
 - `GET /daily-attendance` - Dashboard showing today's attendance summary
 
 **Office Management Routes** ([handlers/office_management.go](backend/handlers/office_management.go)):
-- `GET /offices` - Super admin sees all, managers see only assigned offices
-- `POST /offices` - Create office (super admin only)
-- `PUT /offices/:id` - Update office (super admin or assigned manager)
-- `GET /my-offices` - Get manager's assigned offices with count
-- `POST /offices/assign` - Assign office to manager (super admin, enforces 4-office limit)
-- `POST /offices/unassign` - Remove office assignment (super admin, enforces 1 minimum)
+- `GET /offices` - Permission-based filtering:
+  - Super admin: ALL offices (`WHERE is_active = true`)
+  - Regular manager: Only assigned (`JOIN manager_offices WHERE manager_id = ?, is_active = true`)
+- `POST /offices` - Create office (super admin only, checks `user.IsSuperAdmin`)
+- `PUT /offices/:id` - Update office with permission check:
+  - Super admin: Can update ANY office
+  - Regular manager: Only if assigned to that office (`JOIN manager_offices`)
+- `GET /my-offices` - Returns manager's assigned offices with count for UI badge
+- `POST /offices/assign` - Super admin assigns office to manager:
+  - **Enforces max 4 offices**: `COUNT(*) FROM manager_offices WHERE manager_id = ? >= 4` → error
+  - **Prevents duplicates**: Check existing assignment before insert
+- `POST /offices/unassign` - Super admin removes assignment:
+  - **Enforces min 1 office**: `COUNT(*) FROM manager_offices WHERE manager_id = ? <= 1` → error
 
 ## Code Conventions & Patterns
 
 ### Go Backend
 - **Error responses**: Always `c.JSON(status, gin.H{"error": "message"})` (use Indonesian for user-facing messages)
+  ```go
+  c.JSON(http.StatusBadRequest, gin.H{"error": "Lokasi kantor belum diatur"})
+  ```
 - **Middleware context**: Set data with `c.Set("userID", id)`, retrieve with `c.MustGet("userID").(uint)`
+  ```go
+  // In AuthMiddleware: c.Set("userID", claims.UserID)
+  // In handlers: userID := c.MustGet("userID").(uint)
+  ```
 - **Distance units**: Always **meters** (never kilometers), stored as `decimal(10,2)`
+  - Example: `AllowedRadiusMeters: 100` (not 0.1 km)
 - **JSON binding**: Use `binding:"required"` tags for validation, handle errors with 400 Bad Request
+  ```go
+  type ClockInInput struct {
+      Latitude  float64 `json:"latitude" binding:"required"`
+      Longitude float64 `json:"longitude" binding:"required"`
+  }
+  if err := c.ShouldBindJSON(&input); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+      return
+  }
+  ```
 - **Database queries**: Use GORM's `Preload()` for relations, avoid N+1 queries
+  - Example: `database.DB.Preload("User").Find(&attendances)` (loads user in one query)
+- **Permission checks**: Always verify role + super admin flag before privileged operations
+  ```go
+  var user models.User
+  database.DB.First(&user, userID)
+  if !user.IsSuperAdmin {
+      return 403 Forbidden
+  }
+  ```
 
 ### Angular Frontend
 - **Auth pattern**: `AuthGuard` checks `localStorage.getItem('token')`, redirects to `/login` if missing
 - **API calls**: All through `ApiService`, which auto-adds `Authorization: Bearer <token>` header
+  ```typescript
+  private getHeaders() {
+    const token = localStorage.getItem('token');
+    return { headers: new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    })};
+  }
+  ```
 - **Date inputs**: Use `type="date"` HTML5 inputs, backend receives as `time.Time` in JSON
 - **Error messages**: Indonesian for UI alerts (e.g., "Lokasi kantor belum diatur", "Berhasil melakukan clock-in")
 - **Component patterns**: 
-  - Standard components use separate `.html` files
-  - `OfficeManagementComponent` is **standalone** (imported directly in `app.module.ts`, not in `declarations`)
-  - `ManagerDashboardComponent` has inline template (large template embedded in `.ts` file)
+  - Standard components: Declared in `app.module.ts` `declarations` array, separate `.html` files
+  - `OfficeManagementComponent`: **Standalone** component (imported in `imports`, NOT `declarations`)
+    - Has own `imports: [CommonModule, FormsModule, ReactiveFormsModule]`
+    - Route: `/admin/offices` protected by `AuthGuard`
+  - `ManagerDashboardComponent`: Inline template (large HTML embedded in `.ts` file, no separate `.html`)
 
 ### Cross-cutting Concerns
 - **ID types**: `uint` in Go models ↔ `number` in TypeScript
@@ -158,15 +247,71 @@ All under `/api/admin/*`:
 
 ### New Manager Features
 1. **Route**: Add to `admin` group in [main.go](backend/main.go)
-2. **Handler**: Create function in [handlers/admin.go](backend/handlers/admin.go)
+   ```go
+   admin := protected.Group("/admin")
+   admin.Use(auth.ManagerMiddleware())
+   admin.GET("/your-endpoint", handlers.YourHandler)
+   ```
+2. **Handler**: Create function in [handlers/admin.go](backend/handlers/admin.go) or new file
+   - Always check `userID := c.MustGet("userID").(uint)` from middleware
+   - Use Indonesian error messages for user-facing responses
 3. **Frontend service**: Add method to [api.service.ts](frontend/src/app/services/api.service.ts)
+   ```typescript
+   yourMethod(data: any): Observable<any> {
+     return this.http.post(`${this.apiUrl}/admin/your-endpoint`, data, this.getHeaders());
+   }
+   ```
 4. **UI**: Update [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
+   - Inline template: Add HTML directly in `template:` string
+   - Use TailwindCSS utility classes for styling
 
-### Changing Office Location Logic
-- Multi-office support now implemented - managers can have 1-4 offices
-- Employees auto-approved at ANY of their manager's assigned offices
-- To modify validation logic: edit `ClockIn()` in [handlers/attendance.go](backend/handlers/attendance.go)
-- Office assignment managed through `ManagerOffice` junction table and `/admin/offices/*` routes
+### Office Management System Implementation
+
+**Multi-Office Architecture** (implemented, not aspirational):
+- Managers assigned to 1-4 offices via `ManagerOffice` junction table
+- Employees auto-approved when within radius of ANY manager's office
+- `Attendance.ApprovedOfficeID` tracks which office validated the clock-in
+
+**Permission System** (role + super admin flag):
+```go
+// Super admin check pattern (used in office_management.go)
+if !user.IsSuperAdmin {
+    c.JSON(http.StatusForbidden, gin.H{"error": "Hanya super admin yang dapat..."})
+    return
+}
+
+// Regular manager can only edit assigned offices
+var count int64
+database.DB.Model(&models.ManagerOffice{}).
+    Where("manager_id = ? AND office_id = ?", userID, officeID).
+    Count(&count)
+if count == 0 {
+    c.JSON(http.StatusForbidden, gin.H{"error": "Tidak bisa edit kantor yang tidak di-assign"})
+}
+```
+
+**Constraint Enforcement** (at API level, not DB constraints):
+```go
+// Max 4 offices per manager (in AssignOfficeToManager)
+var count int64
+database.DB.Model(&models.ManagerOffice{}).Where("manager_id = ?", managerID).Count(&count)
+if count >= 4 {
+    return error "Manager sudah memiliki 4 kantor (maksimal)"
+}
+
+// Min 1 office per manager (in UnassignOfficeFromManager)
+if count <= 1 {
+    return error "Manager harus memiliki minimal 1 kantor"
+}
+```
+
+**UI Workflow** ([office-management.component.ts](frontend/src/app/components/office-management/office-management.component.ts)):
+1. Manager clicks "Kelola Kantor" button in dashboard (shows "X of 4" badge)
+2. Navigates to `/admin/offices` - displays office cards with map previews
+3. **Add Office**: Modal form with validation (name, address, lat/long, radius, clock-in time)
+4. **Edit Office**: Pre-populates form, checks permissions (super admin or assigned manager)
+5. **View on Map**: Opens `https://www.google.com/maps?q={lat},{long}` in new tab
+6. **Delete Office**: Soft delete (`is_active = false`), enforces min 1 office constraint
 
 ## Deployment Notes
 - **Production**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Tencent Cloud/VPS setup
@@ -189,6 +334,16 @@ All under `/api/admin/*`:
 
 ### Common Gotchas
 - **Office location not set**: Clock-in fails with "Lokasi kantor belum diatur" error
+  - Solution: Manager must have at least 1 assigned office (check `ManagerOffice` table)
 - **CORS errors**: If frontend can't reach backend, check CORS origins in [main.go](backend/main.go)
+  - Hardcoded: `localhost:4200` and `43.163.107.154`
 - **JWT expiry**: Tokens expire after 24 hours, user must re-login
+  - Check `GenerateToken()` in [backend/auth/jwt.go](backend/auth/jwt.go)
 - **No registration UI**: Must create users via API directly (intended design)
+  - Use `POST /api/register` with Postman/cURL
+- **Standalone component errors**: If `OfficeManagementComponent` not found:
+  - Ensure it's in `imports` array, NOT `declarations` in `app.module.ts`
+- **Multi-office assignment confusion**: 
+  - Employees checked against **manager's offices**, not their own `OfficeID`
+  - `User.OfficeID` is for reference, not used in clock-in validation
+- **Distance always in meters**: Never use kilometers - frontend sends meters, backend expects meters
