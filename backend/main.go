@@ -6,13 +6,12 @@ import (
 	"field-attendance-system/auth"
 	"field-attendance-system/database"
 	"field-attendance-system/handlers"
-
 	"field-attendance-system/models"
+	"field-attendance-system/seed"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -32,9 +31,8 @@ func main() {
 		&models.ManagerOffice{},
 	)
 
-	// Seed admin user and default office assignment
-	seedAdminUser()
-	seedDefaultOfficeAssignment()
+	// Seed database with initial data
+	seed.RunAll()
 
 	r := gin.Default()
 
@@ -92,63 +90,4 @@ func main() {
 
 	log.Println("Server starting on port 8080...")
 	r.Run(":8080")
-}
-
-func seedAdminUser() {
-	// Check if admin user already exists
-	var existingUser models.User
-	result := database.DB.Where("username = ?", "admin").First(&existingUser)
-
-	if result.Error == nil {
-		log.Println("Admin user already exists, skipping seed")
-		return
-	}
-
-	// Create admin user
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("Failed to hash admin password: %v", err)
-		return
-	}
-
-	adminUser := models.User{
-		Username:     "admin",
-		FullName:     "Administrator",
-		PasswordHash: string(hashedPassword),
-		Role:         "manager",
-		IsSuperAdmin: true,
-	}
-
-	if err := database.DB.Create(&adminUser).Error; err != nil {
-		log.Printf("Failed to create admin user: %v", err)
-		return
-	}
-
-	log.Println("✓ Admin user created successfully")
-	log.Println("  Username: admin")
-	log.Println("  Password: admin123")
-	log.Println("  Role: manager (Super Admin)")
-}
-
-func seedDefaultOfficeAssignment() {
-	// Assign first office to super admin manager
-	var office models.OfficeLocation
-	if err := database.DB.First(&office).Error; err == nil {
-		var admin models.User
-		if err := database.DB.Where("role = ? AND is_super_admin = ?", "manager", true).First(&admin).Error; err == nil {
-			// Check if assignment already exists
-			var existingAssignment models.ManagerOffice
-			if err := database.DB.Where("manager_id = ? AND office_id = ?", admin.ID, office.ID).
-				First(&existingAssignment).Error; err != nil {
-				// Create assignment
-				assignment := models.ManagerOffice{
-					ManagerID: admin.ID,
-					OfficeID:  office.ID,
-				}
-				if err := database.DB.Create(&assignment).Error; err == nil {
-					log.Println("✓ Default office assigned to admin")
-				}
-			}
-		}
-	}
 }
