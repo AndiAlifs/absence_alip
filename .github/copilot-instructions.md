@@ -3,12 +3,18 @@
 ## Project Overview
 A geolocation-based attendance tracking system with automatic proximity validation and manager approval workflows. Backend in Go (Gin + GORM), frontend in Angular 16, MySQL database.
 
+**Key Differentiators:**
+- **Multi-office support**: Managers can oversee 1-4 offices, employees auto-approved at ANY managed office
+- **Super admin system**: First admin has elevated permissions for office management
+- **GPS-based validation**: Haversine distance calculation auto-approves/rejects clock-ins
+
 ## Architecture & Key Patterns
 
 ### Backend Structure (Go)
 - **Module name**: `field-attendance-system` (used in all imports)
-- **Entry point**: [backend/main.go](backend/main.go) - seeds admin user on startup via `seedAdminUser()`
+- **Entry point**: [backend/main.go](backend/main.go) - seeds admin user on startup via `seedAdminUser()` and `seedDefaultOfficeAssignment()`
 - **Database**: GORM auto-migration on startup; connection via env vars with defaults (`root:password@127.0.0.1:3306/attendance_db`)
+  - Auto-migrates 5 models: `User`, `Attendance`, `LeaveRequest`, `OfficeLocation`, `ManagerOffice`
 - **Auth**: JWT tokens with 24h expiry ([backend/auth/jwt.go](backend/auth/jwt.go))
   - Middleware chain: `AuthMiddleware()` → `ManagerMiddleware()` for admin routes
   - JWT secret from `JWT_SECRET` env var, fallback to `"super-secret-key-default"`
@@ -24,13 +30,13 @@ A geolocation-based attendance tracking system with automatic proximity validati
 ### Core Business Logic: Geolocation + Lateness Validation
 **Critical workflow** in [handlers/attendance.go](backend/handlers/attendance.go):
 1. Employee sends `{latitude, longitude}` from browser's geolocation API
-2. Backend retrieves `OfficeLocation` settings (lat/long/radius/clock_in_time)
-3. **Distance check**: Haversine formula ([utils/distance.go](backend/utils/distance.go)) calculates meters from office
-   - Within `allowed_radius_meters` → `status="approved"`
-   - Outside radius → `status="pending"` (requires manager approval)
-4. **Lateness check**: Compares current time to `OfficeLocation.ClockInTime` (format: `"HH:MM"`)
+2. Backend retrieves manager's assigned offices (via `ManagerOffice` junction table)
+3. **Multi-office distance check**: Haversine formula ([utils/distance.go](backend/utils/distance.go)) calculates meters from EACH office
+   - Within `allowed_radius_meters` of ANY office → `status="approved"`, records `approved_office_id`
+   - Outside ALL offices' radius → `status="pending"` (requires manager approval)
+4. **Lateness check**: Uses CLOSEST office's `ClockInTime` (format: `"HH:MM"`)
    - Sets `is_late=true` and `minutes_late` if clock-in after official time
-5. Creates `Attendance` record with all calculated fields
+5. Creates `Attendance` record with all calculated fields + office reference
 
 **Key pattern**: Dual-status system (auto-approve vs pending) is fundamental - preserve both paths when modifying.
 
@@ -48,8 +54,12 @@ A geolocation-based attendance tracking system with automatic proximity validati
 
 ### Relations & Foreign Keys
 - `Attendance.UserID` → `User` (preloaded in admin queries via `Preload("User")`)
+- `Attendance.ApprovedOfficeID` → `OfficeLocation` (tracks which office validated the clock-in)
 - `LeaveRequest.UserID` → `User` (JSON tag `"-"` hides user object from API response)
-- `OfficeLocation`: **Singleton pattern** - only ID=1 used, must be seeded before clock-ins work
+- `ManagerOffice`: Junction table linking managers to 1-4 offices (many-to-many)
+  - Enforces 1 minimum, 4 maximum offices per manager
+- `User.OfficeID` → `OfficeLocation` (employee's primary office assignment)
+- `User.IsSuperAdmin`: First admin user has this set to `true` on seed
 
 ## Development Workflows
 
@@ -105,6 +115,14 @@ All under `/api/admin/*`:
 - `PUT|DELETE /employees/:id` - Update/delete employee
 - `GET /daily-attendance` - Dashboard showing today's attendance summary
 
+**Office Management Routes** ([handlers/office_management.go](backend/handlers/office_management.go)):
+- `GET /offices` - Super admin sees all, managers see only assigned offices
+- `POST /offices` - Create office (super admin only)
+- `PUT /offices/:id` - Update office (super admin or assigned manager)
+- `GET /my-offices` - Get manager's assigned offices with count
+- `POST /offices/assign` - Assign office to manager (super admin, enforces 4-office limit)
+- `POST /offices/unassign` - Remove office assignment (super admin, enforces 1 minimum)
+
 ## Code Conventions & Patterns
 
 ### Go Backend
@@ -119,7 +137,10 @@ All under `/api/admin/*`:
 - **API calls**: All through `ApiService`, which auto-adds `Authorization: Bearer <token>` header
 - **Date inputs**: Use `type="date"` HTML5 inputs, backend receives as `time.Time` in JSON
 - **Error messages**: Indonesian for UI alerts (e.g., "Lokasi kantor belum diatur", "Berhasil melakukan clock-in")
-- **Component inline templates**: Large templates embedded in `.ts` files (no separate `.html` for manager dashboard)
+- **Component patterns**: 
+  - Standard components use separate `.html` files
+  - `OfficeManagementComponent` is **standalone** (imported directly in `app.module.ts`, not in `declarations`)
+  - `ManagerDashboardComponent` has inline template (large template embedded in `.ts` file)
 
 ### Cross-cutting Concerns
 - **ID types**: `uint` in Go models ↔ `number` in TypeScript
@@ -142,8 +163,10 @@ All under `/api/admin/*`:
 4. **UI**: Update [manager-dashboard.component.ts](frontend/src/app/components/manager-dashboard/manager-dashboard.component.ts)
 
 ### Changing Office Location Logic
-- Currently **singleton pattern** (ID=1 only) enforced in [handlers/office.go](backend/handlers/office.go)
-- To support multiple offices: change `OfficeLocation` model, update `ClockIn()` to select correct office by employee assignment
+- Multi-office support now implemented - managers can have 1-4 offices
+- Employees auto-approved at ANY of their manager's assigned offices
+- To modify validation logic: edit `ClockIn()` in [handlers/attendance.go](backend/handlers/attendance.go)
+- Office assignment managed through `ManagerOffice` junction table and `/admin/offices/*` routes
 
 ## Deployment Notes
 - **Production**: See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for Tencent Cloud/VPS setup
