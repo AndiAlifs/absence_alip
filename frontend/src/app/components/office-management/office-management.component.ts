@@ -78,6 +78,10 @@ interface Office {
                         class="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700">
                   Peta
                 </button>
+                <button (click)="deleteOffice(office)" 
+                        class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                  Hapus
+                </button>
               </div>
             </div>
           </div>
@@ -365,7 +369,22 @@ export class OfficeManagementComponent implements OnInit {
 
   viewOnMap(office: Office) {
     const url = `https://www.google.com/maps?q=${office.latitude},${office.longitude}`;
-
     window.open(url, '_blank');
+  }
+
+  deleteOffice(office: Office) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus kantor "${office.name}"?\n\nPeringatan: Kantor dengan riwayat absensi tidak dapat dihapus.`)) {
+      return;
+    }
+
+    this.api.deleteOffice(office.id).subscribe({
+      next: () => {
+        alert('Kantor berhasil dihapus');
+        this.loadOffices();
+      },
+      error: (error) => {
+        alert('Gagal menghapus kantor: ' + (error.error?.error || 'Kesalahan tidak diketahui'));
+      }
+    });
   }
 }

@@ -39,41 +39,59 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           <p class="text-sm text-orange-800 font-medium">Anda belum melakukan clock-in hari ini</p>
         </div>
 
-        <!-- Office Location Information Card -->
-        <div *ngIf="officeLocation" class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-teal-500">
+        <!-- Office Locations Information Card -->
+        <div *ngIf="officeLocations.length > 0" class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-teal-500">
           <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <svg class="h-6 w-6 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            📍 Informasi Lokasi Kantor
+            📍 Lokasi Kantor yang Tersedia ({{officeLocations.length}})
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-lg shadow">
-              <p class="text-xs text-gray-600 mb-1">Nama Kantor</p>
-              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.office_name || 'Kantor Pusat' }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-              <p class="text-xs text-gray-600 mb-1">Koordinat</p>
-              <p class="text-xs font-semibold text-gray-900">{{ officeLocation.latitude }}, {{ officeLocation.longitude }}</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-              <p class="text-xs text-gray-600 mb-1">Radius Diizinkan</p>
-              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.allowed_radius_meters }} meter</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-              <p class="text-xs text-gray-600 mb-1">Waktu Clock-In</p>
-              <p class="text-sm font-semibold text-gray-900">{{ officeLocation.clock_in_time }}</p>
+          <p class="text-sm text-gray-600 mb-4">Anda dapat clock-in di salah satu kantor berikut:</p>
+          
+          <!-- Office Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let office of officeLocations" 
+                 class="bg-white rounded-lg shadow-md p-4 border-2"
+                 [class.border-green-500]="office.isWithinRange"
+                 [class.border-orange-300]="!office.isWithinRange">
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="text-lg font-bold text-gray-900">{{ office.name }}</h4>
+                <span *ngIf="office.isWithinRange" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  ✓ Dalam Jangkauan
+                </span>
+                <span *ngIf="!office.isWithinRange && office.distance !== undefined" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                  ⚠ Perlu Approval
+                </span>
+              </div>
+              
+              <p class="text-xs text-gray-600 mb-3" *ngIf="office.address">{{ office.address }}</p>
+              
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Jam Masuk:</span>
+                  <span class="font-semibold">{{ office.clock_in_time }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Radius:</span>
+                  <span class="font-semibold">{{ office.allowed_radius_meters }}m</span>
+                </div>
+                <div *ngIf="office.distance !== undefined" class="flex justify-between pt-2 border-t">
+                  <span class="text-gray-600">Jarak Anda:</span>
+                  <span class="font-semibold" 
+                        [class.text-green-700]="office.isWithinRange"
+                        [class.text-orange-700]="!office.isWithinRange">
+                    {{ office.distance.toFixed(0) }}m
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-          <div *ngIf="location && distanceFromOffice !== null" class="mt-4 bg-white p-4 rounded-lg shadow">
-            <p class="text-xs text-gray-600 mb-1">Jarak Anda dari Kantor</p>
-            <p class="text-lg font-semibold" [class.text-green-700]="distanceFromOffice <= officeLocation.allowed_radius_meters" [class.text-orange-700]="distanceFromOffice > officeLocation.allowed_radius_meters">
-              {{ distanceFromOffice.toFixed(2) }} meter
-              <span *ngIf="distanceFromOffice <= officeLocation.allowed_radius_meters" class="text-sm text-green-600 ml-2">✓ Dalam radius</span>
-              <span *ngIf="distanceFromOffice > officeLocation.allowed_radius_meters" class="text-sm text-orange-600 ml-2">⚠ Di luar radius (perlu persetujuan)</span>
-            </p>
-          </div>
+        </div>
+
+        <div *ngIf="officeLocations.length === 0" class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg mb-6">
+          <p class="text-sm text-orange-800 font-medium">Tidak ada lokasi kantor yang tersedia. Hubungi manajer Anda.</p>
         </div>
 
         <!-- Today's Leave Status Card -->
@@ -188,14 +206,24 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
     <!-- Confirmation Dialog -->
     <div *ngIf="showConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div class="text-center">
           <svg class="mx-auto h-12 w-12 text-orange-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Lokasi Di Luar Kantor</h3>
-          <p class="text-gray-600 mb-2">Clock in diluar kantor memerlukan persetujuan manajer.</p>
-          <p class="text-sm text-gray-500 mb-6">Jarak Anda dari kantor: <strong>{{ distanceFromOffice?.toFixed(2) }} meter</strong></p>
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Lokasi Di Luar Semua Kantor</h3>
+          <p class="text-gray-600 mb-4">Clock-in di luar semua kantor memerlukan persetujuan manajer.</p>
+          
+          <!-- Show distances from all offices -->
+          <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+            <p class="text-sm font-semibold text-gray-700 mb-3">Jarak Anda dari setiap kantor:</p>
+            <div class="space-y-2">
+              <div *ngFor="let office of officeLocations" class="flex justify-between text-sm">
+                <span class="text-gray-600">{{ office.name }}:</span>
+                <span class="font-semibold text-orange-700">{{ office.distance?.toFixed(0) }}m (max: {{ office.allowed_radius_meters }}m)</span>
+              </div>
+            </div>
+          </div>
 
           <div class="flex gap-3">
             <button 
@@ -227,6 +255,7 @@ export class ClockInComponent implements OnInit {
   showConfirmation = false;
   distanceFromOffice: number | null = null;
   officeLocation: any = null;
+  officeLocations: any[] = [];
   todayAttendance: any = null;
   todayLeave: any = null;
 
@@ -234,20 +263,24 @@ export class ClockInComponent implements OnInit {
 
   ngOnInit() {
     this.getLocation();
-    this.loadOfficeLocation();
+    this.loadOfficeLocations();
     this.loadTodayAttendance();
     this.loadTodayLeave();
   }
 
-  loadOfficeLocation() {
-    this.apiService.getOfficeLocation().subscribe({
+  loadOfficeLocations() {
+    this.apiService.getEmployeeOffices().subscribe({
       next: (response) => {
-        this.officeLocation = response.data;
-        // Calculate distance if location is already loaded
-        this.calculateDistanceFromOffice();
+        this.officeLocations = response.data || [];
+        // Set first office as default for backward compatibility
+        if (this.officeLocations.length > 0) {
+          this.officeLocation = this.officeLocations[0];
+        }
+        // Calculate distances if location is already loaded
+        this.calculateDistancesFromOffices();
       },
       error: (error) => {
-        console.error('Failed to load office location:', error);
+        console.error('Failed to load office locations:', error);
       }
     });
   }
@@ -284,8 +317,8 @@ export class ClockInComponent implements OnInit {
             longitude: position.coords.longitude
           };
           this.loading = false;
-          // Calculate distance from office if office location is loaded
-          this.calculateDistanceFromOffice();
+          // Calculate distances from all offices if loaded
+          this.calculateDistancesFromOffices();
         },
         (err) => {
           this.error = 'Gagal mendapatkan lokasi. Silakan aktifkan izin lokasi.';
@@ -324,19 +357,39 @@ export class ClockInComponent implements OnInit {
     }
   }
 
+  calculateDistancesFromOffices() {
+    if (this.location && this.officeLocations.length > 0) {
+      this.officeLocations.forEach(office => {
+        office.distance = this.calculateDistance(
+          this.location!.latitude,
+          this.location!.longitude,
+          office.latitude,
+          office.longitude
+        );
+        office.isWithinRange = office.distance <= office.allowed_radius_meters;
+      });
+      // Also calculate for the default office
+      this.calculateDistanceFromOffice();
+    }
+  }
+
   checkAndSubmitClockIn() {
-    if (!this.location || !this.officeLocation) {
+    if (!this.location || this.officeLocations.length === 0) {
       this.submitClockIn();
       return;
     }
 
-    // Recalculate distance to ensure it's up to date
-    this.calculateDistanceFromOffice();
+    // Recalculate distances to ensure they're up to date
+    this.calculateDistancesFromOffices();
 
-    // Check if outside office radius
-    if (this.distanceFromOffice && this.distanceFromOffice > this.officeLocation.allowed_radius_meters) {
+    // Check if within range of ANY office
+    const isWithinAnyOffice = this.officeLocations.some(office => office.isWithinRange);
+
+    if (!isWithinAnyOffice) {
+      // Outside all offices - show confirmation
       this.showConfirmation = true;
     } else {
+      // Within range of at least one office - proceed
       this.submitClockIn();
     }
   }

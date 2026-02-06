@@ -83,6 +83,7 @@ func main() {
 			admin.GET("/offices", handlers.GetAllOffices)
 			admin.POST("/offices", handlers.CreateOffice)
 			admin.PUT("/offices/:id", handlers.UpdateOffice)
+			admin.DELETE("/offices/:id", handlers.DeleteOffice)
 			admin.GET("/my-offices", handlers.GetManagerOffices)
 			admin.POST("/offices/assign", handlers.AssignOfficeToManager)
 			admin.POST("/offices/unassign", handlers.UnassignOfficeFromManager)

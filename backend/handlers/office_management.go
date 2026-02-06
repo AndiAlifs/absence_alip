@@ -68,6 +68,15 @@ func CreateOffice(c *gin.Context) {
 		return
 	}
 
+	// Check if manager already has 4 offices (to prevent exceeding limit)
+	var currentOfficeCount int64
+	database.DB.Model(&models.ManagerOffice{}).Where("manager_id = ?", userID).Count(&currentOfficeCount)
+
+	if currentOfficeCount >= 4 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Anda sudah memiliki 4 kantor (maksimal). Hapus salah satu untuk menambah yang baru."})
+		return
+	}
+
 	office := models.OfficeLocation{
 		Name:                input.Name,
 		Address:             input.Address,
@@ -83,7 +92,20 @@ func CreateOffice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Kantor berhasil dibuat", "data": office})
+	// Automatically assign the office to the manager who created it
+	assignment := models.ManagerOffice{
+		ManagerID: userID,
+		OfficeID:  office.ID,
+	}
+
+	if err := database.DB.Create(&assignment).Error; err != nil {
+		// If assignment fails, delete the office to maintain consistency
+		database.DB.Delete(&office)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal assign kantor ke manager"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Kantor berhasil dibuat dan di-assign", "data": office})
 }
 
 // UpdateOffice - Manager can update if assigned, super admin can update any
@@ -292,7 +314,61 @@ func GetManagerOffices(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": offices, "count": len(offices)})
 }
 
-// GetEmployeeOffices - Shows all valid offices for employees to see
+// DeleteOffice - Soft delete office (sets is_active = false)
+func DeleteOffice(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+	officeID, _ := strconv.Atoi(c.Param("id"))
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User tidak ditemukan"})
+		return
+	}
+
+	// Check permission - must be assigned or super admin
+	if !user.IsSuperAdmin {
+		var count int64
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ? AND office_id = ?", userID, officeID).
+			Count(&count)
+
+		if count == 0 {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Anda tidak memiliki akses ke kantor ini"})
+			return
+		}
+	}
+
+	var office models.OfficeLocation
+	if err := database.DB.First(&office, officeID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Kantor tidak ditemukan"})
+		return
+	}
+
+	// Check if office has active attendance records
+	var attendanceCount int64
+	database.DB.Model(&models.Attendance{}).
+		Where("approved_office_id = ?", officeID).
+		Count(&attendanceCount)
+
+	if attendanceCount > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Tidak dapat menghapus kantor yang memiliki riwayat absensi"})
+		return
+	}
+
+	// Soft delete: set is_active to false
+	office.IsActive = false
+	if err := database.DB.Save(&office).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus kantor"})
+		return
+	}
+
+	// Remove all manager assignments
+	database.DB.Where("office_id = ?", officeID).Delete(&models.ManagerOffice{})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Kantor berhasil dihapus"})
+}
+
+// GetEmployeeOffices - Shows offices managed by employee's manager
 func GetEmployeeOffices(c *gin.Context) {
 	userID := c.MustGet("userID").(uint)
 
@@ -302,9 +378,19 @@ func GetEmployeeOffices(c *gin.Context) {
 		return
 	}
 
-	// Get all active offices
-	var offices []models.OfficeLocation
-	database.DB.Where("is_active = ?", true).Find(&offices)
+	// Get employee's manager (same logic as ClockIn)
+	var manager models.User
+	if err := database.DB.Where("role = ?", "manager").First(&manager).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Manager tidak ditemukan"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": offices})
+	// Get all offices managed by the manager
+	var offices []models.OfficeLocation
+	database.DB.
+		Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
+		Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", manager.ID, true).
+		Find(&offices)
+
+	c.JSON(http.StatusOK, gin.H{"data": offices, "count": len(offices)})
 }

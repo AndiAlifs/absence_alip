@@ -109,28 +109,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
         </div>
 
-        <!-- Office Filter Selector -->
-        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-              <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Filter Berdasarkan Kantor</label>
-                <select [(ngModel)]="selectedOfficeId" (change)="filterByOffice()" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option [value]="null">Semua Kantor</option>
-                  <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="text-sm text-gray-600">
-              <p>Menampilkan data dari: <strong>{{ getSelectedOfficeName() }}</strong></p>
-            </div>
-          </div>
-        </div>
 
         <!-- Employees Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">

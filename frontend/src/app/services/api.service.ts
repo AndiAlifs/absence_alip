@@ -126,6 +126,10 @@ export class ApiService {
     return this.http.put(`${this.apiUrl}/admin/offices/${id}`, data, this.getHeaders());
   }
 
+  deleteOffice(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/offices/${id}`, this.getHeaders());
+  }
+
   assignOfficeToManager(managerId: number, officeId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/offices/assign`, 
       { manager_id: managerId, office_id: officeId }, 
