@@ -415,8 +415,9 @@ export class AttendanceReportsComponent implements OnInit {
     }
     
     // Office filter
-    if (this.selectedOfficeId) {
-      filtered = filtered.filter(r => r.approved_office_id === this.selectedOfficeId);
+    if (this.selectedOfficeId !== null && this.selectedOfficeId !== undefined) {
+      const officeId = Number(this.selectedOfficeId);
+      filtered = filtered.filter(r => r.approved_office_id === officeId);
     }
     
     // Status filter
