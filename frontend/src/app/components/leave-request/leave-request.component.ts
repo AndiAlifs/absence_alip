@@ -7,8 +7,29 @@ import { ApiService } from '../../services/api.service';
   template: `
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div class="max-w-2xl mx-auto">
+        <!-- Navigation Buttons -->
+        <div class="mb-4 flex justify-between items-center">
+          <h2 class="text-3xl font-bold text-gray-900">Permohonan Cuti</h2>
+          <div class="flex gap-2">
+            <a routerLink="/clock-in" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Clock In
+            </a>
+            <a routerLink="/leave-history" 
+               class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Riwayat Cuti
+            </a>
+          </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Ajukan Permohonan Cuti</h2>
+          <h3 class="text-2xl font-bold text-gray-900 mb-6">Ajukan Permohonan Cuti</h3>
           
           <form [formGroup]="leaveForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <div>

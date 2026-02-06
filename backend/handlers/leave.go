@@ -79,3 +79,20 @@ func GetTodayLeave(c *gin.Context) {
 		"data": leave,
 	})
 }
+
+// GetMyLeaveHistory returns all leave requests for the logged-in user
+func GetMyLeaveHistory(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	var leaves []models.LeaveRequest
+	result := database.DB.Where("user_id = ?", userID).Order("created_at DESC").Find(&leaves)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave history"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": leaves,
+	})
+}

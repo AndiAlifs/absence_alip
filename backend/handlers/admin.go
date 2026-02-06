@@ -75,7 +75,7 @@ func GetAllLeaveRequests(c *gin.Context) {
 
 	if manager.IsSuperAdmin {
 		// Super admin can see all leave requests
-		if result := database.DB.Preload("User").Find(&leaves); result.Error != nil {
+		if result := database.DB.Preload("User").Order("created_at DESC").Find(&leaves); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave requests"})
 			return
 		}
@@ -102,13 +102,44 @@ func GetAllLeaveRequests(c *gin.Context) {
 			return
 		}
 
-		if result := database.DB.Preload("User").Where("user_id IN ?", userIDs).Find(&leaves); result.Error != nil {
+		if result := database.DB.Preload("User").Where("user_id IN ?", userIDs).Order("created_at DESC").Find(&leaves); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave requests"})
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": leaves})
+	// Create response with user data included
+	type LeaveResponse struct {
+		ID        uint      `json:"id"`
+		UserID    uint      `json:"user_id"`
+		StartDate time.Time `json:"start_date"`
+		EndDate   time.Time `json:"end_date"`
+		Reason    string    `json:"reason"`
+		Status    string    `json:"status"`
+		User      struct {
+			ID       uint   `json:"id"`
+			Username string `json:"username"`
+			FullName string `json:"full_name"`
+		} `json:"user"`
+	}
+
+	var response []LeaveResponse
+	for _, leave := range leaves {
+		lr := LeaveResponse{
+			ID:        leave.ID,
+			UserID:    leave.UserID,
+			StartDate: leave.StartDate,
+			EndDate:   leave.EndDate,
+			Reason:    leave.Reason,
+			Status:    leave.Status,
+		}
+		lr.User.ID = leave.User.ID
+		lr.User.Username = leave.User.Username
+		lr.User.FullName = leave.User.FullName
+		response = append(response, lr)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
 }
 
 type UpdateLeaveInput struct {
