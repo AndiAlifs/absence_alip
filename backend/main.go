@@ -57,7 +57,9 @@ func main() {
 		protected.POST("/leave", handlers.CreateLeaveRequest)
 		protected.GET("/office-location", handlers.GetOfficeLocation)
 		protected.GET("/my-attendance/today", handlers.GetTodayAttendance)
+		protected.GET("/my-attendance/history", handlers.GetMyAttendanceHistory)
 		protected.GET("/my-leave/today", handlers.GetTodayLeave)
+		protected.GET("/my-leave/history", handlers.GetMyLeaveHistory)
 		protected.GET("/my-offices", handlers.GetEmployeeOffices)
 
 		// Manager routes

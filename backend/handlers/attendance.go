@@ -172,3 +172,42 @@ func GetTodayAttendance(c *gin.Context) {
 		"data": attendance,
 	})
 }
+
+// GetMyAttendanceHistory returns all attendance records for the logged-in employee
+func GetMyAttendanceHistory(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	// Optional query parameters for filtering
+	limit := c.DefaultQuery("limit", "50")
+	offset := c.DefaultQuery("offset", "0")
+
+	limitInt, _ := strconv.Atoi(limit)
+	offsetInt, _ := strconv.Atoi(offset)
+
+	var attendances []models.Attendance
+	var total int64
+
+	// Get total count
+	database.DB.Model(&models.Attendance{}).Where("user_id = ?", userID).Count(&total)
+
+	// Get records with preload of related office
+	result := database.DB.
+		Preload("ApprovedOffice").
+		Where("user_id = ?", userID).
+		Order("clock_in_time DESC").
+		Limit(limitInt).
+		Offset(offsetInt).
+		Find(&attendances)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data absensi"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":   attendances,
+		"total":  total,
+		"limit":  limitInt,
+		"offset": offsetInt,
+	})
+}

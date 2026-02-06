@@ -35,6 +35,10 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/my-attendance/today`, this.getHeaders());
   }
 
+  getMyAttendanceHistory(limit: number = 50, offset: number = 0): Observable<any> {
+    return this.http.get(`${this.apiUrl}/my-attendance/history?limit=${limit}&offset=${offset}`, this.getHeaders());
+  }
+
   // Leave
   submitLeave(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/leave`, data, this.getHeaders());
@@ -42,6 +46,14 @@ export class ApiService {
 
   getTodayLeave(): Observable<any> {
     return this.http.get(`${this.apiUrl}/my-leave/today`, this.getHeaders());
+  }
+
+  getMyLeaveHistory(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/my-leave/history`, this.getHeaders());
+  }
+
+  getAllLeaveRequests(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/leaves`, this.getHeaders());
   }
 
   // Admin
