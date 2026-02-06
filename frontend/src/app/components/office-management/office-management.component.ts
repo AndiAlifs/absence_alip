@@ -30,11 +30,11 @@ interface Office {
           </div>
           <div class="space-x-3">
             <button (click)="goToDashboard()" 
-                    class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                    class="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition-all shadow-lg">
               ← Kembali ke Dashboard
             </button>
             <button (click)="showAddOfficeForm()" 
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-lg">
               + Tambah Kantor Baru
             </button>
           </div>
@@ -71,15 +71,15 @@ interface Office {
               
               <div class="flex space-x-2">
                 <button (click)="editOffice(office)" 
-                        class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                        class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md">
                   Edit
                 </button>
                 <button (click)="viewOnMap(office)" 
-                        class="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                        class="flex-1 px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md">
                   Peta
                 </button>
                 <button (click)="deleteOffice(office)" 
-                        class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                        class="px-3 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md">
                   Hapus
                 </button>
               </div>
@@ -127,7 +127,7 @@ interface Office {
                 <div class="flex gap-3">
                   <button type="button" (click)="getCurrentLocation()" 
                           [disabled]="isGettingLocation"
-                          class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center">
+                          class="flex-1 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 transition-all shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
                     <svg *ngIf="!isGettingLocation" class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     </svg>
@@ -135,7 +135,7 @@ interface Office {
                     {{ isGettingLocation ? 'Mengambil...' : 'Gunakan Lokasi Saat Ini' }}
                   </button>
                   <button type="button" (click)="toggleMapPicker()" 
-                          class="flex-1 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center justify-center">
+                          class="flex-1 px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-300 transition-all shadow-md flex items-center justify-center">
                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
@@ -182,11 +182,11 @@ interface Office {
               <div class="flex space-x-3 mt-6">
                 <button type="submit" 
                         [disabled]="!officeForm.valid"
-                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400">
+                        class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
                   {{formMode === 'add' ? 'Buat Kantor' : 'Update Kantor'}}
                 </button>
                 <button type="button" (click)="closeForm()" 
-                        class="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                        class="flex-1 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition-all shadow-lg">
                   Batal
                 </button>
               </div>
