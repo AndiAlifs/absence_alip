@@ -152,7 +152,7 @@ func GetAllEmployees(c *gin.Context) {
 
 	// Super admin can see all users
 	if manager.IsSuperAdmin {
-		if result := database.DB.Find(&users); result.Error != nil {
+		if result := database.DB.Preload("Office").Find(&users); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
 			return
 		}
@@ -169,7 +169,7 @@ func GetAllEmployees(c *gin.Context) {
 			return
 		}
 
-		if result := database.DB.Where("office_id IN ?", officeIDs).Find(&users); result.Error != nil {
+		if result := database.DB.Preload("Office").Where("office_id IN ?", officeIDs).Find(&users); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
 			return
 		}
