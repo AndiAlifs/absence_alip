@@ -24,15 +24,16 @@ func RunAll() {
 	log.Println("Database seeding completed!")
 }
 
-// SeedSuperAdmins creates two super admin users
+// SeedSuperAdmins creates admin users (1 super admin, 1 regular manager)
 func SeedSuperAdmins() {
 	admins := []struct {
-		username string
-		fullName string
-		password string
+		username     string
+		fullName     string
+		password     string
+		isSuperAdmin bool
 	}{
-		{"admin", "Administrator 1", "admin"},
-		{"admin2", "Administrator 2", "admin2"},
+		{"admin", "Administrator 1", "admin", true},
+		{"admin2", "Administrator 2", "admin2", false}, // Regular manager, not super admin
 	}
 
 	for _, admin := range admins {
@@ -57,7 +58,7 @@ func SeedSuperAdmins() {
 			FullName:     admin.fullName,
 			PasswordHash: string(hashedPassword),
 			Role:         "manager",
-			IsSuperAdmin: true,
+			IsSuperAdmin: admin.isSuperAdmin,
 		}
 
 		if err := database.DB.Create(&adminUser).Error; err != nil {
@@ -65,10 +66,15 @@ func SeedSuperAdmins() {
 			continue
 		}
 
+		roleType := "Regular Manager"
+		if admin.isSuperAdmin {
+			roleType = "Super Admin"
+		}
+
 		log.Printf("✓ Admin user '%s' created successfully", admin.username)
 		log.Printf("  Username: %s", admin.username)
 		log.Printf("  Password: %s", admin.password)
-		log.Println("  Role: manager (Super Admin)")
+		log.Printf("  Role: manager (%s)", roleType)
 	}
 }
 
@@ -117,12 +123,16 @@ func SeedOffices() {
 	}
 }
 
-// SeedDefaultOfficeAssignment assigns all offices to the first admin
+// SeedDefaultOfficeAssignment assigns offices to managers
 func SeedDefaultOfficeAssignment() {
-	// Get first admin (admin)
-	var admin models.User
-	if err := database.DB.Where("username = ?", "admin").First(&admin).Error; err != nil {
+	// Get both admins
+	var admin1, admin2 models.User
+	if err := database.DB.Where("username = ?", "admin").First(&admin1).Error; err != nil {
 		log.Println("Admin user not found, skipping office assignment")
+		return
+	}
+	if err := database.DB.Where("username = ?", "admin2").First(&admin2).Error; err != nil {
+		log.Println("Admin2 user not found, skipping office assignment")
 		return
 	}
 
@@ -133,36 +143,48 @@ func SeedDefaultOfficeAssignment() {
 		return
 	}
 
-	// Assign all 4 offices to first admin
-	for _, office := range offices {
+	if len(offices) < 4 {
+		log.Println("Not enough offices, skipping assignment")
+		return
+	}
+
+	// Assign first 2 offices to admin1 (Kendari, Jakarta)
+	for i := 0; i < 2; i++ {
 		var existingAssignment models.ManagerOffice
-		if err := database.DB.Where("manager_id = ? AND office_id = ?", admin.ID, office.ID).
+		if err := database.DB.Where("manager_id = ? AND office_id = ?", admin1.ID, offices[i].ID).
 			First(&existingAssignment).Error; err != nil {
-			// Create assignment
 			assignment := models.ManagerOffice{
-				ManagerID: admin.ID,
-				OfficeID:  office.ID,
+				ManagerID: admin1.ID,
+				OfficeID:  offices[i].ID,
 			}
 			if err := database.DB.Create(&assignment).Error; err == nil {
-				log.Printf("✓ Office '%s' assigned to admin", office.Name)
+				log.Printf("✓ Office '%s' assigned to admin", offices[i].Name)
+			}
+		}
+	}
+
+	// Assign last 2 offices to admin2 (Palopo, Makassar)
+	for i := 2; i < 4; i++ {
+		var existingAssignment models.ManagerOffice
+		if err := database.DB.Where("manager_id = ? AND office_id = ?", admin2.ID, offices[i].ID).
+			First(&existingAssignment).Error; err != nil {
+			assignment := models.ManagerOffice{
+				ManagerID: admin2.ID,
+				OfficeID:  offices[i].ID,
+			}
+			if err := database.DB.Create(&assignment).Error; err == nil {
+				log.Printf("✓ Office '%s' assigned to admin2", offices[i].Name)
 			}
 		}
 	}
 }
 
-// SeedEmployees creates initial employees under the first admin
+// SeedEmployees creates initial employees assigned to different offices
 func SeedEmployees() {
-	// Get first admin
-	var admin models.User
-	if err := database.DB.Where("username = ?", "admin").First(&admin).Error; err != nil {
-		log.Println("Admin user not found, skipping employee creation")
-		return
-	}
-
-	// Get first office for assigning to employees
-	var firstOffice models.OfficeLocation
-	if err := database.DB.First(&firstOffice).Error; err != nil {
-		log.Println("No office found, skipping employee creation")
+	// Get all offices
+	var offices []models.OfficeLocation
+	if err := database.DB.Find(&offices).Error; err != nil || len(offices) < 4 {
+		log.Println("Not enough offices found, skipping employee creation")
 		return
 	}
 
@@ -172,9 +194,18 @@ func SeedEmployees() {
 		"Citra Dewi",
 		"Dian Kartika",
 		"Eko Wijaya",
+		"Fitri Handayani",
+		"Gilang Ramadhan",
 	}
 
-	for i := 1; i <= 5; i++ {
+	// Assign employees to different offices:
+	// karyawan1, karyawan2 -> Kendari (office 0) - managed by admin
+	// karyawan3 -> Jakarta (office 1) - managed by admin
+	// karyawan4, karyawan5 -> Palopo (office 2) - managed by admin2
+	// karyawan6, karyawan7 -> Kendari (office 0) - managed by admin
+	officeAssignments := []int{0, 0, 1, 2, 2, 0, 0}
+
+	for i := 1; i <= 7; i++ {
 		username := fmt.Sprintf("karyawan%d", i)
 
 		// Check if employee already exists
@@ -192,12 +223,15 @@ func SeedEmployees() {
 			continue
 		}
 
+		officeIndex := officeAssignments[i-1]
+		officeID := offices[officeIndex].ID
+
 		employee := models.User{
 			Username:     username,
 			FullName:     employeeNames[i-1],
 			PasswordHash: string(hashedPassword),
 			Role:         "employee",
-			OfficeID:     &firstOffice.ID,
+			OfficeID:     &officeID,
 			IsSuperAdmin: false,
 		}
 
@@ -210,6 +244,7 @@ func SeedEmployees() {
 		log.Printf("  Username: %s", username)
 		log.Printf("  Password: %s", username)
 		log.Printf("  Full Name: %s", employeeNames[i-1])
+		log.Printf("  Office: %s", offices[officeIndex].Name)
 	}
 }
 
@@ -245,8 +280,8 @@ func SeedAttendanceRecords() {
 	for day := 0; day < 7; day++ {
 		recordDate := time.Now().AddDate(0, 0, -day)
 
-		// Randomly select 5-6 employees to have attendance each day
-		numRecords := 5 + rand.Intn(2)
+		// Randomly select 6-7 employees to have attendance each day
+		numRecords := 6 + rand.Intn(2)
 		shuffledEmployees := make([]models.User, len(employees))
 		copy(shuffledEmployees, employees)
 		rand.Shuffle(len(shuffledEmployees), func(i, j int) {

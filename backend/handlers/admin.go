@@ -12,24 +12,102 @@ import (
 )
 
 func GetAllRecords(c *gin.Context) {
-	// Returns all approved employee attendance data for the manager.
-	// We might want to preload User info to show names.
-	var attendances []models.Attendance
-	if result := database.DB.Preload("User").Where("status = ?", "approved").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
+	userID := c.MustGet("userID").(uint)
+
+	// Get current manager
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
+	}
+
+	var attendances []models.Attendance
+
+	if manager.IsSuperAdmin {
+		// Super admin can see all attendance records
+		if result := database.DB.Preload("User").Where("status = ?", "approved").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
+			return
+		}
+	} else {
+		// Regular manager: only see attendance from employees in their assigned offices
+		var officeIDs []uint
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ?", userID).
+			Pluck("office_id", &officeIDs)
+
+		if len(officeIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.Attendance{}})
+			return
+		}
+
+		// Get user IDs from assigned offices
+		var userIDs []uint
+		database.DB.Model(&models.User{}).
+			Where("office_id IN ?", officeIDs).
+			Pluck("id", &userIDs)
+
+		if len(userIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.Attendance{}})
+			return
+		}
+
+		if result := database.DB.Preload("User").Where("status = ? AND user_id IN ?", "approved", userIDs).Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": attendances})
 }
 
 func GetAllLeaveRequests(c *gin.Context) {
-	// Helper endpoint to see all requests (not explicitly asked but useful for manager dashboard)
-	var leaves []models.LeaveRequest
-	if result := database.DB.Preload("User").Find(&leaves); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave requests"})
+	userID := c.MustGet("userID").(uint)
+
+	// Get current manager
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
 	}
+
+	var leaves []models.LeaveRequest
+
+	if manager.IsSuperAdmin {
+		// Super admin can see all leave requests
+		if result := database.DB.Preload("User").Find(&leaves); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave requests"})
+			return
+		}
+	} else {
+		// Regular manager: only see leave requests from employees in their assigned offices
+		var officeIDs []uint
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ?", userID).
+			Pluck("office_id", &officeIDs)
+
+		if len(officeIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.LeaveRequest{}})
+			return
+		}
+
+		// Get user IDs from assigned offices
+		var userIDs []uint
+		database.DB.Model(&models.User{}).
+			Where("office_id IN ?", officeIDs).
+			Pluck("id", &userIDs)
+
+		if len(userIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.LeaveRequest{}})
+			return
+		}
+
+		if result := database.DB.Preload("User").Where("user_id IN ?", userIDs).Find(&leaves); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leave requests"})
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"data": leaves})
 }
 
@@ -61,11 +139,40 @@ func UpdateLeaveStatus(c *gin.Context) {
 }
 
 func GetAllEmployees(c *gin.Context) {
-	// Get all users in the system
-	var users []models.User
-	if result := database.DB.Find(&users); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+	userID := c.MustGet("userID").(uint)
+
+	// Get current manager
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
+	}
+
+	var users []models.User
+
+	// Super admin can see all users
+	if manager.IsSuperAdmin {
+		if result := database.DB.Find(&users); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+			return
+		}
+	} else {
+		// Regular manager: only see employees from their assigned offices
+		var officeIDs []uint
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ?", userID).
+			Pluck("office_id", &officeIDs)
+
+		if len(officeIDs) == 0 {
+			// No offices assigned, return empty list
+			c.JSON(http.StatusOK, gin.H{"data": []models.User{}})
+			return
+		}
+
+		if result := database.DB.Where("office_id IN ?", officeIDs).Find(&users); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
@@ -212,11 +319,42 @@ type EmployeeDailyStatus struct {
 }
 
 func GetDailyAttendanceDashboard(c *gin.Context) {
-	// Get all employees
-	var users []models.User
-	if result := database.DB.Find(&users); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+	userID := c.MustGet("userID").(uint)
+
+	// Get current manager
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
+	}
+
+	// Get employees based on manager's permissions
+	var users []models.User
+	if manager.IsSuperAdmin {
+		// Super admin can see all employees
+		if result := database.DB.Find(&users); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+			return
+		}
+	} else {
+		// Regular manager: only see employees from their assigned offices
+		var officeIDs []uint
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ?", userID).
+			Pluck("office_id", &officeIDs)
+
+		if len(officeIDs) == 0 {
+			// No offices assigned, return empty dashboard
+			c.JSON(http.StatusOK, gin.H{"data": []EmployeeDailyStatus{}, "summary": map[string]int{
+				"total": 0, "present_ontime": 0, "present_late": 0, "on_leave": 0, "absent": 0,
+			}})
+			return
+		}
+
+		if result := database.DB.Where("office_id IN ?", officeIDs).Find(&users); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+			return
+		}
 	}
 
 	// Get today's date range
@@ -294,11 +432,50 @@ func GetDailyAttendanceDashboard(c *gin.Context) {
 }
 
 func GetPendingClockIns(c *gin.Context) {
-	// Get all pending clock-in requests
-	var attendances []models.Attendance
-	if result := database.DB.Preload("User").Where("status = ?", "pending").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pending clock-ins"})
+	userID := c.MustGet("userID").(uint)
+
+	// Get current manager
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
+	}
+
+	var attendances []models.Attendance
+
+	if manager.IsSuperAdmin {
+		// Super admin can see all pending clock-ins
+		if result := database.DB.Preload("User").Where("status = ?", "pending").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pending clock-ins"})
+			return
+		}
+	} else {
+		// Regular manager: only see pending clock-ins from employees in their assigned offices
+		var officeIDs []uint
+		database.DB.Model(&models.ManagerOffice{}).
+			Where("manager_id = ?", userID).
+			Pluck("office_id", &officeIDs)
+
+		if len(officeIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.Attendance{}})
+			return
+		}
+
+		// Get user IDs from assigned offices
+		var userIDs []uint
+		database.DB.Model(&models.User{}).
+			Where("office_id IN ?", officeIDs).
+			Pluck("id", &userIDs)
+
+		if len(userIDs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"data": []models.Attendance{}})
+			return
+		}
+
+		if result := database.DB.Preload("User").Where("status = ? AND user_id IN ?", "pending", userIDs).Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pending clock-ins"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": attendances})

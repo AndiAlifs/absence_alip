@@ -50,7 +50,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <label class="block text-sm font-medium text-gray-700 mb-1">Kantor</label>
               <select [(ngModel)]="selectedOfficeId" (change)="applyFilters()"
                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option [value]="null">Semua Kantor</option>
+                <option value="">Semua Kantor</option>
                 <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
               </select>
             </div>
@@ -306,7 +306,7 @@ export class AttendanceReportsComponent implements OnInit {
   // Filter properties
   filterStartDate: string = '';
   filterEndDate: string = '';
-  selectedOfficeId: number | null = null;
+  selectedOfficeId: number | string = '';
   filterStatus: string = '';
   searchQuery: string = '';
   quickFilter: string = 'week';
@@ -415,7 +415,7 @@ export class AttendanceReportsComponent implements OnInit {
     }
     
     // Office filter
-    if (this.selectedOfficeId !== null && this.selectedOfficeId !== undefined) {
+    if (this.selectedOfficeId && this.selectedOfficeId !== '') {
       const officeId = Number(this.selectedOfficeId);
       filtered = filtered.filter(r => r.approved_office_id === officeId);
     }
@@ -498,7 +498,7 @@ export class AttendanceReportsComponent implements OnInit {
   resetFilters() {
     this.filterStartDate = '';
     this.filterEndDate = '';
-    this.selectedOfficeId = null;
+    this.selectedOfficeId = '';
     this.filterStatus = '';
     this.searchQuery = '';
     this.quickFilter = '';
