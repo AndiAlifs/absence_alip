@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule, Routes } from '@angular/router';
@@ -10,6 +11,7 @@ import { ClockInComponent } from './components/clock-in/clock-in.component';
 import { LeaveRequestComponent } from './components/leave-request/leave-request.component';
 import { ManagerDashboardComponent } from './components/manager-dashboard/manager-dashboard.component';
 import { OfficeManagementComponent } from './components/office-management/office-management.component';
+import { AttendanceReportsComponent } from './components/attendance-reports/attendance-reports.component';
 import { AuthGuard } from './auth.guard';
 
 const routes: Routes = [
@@ -19,6 +21,7 @@ const routes: Routes = [
   { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard] },
   { path: 'admin', component: ManagerDashboardComponent, canActivate: [AuthGuard] },
   { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard] },
+  { path: 'admin/reports', component: AttendanceReportsComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: '/login' }
 ];
 
@@ -28,10 +31,12 @@ const routes: Routes = [
     LoginComponent,
     ClockInComponent,
     LeaveRequestComponent,
-    ManagerDashboardComponent
+    ManagerDashboardComponent,
+    AttendanceReportsComponent
   ],
   imports: [
     BrowserModule,
+    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,

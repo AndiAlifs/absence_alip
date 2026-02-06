@@ -12,14 +12,22 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <h1 class="text-4xl font-bold text-gray-900">Dashboard Manajer</h1>
             <p class="mt-2 text-gray-600">Kelola lokasi kantor, karyawan, dan lihat catatan absensi</p>
           </div>
-          <div>
+          <div class="flex gap-3">
+            <button 
+              (click)="goToReports()" 
+              class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition-all shadow-lg flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              📋 Laporan Absensi
+            </button>
             <button 
               (click)="goToOfficeManagement()" 
               class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-300 transition-all shadow-lg flex items-center">
               <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              Kelola Kantor ({{officeCount}})
+              🏢 Kelola Kantor ({{officeCount}})
             </button>
           </div>
         </div>
@@ -384,86 +392,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
           </div>
         </div>
-
-        <!-- Attendance Records Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="toggleAttendanceRecords()">
-            <div class="flex items-center">
-              <svg class="h-6 w-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-              Catatan Absensi
-            </div>
-            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isAttendanceRecordsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </h2>
-
-          <div *ngIf="isAttendanceRecordsExpanded" class="transition-all duration-200"><div *ngIf="records.length > 0" class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
-                <tr>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID Karyawan</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama Karyawan</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Peta</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <ng-container *ngFor="let record of records">
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.user_id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <p class="text-sm font-medium text-gray-900">{{ record.user?.full_name || record.user?.username || 'N/A' }}</p>
-                      <p *ngIf="record.user?.full_name" class="text-xs text-gray-500">{{ record.user?.username }}</p>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ record.clock_in_time | date:'medium' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {{ record.latitude }}, {{ record.longitude }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                      <button 
-                        (click)="toggleMap(record.id)" 
-                        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-300 transition-all text-xs font-semibold shadow">
-                        {{ selectedMapRecord === record.id ? 'Sembunyikan Peta' : 'Tampilkan Peta' }}
-                      </button>
-                    </td>
-                  </tr>
-                  <tr *ngIf="selectedMapRecord === record.id" class="bg-gray-50">
-                    <td colspan="5" class="px-6 py-4">
-                      <div class="rounded-lg overflow-hidden shadow-md">
-                        <iframe 
-                          [src]="getClockInMapEmbed(record.latitude, record.longitude)" 
-                          width="100%" 
-                          height="300" 
-                          style="border:0;" 
-                          allowfullscreen="" 
-                          loading="lazy">
-                        </iframe>
-                      </div>
-                    </td>
-                  </tr>
-                </ng-container>
-              </tbody>
-            </table>
-          </div>
-
-          <div *ngIf="records.length === 0" class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            <p class="mt-2 text-gray-600">Tidak ada catatan absensi ditemukan.</p>
-          </div>
-          </div>
-        </div>
       </div>
     </div>
   `,
   styles: []
 })
 export class ManagerDashboardComponent implements OnInit {
-  records: any[] = [];
   employees: any[] = [];
   pendingClockIns: any[] = [];
   officeData: any = {
@@ -476,7 +410,6 @@ export class ManagerDashboardComponent implements OnInit {
   officeLocation: any = null;
   officeMessage = '';
   isOfficeError = false;
-  selectedMapRecord: number | null = null;
   showMapPicker = false;
   isGettingLocation = false;
   locationError = '';
@@ -523,7 +456,6 @@ export class ManagerDashboardComponent implements OnInit {
   isOfficeLocationExpanded = true;
   isEmployeesExpanded = true;
   isPendingClockInsExpanded = true;
-  isAttendanceRecordsExpanded = true;
 
   constructor(
     private apiService: ApiService,
@@ -532,7 +464,6 @@ export class ManagerDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadOfficeLocation();
-    this.loadRecords();
     this.loadEmployees();
     this.loadPendingClockIns();
     this.loadDailyAttendance();
@@ -576,7 +507,7 @@ export class ManagerDashboardComponent implements OnInit {
         
         setTimeout(() => {
           this.loadPendingClockIns();
-          this.loadRecords();
+          this.loadDailyAttendance();
         }, 1500);
       },
       error: (error) => {
@@ -735,19 +666,6 @@ export class ManagerDashboardComponent implements OnInit {
       }
     });
   }
-
-
-  loadRecords() {
-    this.apiService.getAttendanceRecords().subscribe({
-      next: (res) => {
-        this.records = res.data || [];
-      },
-      error: (err) => {
-        console.error('Error loading records:', err);
-      }
-    });
-  }
-
   loadEmployees() {
     this.apiService.getAllEmployees().subscribe({
       next: (res) => {
@@ -767,10 +685,6 @@ export class ManagerDashboardComponent implements OnInit {
   getClockInMapEmbed(lat: number, lng: number): SafeResourceUrl {
     const url = `https://maps.google.com/maps?q=${lat},${lng}&output=embed&z=17`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  }
-
-  toggleMap(recordId: number): void {
-    this.selectedMapRecord = this.selectedMapRecord === recordId ? null : recordId;
   }
 
   getCurrentLocation(): void {
@@ -880,10 +794,6 @@ export class ManagerDashboardComponent implements OnInit {
     this.isPendingClockInsExpanded = !this.isPendingClockInsExpanded;
   }
 
-  toggleAttendanceRecords() {
-    this.isAttendanceRecordsExpanded = !this.isAttendanceRecordsExpanded;
-  }
-
   // Office Management Navigation
   loadOfficeCount() {
     this.apiService.getMyOffices().subscribe({
@@ -899,6 +809,10 @@ export class ManagerDashboardComponent implements OnInit {
 
   goToOfficeManagement() {
     window.location.href = '/admin/offices';
+  }
+
+  goToReports() {
+    window.location.href = '/admin/reports';
   }
 
   // Office Filter Methods
