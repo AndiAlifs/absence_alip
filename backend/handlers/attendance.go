@@ -84,14 +84,14 @@ func ClockIn(c *gin.Context) {
 		}
 	}
 
-	// Determine status
-	status := "pending"
+	// Always approve, but track if outside radius via approvedOfficeID
+	status := "approved"
 	var approvedOfficeID *uint
 
 	if isWithinRadius {
-		status = "approved"
 		approvedOfficeID = &closestOffice.ID
 	}
+	// If approvedOfficeID is nil, it means employee was outside all office radii
 
 	// Calculate if employee is late
 	isLate := false
@@ -133,8 +133,8 @@ func ClockIn(c *gin.Context) {
 	}
 
 	message := "Berhasil melakukan clock-in"
-	if status == "pending" {
-		message = "Clock-in dicatat. Menunggu persetujuan manajer karena lokasi terlalu jauh dari kantor."
+	if !isWithinRadius {
+		message += " - Masuk diluar radius kantor"
 	}
 	if isLate {
 		message += " - Terlambat " + strconv.Itoa(minutesLate) + " menit"
@@ -145,7 +145,7 @@ func ClockIn(c *gin.Context) {
 		"data":            attendance,
 		"distance_meters": minDistance,
 		"status":          status,
-		"needs_approval":  status == "pending",
+		"outside_radius":  !isWithinRadius,
 		"is_late":         isLate,
 		"minutes_late":    minutesLate,
 		"office_used":     closestOffice.Name,
@@ -183,7 +183,7 @@ func ClockOut(c *gin.Context) {
 
 	// Record clock-out time and location
 	clockOutTime := time.Now()
-	
+
 	// Calculate work hours (difference in hours as decimal)
 	workDuration := clockOutTime.Sub(attendance.ClockInTime)
 	workHours := workDuration.Hours()

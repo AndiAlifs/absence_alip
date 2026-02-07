@@ -189,6 +189,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     Jam Masuk
                     <span *ngIf="sortColumn === 'time'">{{ sortDirection === 'asc' ? '↑' : '↓' }}</span>
                   </th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Keluar</th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kantor</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Ketepatan</th>
@@ -209,8 +211,20 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
                       {{ record.clock_in_time | date:'HH:mm' }}
                     </td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {{ getOfficeName(record.approved_office_id) }}
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                      {{ record.clock_out_time ? (record.clock_out_time | date:'HH:mm') : '-' }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-600">
+                      {{ record.work_hours ? (record.work_hours | number:'1.1-1') + ' jam' : '-' }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                      <div *ngIf="record.approved_office_id" class="text-gray-600">
+                        {{ getOfficeName(record.approved_office_id) }}
+                      </div>
+                      <div *ngIf="!record.approved_office_id" class="flex flex-col">
+                        <span class="text-xs font-medium text-gray-500">-</span>
+                        <span class="text-xs text-orange-600 font-semibold">⚠ Masuk diluar radius kantor</span>
+                      </div>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
                       <span *ngIf="record.status === 'approved'" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
@@ -238,13 +252,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                       <button 
                         (click)="toggleDetails(record.id)" 
                         class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all text-xs font-semibold">
-                        {{ expandedRecordId === record.id ? 'Tutup' : 'Detail' }}
+                        {{ expandedRecordId === record.id ? 'Tutup' : 'Lihat' }} Detail
                       </button>
                     </td>
                   </tr>
+
                   <!-- Expanded Details Row -->
-                  <tr *ngIf="expandedRecordId === record.id" class="bg-gray-50">
-                    <td colspan="8" class="px-4 py-4">
+                  <tr *ngIf="expandedRecordId === record.id">
+                    <td colspan="10" class="px-4 py-4">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h4 class="font-semibold text-gray-900 mb-2">Informasi Detail</h4>
@@ -252,6 +267,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                             <p><strong>Koordinat:</strong> {{ record.latitude }}, {{ record.longitude }}</p>
                             <p><strong>Jarak dari Kantor:</strong> {{ record.distance?.toFixed(2) || '-' }} meter</p>
                             <p><strong>Waktu Lengkap:</strong> {{ record.clock_in_time | date:'full' }}</p>
+                            <p *ngIf="record.clock_out_time"><strong>Waktu Clock-Out:</strong> {{ record.clock_out_time | date:'full' }}</p>
+                            <p *ngIf="record.work_hours"><strong>Durasi Kerja:</strong> {{ record.work_hours | number:'1.2-2' }} jam</p>
                             <p><strong>ID:</strong> #{{ record.id }}</p>
                           </div>
                         </div>

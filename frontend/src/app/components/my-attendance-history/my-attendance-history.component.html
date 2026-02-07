@@ -95,11 +95,15 @@
                   </div>
                 </td>
                 <td class="px-6 py-4">
-                  <div class="text-sm text-gray-900">
-                    {{ record.approved_office?.name || '-' }}
+                  <div *ngIf="record.approved_office" class="text-sm text-gray-900">
+                    {{ record.approved_office.name }}
                   </div>
-                  <div class="text-xs text-gray-500">
-                    {{ record.approved_office?.address || 'Tidak ada data kantor' }}
+                  <div *ngIf="record.approved_office" class="text-xs text-gray-500">
+                    {{ record.approved_office.address }}
+                  </div>
+                  <div *ngIf="!record.approved_office" class="flex flex-col">
+                    <span class="text-sm text-gray-400">-</span>
+                    <span class="text-xs text-orange-600 font-semibold">⚠ Masuk diluar radius kantor</span>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -162,7 +166,13 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Kantor:</span>
-                <span class="font-medium text-gray-900">{{ record.approved_office?.name || '-' }}</span>
+                <div *ngIf="record.approved_office" class="font-medium text-gray-900">
+                  {{ record.approved_office.name }}
+                </div>
+                <div *ngIf="!record.approved_office" class="flex flex-col items-end">
+                  <span class="font-medium text-gray-400">-</span>
+                  <span class="text-xs text-orange-600 font-semibold">⚠ Diluar radius</span>
+                </div>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Jarak:</span>

@@ -312,95 +312,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
         </div>
 
-        <!-- Pending Clock-ins Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between cursor-pointer" (click)="togglePendingClockIns()">
-            <div class="flex items-center">
-              <svg class="h-6 w-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Absensi Menunggu Persetujuan
-            </div>
-            <svg class="h-5 w-5 text-gray-500 transition-transform duration-200" [class.rotate-180]="!isPendingClockInsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </h2>
-
-          <div *ngIf="isPendingClockInsExpanded" class="transition-all duration-200"><div *ngIf="pendingClockIns.length > 0" class="space-y-4">
-            <div *ngFor="let clockIn of pendingClockIns" class="bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-orange-500 rounded-lg p-6 shadow-md">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p class="text-xs text-gray-600 mb-1">Karyawan</p>
-                  <p class="font-bold text-gray-900">{{ clockIn.user?.full_name || clockIn.user?.username }}</p>
-                  <p *ngIf="clockIn.user?.full_name" class="text-xs text-gray-500">{{ clockIn.user?.username }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-600 mb-1">Waktu Clock-in</p>
-                  <p class="font-semibold text-gray-900">{{ clockIn.clock_in_time | date:'medium' }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-600 mb-1">Lokasi</p>
-                  <p class="font-semibold text-gray-900">{{ clockIn.latitude }}, {{ clockIn.longitude }}</p>
-                </div>
-                <div>
-                  <p class="text-xs text-gray-600 mb-1">Jarak dari Kantor</p>
-                  <p class="font-semibold text-orange-700">{{ clockIn.distance?.toFixed(2) }} meter</p>
-                </div>
-              </div>
-
-              <div class="rounded-lg overflow-hidden shadow-md mb-4">
-                <iframe 
-                  [src]="getClockInMapEmbed(clockIn.latitude, clockIn.longitude)" 
-                  width="100%" 
-                  height="250" 
-                  style="border:0;" 
-                  allowfullscreen="" 
-                  loading="lazy">
-                </iframe>
-              </div>
-
-              <div class="flex gap-3">
-                <button 
-                  (click)="approveClockIn(clockIn.id)"
-                  [disabled]="processingClockIn === clockIn.id"
-                  class="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ processingClockIn === clockIn.id ? 'Menyetujui...' : 'Setujui' }}
-                </button>
-                <button 
-                  (click)="rejectClockIn(clockIn.id)"
-                  [disabled]="processingClockIn === clockIn.id"
-                  class="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ processingClockIn === clockIn.id ? 'Menolak...' : 'Tolak' }}
-                </button>
-              </div>
-
-              <div *ngIf="clockInMessage[clockIn.id]" class="mt-3 p-3 rounded-lg" 
-                   [class.bg-green-100]="!clockInError[clockIn.id]"
-                   [class.bg-red-100]="clockInError[clockIn.id]">
-                <p class="text-sm" 
-                   [class.text-green-800]="!clockInError[clockIn.id]"
-                   [class.text-red-800]="clockInError[clockIn.id]">
-                  {{ clockInMessage[clockIn.id] }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="pendingClockIns.length === 0" class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="mt-2 text-gray-600">Tidak ada absensi yang menunggu persetujuan.</p>
-          </div>
-          </div>
-        </div>
-
         <!-- Session Duration Settings Section -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center cursor-pointer" (click)="isSessionSettingsExpanded = !isSessionSettingsExpanded">
@@ -476,7 +387,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class ManagerDashboardComponent implements OnInit {
   employees: any[] = [];
-  pendingClockIns: any[] = [];
   officeData: any = {
     name: '',
     latitude: null,
@@ -514,11 +424,6 @@ export class ManagerDashboardComponent implements OnInit {
   isSavingEmployee = false;
   isDeletingEmployee = false;
 
-  // Clock-in approval properties
-  processingClockIn: number | null = null;
-  clockInMessage: { [key: number]: string } = {};
-  clockInError: { [key: number]: boolean } = {};
-
   // Daily attendance dashboard properties
   dailyAttendance: any[] = [];
   dailySummary: any = {
@@ -532,7 +437,6 @@ export class ManagerDashboardComponent implements OnInit {
   // Card expansion states (Daily Dashboard is always expanded)
   isOfficeLocationExpanded = true;
   isEmployeesExpanded = true;
-  isPendingClockInsExpanded = true;
   isSessionSettingsExpanded = true;
 
   // Session duration settings
@@ -549,24 +453,12 @@ export class ManagerDashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadOfficeLocation();
     this.loadEmployees();
-    this.loadPendingClockIns();
     this.loadDailyAttendance();
     this.loadOfficeCount();
     this.loadSessionDuration();
   }
 
-  // Pending Clock-in Methods
-  loadPendingClockIns() {
-    this.apiService.getPendingClockIns().subscribe({
-      next: (response) => {
-        this.pendingClockIns = response.data || [];
-      },
-      error: (error) => {
-        console.error('Failed to load pending clock-ins:', error);
-      }
-    });
-  }
-
+  // Daily Attendance Methods
   loadDailyAttendance() {
     this.apiService.getDailyAttendance().subscribe({
       next: (response) => {
@@ -575,53 +467,6 @@ export class ManagerDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load daily attendance:', error);
-      }
-    });
-  }
-
-  approveClockIn(id: number) {
-    this.processingClockIn = id;
-    this.clockInMessage[id] = '';
-    this.clockInError[id] = false;
-
-    this.apiService.updateClockInStatus(id, 'approved').subscribe({
-      next: (response) => {
-        this.processingClockIn = null;
-        this.clockInMessage[id] = 'Absensi berhasil disetujui!';
-        this.clockInError[id] = false;
-        
-        setTimeout(() => {
-          this.loadPendingClockIns();
-          this.loadDailyAttendance();
-        }, 1500);
-      },
-      error: (error) => {
-        this.processingClockIn = null;
-        this.clockInMessage[id] = error.error?.error || 'Gagal menyetujui absensi';
-        this.clockInError[id] = true;
-      }
-    });
-  }
-
-  rejectClockIn(id: number) {
-    this.processingClockIn = id;
-    this.clockInMessage[id] = '';
-    this.clockInError[id] = false;
-
-    this.apiService.updateClockInStatus(id, 'rejected').subscribe({
-      next: (response) => {
-        this.processingClockIn = null;
-        this.clockInMessage[id] = 'Absensi ditolak.';
-        this.clockInError[id] = false;
-        
-        setTimeout(() => {
-          this.loadPendingClockIns();
-        }, 1500);
-      },
-      error: (error) => {
-        this.processingClockIn = null;
-        this.clockInMessage[id] = error.error?.error || 'Gagal menolak absensi';
-        this.clockInError[id] = true;
       }
     });
   }
@@ -873,10 +718,6 @@ export class ManagerDashboardComponent implements OnInit {
 
   toggleEmployees() {
     this.isEmployeesExpanded = !this.isEmployeesExpanded;
-  }
-
-  togglePendingClockIns() {
-    this.isPendingClockInsExpanded = !this.isPendingClockInsExpanded;
   }
 
   // Office Management Navigation
