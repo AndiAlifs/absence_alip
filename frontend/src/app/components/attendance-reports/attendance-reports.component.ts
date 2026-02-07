@@ -252,21 +252,20 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                       <button 
                         (click)="toggleDetails(record.id)" 
                         class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-all text-xs font-semibold">
-                        {{ expandedRecordId === record.id ? 'Tutup' : 'Lihat' }} Detail
+                        {{ expandedRecordId === record.id ? 'Tutup' : 'Detail' }}
                       </button>
                     </td>
                   </tr>
-
-                  <!-- Expanded Details Row -->
                   <tr *ngIf="expandedRecordId === record.id">
-                    <td colspan="10" class="px-4 py-4">
+                    <td colspan="10" class="px-4 py-4 bg-gray-50">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h4 class="font-semibold text-gray-900 mb-2">Informasi Detail</h4>
                           <div class="space-y-1 text-sm">
-                            <p><strong>Koordinat:</strong> {{ record.latitude }}, {{ record.longitude }}</p>
+                            <p><strong>Koordinat Masuk:</strong> {{ record.latitude }}, {{ record.longitude }}</p>
+                            <p *ngIf="record.latitude_out && record.longitude_out"><strong>Koordinat Keluar:</strong> {{ record.latitude_out }}, {{ record.longitude_out }}</p>
                             <p><strong>Jarak dari Kantor:</strong> {{ record.distance?.toFixed(2) || '-' }} meter</p>
-                            <p><strong>Waktu Lengkap:</strong> {{ record.clock_in_time | date:'full' }}</p>
+                            <p><strong>Waktu Clock-In:</strong> {{ record.clock_in_time | date:'full' }}</p>
                             <p *ngIf="record.clock_out_time"><strong>Waktu Clock-Out:</strong> {{ record.clock_out_time | date:'full' }}</p>
                             <p *ngIf="record.work_hours"><strong>Durasi Kerja:</strong> {{ record.work_hours | number:'1.2-2' }} jam</p>
                             <p><strong>ID:</strong> #{{ record.id }}</p>

@@ -81,6 +81,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-In</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-Out</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Keterangan</th>
                 </tr>
               </thead>
@@ -106,6 +108,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {{ emp.clock_in_time ? (emp.clock_in_time | date:'HH:mm') : '-' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {{ emp.clock_out_time ? (emp.clock_out_time | date:'HH:mm') : '-' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
+                    {{ emp.work_hours ? (emp.work_hours | number:'1.1-1') + ' jam' : '-' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     <span *ngIf="emp.status === 'present_late'">Terlambat {{ emp.minutes_late }} menit</span>
