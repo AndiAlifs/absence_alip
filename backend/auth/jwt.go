@@ -24,9 +24,12 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken creates a JWT token for a user
-func GenerateToken(userID uint, role string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+// GenerateToken creates a JWT token for a user with specified duration in hours
+func GenerateToken(userID uint, role string, durationHours int) (string, error) {
+	if durationHours <= 0 {
+		durationHours = 24 // Default to 24 hours if not specified
+	}
+	expirationTime := time.Now().Add(time.Duration(durationHours) * time.Hour)
 	claims := &Claims{
 		UserID: userID,
 		Role:   role,

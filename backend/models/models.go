@@ -74,3 +74,17 @@ type ManagerOffice struct {
 	Manager *User           `gorm:"foreignKey:ManagerID" json:"manager,omitempty"`
 	Office  *OfficeLocation `gorm:"foreignKey:OfficeID" json:"office,omitempty"`
 }
+
+// SystemSettings stores global system configuration
+type SystemSettings struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	SettingKey   string    `gorm:"type:varchar(50);unique;not null" json:"setting_key"`
+	SettingValue string    `gorm:"type:varchar(255);not null" json:"setting_value"`
+	Description  string    `gorm:"type:varchar(255)" json:"description"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// Common setting keys
+const (
+	SettingSessionDurationHours = "session_duration_hours" // Default session duration in hours
+)

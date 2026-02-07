@@ -160,4 +160,20 @@ export class ApiService {
   getEmployeeOffices(): Observable<any> {
     return this.http.get(`${this.apiUrl}/my-offices`, this.getHeaders());
   }
+
+  // System Settings
+  getSystemSettings(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/settings`, this.getHeaders());
+  }
+
+  getSessionDuration(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/settings/session-duration`, this.getHeaders());
+  }
+
+  updateSessionDuration(durationHours: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/settings/session-duration`, 
+      { duration_hours: durationHours }, 
+      this.getHeaders()
+    );
+  }
 }

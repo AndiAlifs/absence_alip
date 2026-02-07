@@ -19,8 +19,9 @@ type RegisterInput struct {
 }
 
 type LoginInput struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username   string `json:"username" binding:"required"`
+	Password   string `json:"password" binding:"required"`
+	RememberMe bool   `json:"remember_me"` // If true, session lasts 7 days
 }
 
 func Register(c *gin.Context) {
@@ -77,7 +78,15 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID, user.Role)
+	// Determine session duration
+	var durationHours int
+	if input.RememberMe {
+		durationHours = 168 // 7 days (remember me)
+	} else {
+		durationHours = GetSessionDurationHours() // Use system setting
+	}
+
+	token, err := auth.GenerateToken(user.ID, user.Role, durationHours)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

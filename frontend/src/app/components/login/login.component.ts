@@ -29,6 +29,16 @@ import { ApiService } from '../../services/api.service';
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
               placeholder="Masukkan kata sandi">
           </div>
+          <div class="flex items-center">
+            <input 
+              type="checkbox" 
+              formControlName="rememberMe"
+              id="rememberMe"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+            <label for="rememberMe" class="ml-2 block text-sm text-gray-700 cursor-pointer">
+              Ingat Saya (7 hari)
+            </label>
+          </div>
           <button 
             type="submit" 
             [disabled]="loginForm.invalid"
@@ -53,13 +63,15 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      rememberMe: [false]
     });
   }
 
   onSubmit() {
     if (this.loginForm.valid) {
-      this.apiService.login(this.loginForm.value).subscribe({
+      const { username, password, rememberMe } = this.loginForm.value;
+      this.apiService.login({ username, password, remember_me: rememberMe }).subscribe({
         next: (res) => {
           localStorage.setItem('token', res.token);
           localStorage.setItem('role', res.role);

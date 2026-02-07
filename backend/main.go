@@ -29,6 +29,7 @@ func main() {
 		&models.LeaveRequest{},
 		&models.OfficeLocation{},
 		&models.ManagerOffice{},
+		&models.SystemSettings{},
 	)
 
 	// Seed database with initial data
@@ -87,6 +88,11 @@ func main() {
 			admin.GET("/my-offices", handlers.GetManagerOffices)
 			admin.POST("/offices/assign", handlers.AssignOfficeToManager)
 			admin.POST("/offices/unassign", handlers.UnassignOfficeFromManager)
+
+			// System Settings Routes
+			admin.GET("/settings", handlers.GetSystemSettings)
+			admin.GET("/settings/session-duration", handlers.GetSessionDuration)
+			admin.PUT("/settings/session-duration", handlers.UpdateSessionDuration)
 		}
 	}
 

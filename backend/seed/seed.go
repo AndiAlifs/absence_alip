@@ -21,6 +21,7 @@ func RunAll() {
 	SeedDefaultOfficeAssignment()
 	SeedEmployees()
 	SeedAttendanceRecords()
+	SeedSystemSettings()
 	log.Println("Database seeding completed!")
 }
 
@@ -358,4 +359,30 @@ func SeedAttendanceRecords() {
 	log.Printf("  - Approved: %d", recordsCreated-rejectedCount-pendingCount)
 	log.Printf("  - Rejected: %d", rejectedCount)
 	log.Printf("  - Pending: %d", pendingCount)
+}
+
+// SeedSystemSettings creates default system settings
+func SeedSystemSettings() {
+	// Check if session duration setting already exists
+	var existingSetting models.SystemSettings
+	result := database.DB.Where("setting_key = ?", models.SettingSessionDurationHours).First(&existingSetting)
+
+	if result.Error == nil {
+		log.Printf("System setting '%s' already exists, skipping", models.SettingSessionDurationHours)
+		return
+	}
+
+	// Create default session duration setting (24 hours)
+	setting := models.SystemSettings{
+		SettingKey:   models.SettingSessionDurationHours,
+		SettingValue: "24",
+		Description:  "Durasi sesi login default (jam)",
+	}
+
+	if err := database.DB.Create(&setting).Error; err != nil {
+		log.Printf("Failed to create system setting: %v", err)
+		return
+	}
+
+	log.Printf("✓ Created default system setting: %s = %s", setting.SettingKey, setting.SettingValue)
 }

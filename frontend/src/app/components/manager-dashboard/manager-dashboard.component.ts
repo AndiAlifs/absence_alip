@@ -400,6 +400,75 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
           </div>
         </div>
+
+        <!-- Session Duration Settings Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center cursor-pointer" (click)="isSessionSettingsExpanded = !isSessionSettingsExpanded">
+            <svg class="h-6 w-6 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pengaturan Durasi Sesi Login
+            <svg class="h-5 w-5 ml-2 transform transition-transform" [class.rotate-180]="isSessionSettingsExpanded" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </h2>
+
+          <div *ngIf="isSessionSettingsExpanded" class="space-y-6">
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
+              <p class="text-sm text-gray-600 mb-4">
+                Atur berapa lama sesi login pengguna akan aktif sebelum perlu login ulang. 
+                Pengguna juga dapat memilih "Ingat Saya" di halaman login untuk memperpanjang sesi menjadi 7 hari.
+              </p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Durasi Sesi Default</label>
+                  <div class="flex items-center gap-3">
+                    <select 
+                      [(ngModel)]="sessionDurationHours" 
+                      class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200">
+                      <option [value]="1">1 Jam</option>
+                      <option [value]="2">2 Jam</option>
+                      <option [value]="4">4 Jam</option>
+                      <option [value]="8">8 Jam</option>
+                      <option [value]="12">12 Jam</option>
+                      <option [value]="24">24 Jam (1 Hari)</option>
+                      <option [value]="48">48 Jam (2 Hari)</option>
+                      <option [value]="72">72 Jam (3 Hari)</option>
+                      <option [value]="168">168 Jam (7 Hari)</option>
+                    </select>
+                    <button 
+                      (click)="updateSessionDuration()"
+                      [disabled]="isSavingSessionDuration"
+                      class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                      {{ isSavingSessionDuration ? 'Menyimpan...' : 'Simpan' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                  <p class="text-sm font-medium text-gray-700 mb-2">Info Sesi Login</p>
+                  <ul class="text-xs text-gray-600 space-y-1">
+                    <li>• Durasi default: <strong>{{ sessionDurationHours }} jam</strong></li>
+                    <li>• "Ingat Saya" di login: <strong>7 hari (168 jam)</strong></li>
+                    <li>• Perubahan berlaku untuk login baru</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div *ngIf="sessionSettingsMessage" class="mt-4 p-3 rounded-lg" 
+                   [class.bg-green-100]="!isSessionSettingsError"
+                   [class.bg-red-100]="isSessionSettingsError">
+                <p class="text-sm" 
+                   [class.text-green-800]="!isSessionSettingsError"
+                   [class.text-red-800]="isSessionSettingsError">
+                  {{ sessionSettingsMessage }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   `,
@@ -464,6 +533,13 @@ export class ManagerDashboardComponent implements OnInit {
   isOfficeLocationExpanded = true;
   isEmployeesExpanded = true;
   isPendingClockInsExpanded = true;
+  isSessionSettingsExpanded = true;
+
+  // Session duration settings
+  sessionDurationHours: number = 24;
+  isSavingSessionDuration = false;
+  sessionSettingsMessage = '';
+  isSessionSettingsError = false;
 
   constructor(
     private apiService: ApiService,
@@ -476,6 +552,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.loadPendingClockIns();
     this.loadDailyAttendance();
     this.loadOfficeCount();
+    this.loadSessionDuration();
   }
 
   // Pending Clock-in Methods
@@ -840,5 +917,39 @@ export class ManagerDashboardComponent implements OnInit {
     }
     const office = this.offices.find(o => o.id === this.selectedOfficeId);
     return office ? office.name : 'Semua Kantor';
+  }
+
+  // Session Duration Settings Methods
+  loadSessionDuration() {
+    this.apiService.getSessionDuration().subscribe({
+      next: (response) => {
+        this.sessionDurationHours = parseInt(response.setting_value, 10) || 24;
+      },
+      error: (error) => {
+        console.error('Failed to load session duration:', error);
+        this.sessionDurationHours = 24; // Default fallback
+      }
+    });
+  }
+
+  updateSessionDuration() {
+    this.isSavingSessionDuration = true;
+    this.sessionSettingsMessage = '';
+    this.isSessionSettingsError = false;
+
+    this.apiService.updateSessionDuration(this.sessionDurationHours).subscribe({
+      next: (response) => {
+        this.isSavingSessionDuration = false;
+        this.sessionSettingsMessage = response.message || 'Durasi sesi berhasil diperbarui';
+        this.isSessionSettingsError = false;
+        setTimeout(() => this.sessionSettingsMessage = '', 5000);
+      },
+      error: (error) => {
+        this.isSavingSessionDuration = false;
+        this.sessionSettingsMessage = error.error?.error || 'Gagal memperbarui durasi sesi. Hanya super admin yang dapat mengubah pengaturan ini.';
+        this.isSessionSettingsError = true;
+        setTimeout(() => this.sessionSettingsMessage = '', 5000);
+      }
+    });
   }
 }
