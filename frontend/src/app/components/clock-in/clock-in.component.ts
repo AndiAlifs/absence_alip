@@ -43,10 +43,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </svg>
             Status Absensi Hari Ini
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
               <p class="text-xs text-gray-600 mb-1">Waktu Clock-In</p>
               <p class="text-lg font-semibold text-gray-900">{{ todayAttendance.clock_in_time | date:'HH:mm' }}</p>
+            </div>
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg" *ngIf="todayAttendance.clock_out_time">
+              <p class="text-xs text-gray-600 mb-1">Waktu Clock-Out</p>
+              <p class="text-lg font-semibold text-gray-900">{{ todayAttendance.clock_out_time | date:'HH:mm' }}</p>
             </div>
             <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
               <p class="text-xs text-gray-600 mb-1">Status</p>
@@ -60,6 +64,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                 {{ todayAttendance.is_late ? 'Terlambat ' + todayAttendance.minutes_late + ' menit' : 'Tepat Waktu' }}
               </p>
             </div>
+          </div>
+          <div *ngIf="todayAttendance.work_hours !== null && todayAttendance.work_hours !== undefined" class="mt-4 bg-gradient-to-r from-cyan-50 to-blue-50 p-4 rounded-lg border-l-4 border-cyan-500">
+            <p class="text-xs text-gray-600 mb-1">Jam Kerja</p>
+            <p class="text-2xl font-bold text-cyan-700">{{ todayAttendance.work_hours.toFixed(2) }} jam</p>
           </div>
         </div>
 
@@ -201,19 +209,35 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               </div>
             </div>
 
-            <button 
-              (click)="checkAndSubmitClockIn()" 
-              [disabled]="submitting"
-              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-lg">
-              <span *ngIf="!submitting">Absen Sekarang</span>
-              <span *ngIf="submitting" class="flex items-center justify-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Mengirim...
-              </span>
-            </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button 
+                (click)="checkAndSubmitClockIn()" 
+                [disabled]="submitting || todayAttendance"
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-lg">
+                <span *ngIf="!submitting">{{ todayAttendance ? 'Sudah Clock-In' : 'Clock-In Sekarang' }}</span>
+                <span *ngIf="submitting" class="flex items-center justify-center">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Mengirim...
+                </span>
+              </button>
+
+              <button 
+                (click)="submitClockOut()" 
+                [disabled]="submittingClockOut || !todayAttendance || todayAttendance?.clock_out_time"
+                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-lg">
+                <span *ngIf="!submittingClockOut">{{ todayAttendance?.clock_out_time ? 'Sudah Clock-Out' : !todayAttendance ? 'Clock-In Terlebih Dahulu' : 'Clock-Out Sekarang' }}</span>
+                <span *ngIf="submittingClockOut" class="flex items-center justify-center">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Mengirim...
+                </span>
+              </button>
+            </div>
           </div>
 
           <div *ngIf="successMessage" class="mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
@@ -278,6 +302,7 @@ export class ClockInComponent implements OnInit {
   location: { latitude: number, longitude: number } | null = null;
   loading = false;
   submitting = false;
+  submittingClockOut = false;
   error = '';
   successMessage = '';
   showConfirmation = false;
@@ -456,6 +481,34 @@ export class ClockInComponent implements OnInit {
       error: (err) => {
         this.error = err.error?.error || 'Gagal melakukan absen.';
         this.submitting = false;
+      }
+    });
+  }
+
+  submitClockOut() {
+    if (!this.location) {
+      this.error = 'Lokasi belum tersedia. Silakan muat ulang halaman.';
+      return;
+    }
+
+    this.submittingClockOut = true;
+    this.error = '';
+    this.successMessage = '';
+    
+    this.apiService.clockOut(this.location).subscribe({
+      next: (res) => {
+        this.successMessage = res.message || 'Clock-out berhasil pada ' + new Date().toLocaleTimeString('id-ID');
+        if (res.work_hours) {
+          this.successMessage += '. Total jam kerja: ' + res.work_hours + ' jam';
+        }
+        
+        // Reload today's attendance to show updated status
+        this.loadTodayAttendance();
+        this.submittingClockOut = false;
+      },
+      error: (err) => {
+        this.error = err.error?.error || 'Gagal melakukan clock-out.';
+        this.submittingClockOut = false;
       }
     });
   }
