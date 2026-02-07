@@ -78,12 +78,24 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Filter Cepat</label>
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap">
                 <button (click)="setQuickFilter('today')" 
                         [class.bg-blue-600]="quickFilter === 'today'"
                         [class.text-white]="quickFilter === 'today'"
                         class="px-3 py-2 border rounded-lg hover:bg-blue-100 transition-all text-sm">
                   Hari Ini
+                </button>
+                <button (click)="setQuickFilter('thisWeek')"
+                        [class.bg-blue-600]="quickFilter === 'thisWeek'"
+                        [class.text-white]="quickFilter === 'thisWeek'"
+                        class="px-3 py-2 border rounded-lg hover:bg-blue-100 transition-all text-sm">
+                  Minggu Ini
+                </button>
+                <button (click)="setQuickFilter('thisMonth')"
+                        [class.bg-blue-600]="quickFilter === 'thisMonth'"
+                        [class.text-white]="quickFilter === 'thisMonth'"
+                        class="px-3 py-2 border rounded-lg hover:bg-blue-100 transition-all text-sm">
+                  Bulan Ini
                 </button>
                 <button (click)="setQuickFilter('week')"
                         [class.bg-blue-600]="quickFilter === 'week'"
@@ -368,6 +380,21 @@ export class AttendanceReportsComponent implements OnInit {
     switch(filter) {
       case 'today':
         this.filterStartDate = this.formatDate(today);
+        this.filterEndDate = this.formatDate(endDate);
+        break;
+      case 'thisWeek':
+        // Start from Monday of the current week
+        const startOfWeek = new Date(today);
+        const dayOfWeek = startOfWeek.getDay();
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday (0), go back 6 days, otherwise go to Monday
+        startOfWeek.setDate(startOfWeek.getDate() + diff);
+        this.filterStartDate = this.formatDate(startOfWeek);
+        this.filterEndDate = this.formatDate(endDate);
+        break;
+      case 'thisMonth':
+        // Start from the first day of current month
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        this.filterStartDate = this.formatDate(startOfMonth);
         this.filterEndDate = this.formatDate(endDate);
         break;
       case 'week':
