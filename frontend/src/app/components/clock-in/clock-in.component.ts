@@ -228,7 +228,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                 (click)="submitClockOut()" 
                 [disabled]="submittingClockOut || !todayAttendance || todayAttendance?.clock_out_time"
                 class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-lg">
-                <span *ngIf="!submittingClockOut">{{ todayAttendance?.clock_out_time ? 'Sudah Clock-Out' : !todayAttendance ? 'Clock-In Terlebih Dahulu' : 'Clock-Out Sekarang' }}</span>
+                <span *ngIf="!submittingClockOut">{{ getClockOutButtonText() }}</span>
                 <span *ngIf="submittingClockOut" class="flex items-center justify-center">
                   <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -511,6 +511,16 @@ export class ClockInComponent implements OnInit {
         this.submittingClockOut = false;
       }
     });
+  }
+
+  getClockOutButtonText(): string {
+    if (this.todayAttendance?.clock_out_time) {
+      return 'Sudah Clock-Out';
+    }
+    if (!this.todayAttendance) {
+      return 'Clock-In Terlebih Dahulu';
+    }
+    return 'Clock-Out Sekarang';
   }
 
   getMapEmbed(): SafeResourceUrl {
