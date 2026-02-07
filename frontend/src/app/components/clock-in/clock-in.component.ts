@@ -233,45 +233,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
       </div>
     </div>
 
-    <!-- Confirmation Dialog -->
-    <div *ngIf="showConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="text-center">
-          <svg class="mx-auto h-12 w-12 text-orange-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <h3 class="text-xl font-bold text-gray-900 mb-3">Lokasi Di Luar Semua Kantor</h3>
-          <p class="text-gray-600 mb-4">Clock-in di luar semua kantor memerlukan persetujuan manajer.</p>
-          
-          <!-- Show distances from all offices -->
-          <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <p class="text-sm font-semibold text-gray-700 mb-3">Jarak Anda dari setiap kantor:</p>
-            <div class="space-y-2">
-              <div *ngFor="let office of officeLocations" class="flex justify-between text-sm">
-                <span class="text-gray-600">{{ office.name }}:</span>
-                <span class="font-semibold text-orange-700">{{ office.distance?.toFixed(0) }}m (max: {{ office.allowed_radius_meters }}m)</span>
-              </div>
-            </div>
-          </div>
 
-          <div class="flex gap-3">
-            <button 
-              (click)="cancelClockIn()" 
-              type="button"
-              class="flex-1 py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
-              Batal
-            </button>
-            <button 
-              (click)="confirmClockIn()" 
-              type="button"
-              [disabled]="submitting"
-              class="flex-1 py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-              {{ submitting ? 'Mengirim...' : 'Lanjutkan' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   `,
   styles: []
 })
@@ -282,7 +244,6 @@ export class ClockInComponent implements OnInit {
   submittingClockOut = false;
   error = '';
   successMessage = '';
-  showConfirmation = false;
   distanceFromOffice: number | null = null;
   officeLocation: any = null;
   officeLocations: any[] = [];
@@ -404,33 +365,9 @@ export class ClockInComponent implements OnInit {
   }
 
   checkAndSubmitClockIn() {
-    if (!this.location || this.officeLocations.length === 0) {
-      this.submitClockIn();
-      return;
-    }
-
-    // Recalculate distances to ensure they're up to date
-    this.calculateDistancesFromOffices();
-
-    // Check if within range of ANY office
-    const isWithinAnyOffice = this.officeLocations.some(office => office.isWithinRange);
-
-    if (!isWithinAnyOffice) {
-      // Outside all offices - show confirmation
-      this.showConfirmation = true;
-    } else {
-      // Within range of at least one office - proceed
-      this.submitClockIn();
-    }
-  }
-
-  confirmClockIn() {
-    this.showConfirmation = false;
+    // Always allow clock-in regardless of location
+    // Backend will handle approval and add note if outside radius
     this.submitClockIn();
-  }
-
-  cancelClockIn() {
-    this.showConfirmation = false;
   }
 
   submitClockIn() {
