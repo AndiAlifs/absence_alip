@@ -54,6 +54,7 @@ func main() {
 	protected.Use(auth.AuthMiddleware())
 	{
 		protected.POST("/clock-in", handlers.ClockIn)
+		protected.POST("/clock-out", handlers.ClockOut)
 		protected.POST("/leave", handlers.CreateLeaveRequest)
 		protected.GET("/office-location", handlers.GetOfficeLocation)
 		protected.GET("/my-attendance/today", handlers.GetTodayAttendance)

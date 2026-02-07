@@ -43,7 +43,13 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tanggal & Waktu
+                  Tanggal & Waktu Clock-In
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Waktu Clock-Out
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Jam Kerja
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Lokasi Kantor
@@ -70,6 +76,22 @@
                   </div>
                   <div class="text-sm text-gray-500">
                     {{ formatTime(record.clock_in_time) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div *ngIf="record.clock_out_time" class="text-sm text-gray-900">
+                    {{ formatTime(record.clock_out_time) }}
+                  </div>
+                  <div *ngIf="!record.clock_out_time" class="text-sm text-gray-400 italic">
+                    Belum clock-out
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div *ngIf="record.work_hours !== null && record.work_hours !== undefined" class="text-sm font-semibold text-blue-600">
+                    {{ record.work_hours.toFixed(2) }} jam
+                  </div>
+                  <div *ngIf="record.work_hours === null || record.work_hours === undefined" class="text-sm text-gray-400 italic">
+                    -
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -118,7 +140,13 @@
                   {{ formatDate(record.clock_in_time) }}
                 </div>
                 <div class="text-sm text-gray-600">
-                  {{ formatTime(record.clock_in_time) }}
+                  Clock-In: {{ formatTime(record.clock_in_time) }}
+                </div>
+                <div class="text-sm text-gray-600" *ngIf="record.clock_out_time">
+                  Clock-Out: {{ formatTime(record.clock_out_time) }}
+                </div>
+                <div class="text-sm text-gray-400 italic" *ngIf="!record.clock_out_time">
+                  Belum clock-out
                 </div>
               </div>
               <span [class]="getStatusBadgeClass(record.status)" 
@@ -128,6 +156,10 @@
             </div>
             
             <div class="space-y-2 text-sm">
+              <div class="flex justify-between" *ngIf="record.work_hours !== null && record.work_hours !== undefined">
+                <span class="text-gray-600">Jam Kerja:</span>
+                <span class="font-semibold text-blue-600">{{ record.work_hours.toFixed(2) }} jam</span>
+              </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Kantor:</span>
                 <span class="font-medium text-gray-900">{{ record.approved_office?.name || '-' }}</span>

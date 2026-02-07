@@ -17,6 +17,11 @@ type ClockInInput struct {
 	Longitude float64 `json:"longitude" binding:"required"`
 }
 
+type ClockOutInput struct {
+	Latitude  float64 `json:"latitude" binding:"required"`
+	Longitude float64 `json:"longitude" binding:"required"`
+}
+
 func ClockIn(c *gin.Context) {
 	var input ClockInInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -144,6 +149,63 @@ func ClockIn(c *gin.Context) {
 		"is_late":         isLate,
 		"minutes_late":    minutesLate,
 		"office_used":     closestOffice.Name,
+	})
+}
+
+// ClockOut handles clock-out request with geolocation validation
+func ClockOut(c *gin.Context) {
+	var input ClockOutInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID := c.MustGet("userID").(uint)
+
+	// Get today's attendance record
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+
+	var attendance models.Attendance
+	result := database.DB.Where("user_id = ? AND clock_in_time BETWEEN ? AND ?", userID, startOfDay, endOfDay).First(&attendance)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Anda belum melakukan clock-in hari ini"})
+		return
+	}
+
+	// Check if already clocked out
+	if attendance.ClockOutTime != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Anda sudah melakukan clock-out hari ini"})
+		return
+	}
+
+	// Record clock-out time and location
+	clockOutTime := time.Now()
+	
+	// Calculate work hours (difference in hours as decimal)
+	workDuration := clockOutTime.Sub(attendance.ClockInTime)
+	workHours := workDuration.Hours()
+
+	// Update attendance record
+	attendance.ClockOutTime = &clockOutTime
+	attendance.LatitudeOut = &input.Latitude
+	attendance.LongitudeOut = &input.Longitude
+	attendance.WorkHours = &workHours
+
+	if err := database.DB.Save(&attendance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan clock-out"})
+		return
+	}
+
+	// Format work hours for display (e.g., "8.5 jam")
+	hoursDisplay := strconv.FormatFloat(workHours, 'f', 2, 64)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Berhasil melakukan clock-out",
+		"data":       attendance,
+		"work_hours": hoursDisplay,
 	})
 }
 

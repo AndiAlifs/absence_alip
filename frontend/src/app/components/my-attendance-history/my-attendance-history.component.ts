@@ -5,8 +5,10 @@ import { Router } from '@angular/router';
 interface AttendanceRecord {
   id: number;
   clock_in_time: string;
+  clock_out_time?: string;
   status: string;
   distance: number;
+  work_hours?: number;
   is_late: boolean;
   minutes_late: number;
   latitude: number;
