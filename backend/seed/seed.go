@@ -334,13 +334,42 @@ func SeedAttendanceRecords() {
 				approvedOfficeID = &office.ID
 			}
 
+			// Generate clock out time (8-9 hours after clock in, 80% chance of having clock out)
+			var clockOutTime *time.Time
+			var clockOutLat *float64
+			var clockOutLong *float64
+			var workHours *float64
+
+			if rand.Float32() < 0.8 { // 80% of records have clock out
+				// Random work duration: 8-9 hours
+				workDuration := 8 + rand.Float64()
+				clockOut := clockInTime.Add(time.Duration(workDuration * float64(time.Hour)))
+				clockOutTime = &clockOut
+
+				// Clock out location near office (with some variance)
+				clockOutLatVariance := (rand.Float64() - 0.5) * 0.01
+				clockOutLongVariance := (rand.Float64() - 0.5) * 0.01
+				clockOutLatValue := office.Latitude + clockOutLatVariance
+				clockOutLongValue := office.Longitude + clockOutLongVariance
+				clockOutLat = &clockOutLatValue
+				clockOutLong = &clockOutLongValue
+
+				// Calculate work hours
+				workHoursValue := workDuration
+				workHours = &workHoursValue
+			}
+
 			attendance := models.Attendance{
 				UserID:           employee.ID,
 				ClockInTime:      clockInTime,
+				ClockOutTime:     clockOutTime,
 				Latitude:         clockInLat,
 				Longitude:        clockInLong,
+				LatitudeOut:      clockOutLat,
+				LongitudeOut:     clockOutLong,
 				Status:           status,
 				Distance:         distance,
+				WorkHours:        workHours,
 				ApprovedOfficeID: approvedOfficeID,
 				IsLate:           isLate,
 				MinutesLate:      minutesLate,
