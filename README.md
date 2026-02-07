@@ -1,4 +1,7 @@
-# Field Attendance System
+# NYAMPE (Nyaman Manajemen Presensi Elektronik)
+
+> **Previously known as:** Field Attendance System
+
 
 > **TL;DR:** GPS-based attendance tracker with automatic location validation. Employees clock in with one click, system auto-approves when on-site, managers see real-time presence dashboard.
 

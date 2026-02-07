@@ -7,11 +7,14 @@ import { Component } from '@angular/core';
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo/Brand -->
-          <div class="flex-shrink-0 flex items-center">
+          <div class="flex-shrink-0 flex items-center group cursor-help relative">
             <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="ml-2 text-xl font-bold text-white">Sistem Absensi</span>
+            <div class="flex flex-col ml-2">
+              <span class="text-xl font-bold text-white tracking-wider">NYAMPE</span>
+              <span class="text-[10px] text-blue-200 leading-none hidden md:block">Nyaman Manajemen Presensi Elektronik</span>
+            </div>
           </div>
 
           <!-- Navigation Links -->
