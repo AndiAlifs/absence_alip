@@ -339,14 +339,16 @@ func hashPassword(password string) (string, error) {
 }
 
 type EmployeeDailyStatus struct {
-	UserID      uint       `json:"user_id"`
-	FullName    string     `json:"full_name"`
-	Username    string     `json:"username"`
-	Status      string     `json:"status"` // "present_ontime", "present_late", "on_leave", "absent"
-	ClockInTime *time.Time `json:"clock_in_time,omitempty"`
-	MinutesLate int        `json:"minutes_late,omitempty"`
-	LeaveReason string     `json:"leave_reason,omitempty"`
-	LeaveStatus string     `json:"leave_status,omitempty"`
+	UserID       uint       `json:"user_id"`
+	FullName     string     `json:"full_name"`
+	Username     string     `json:"username"`
+	Status       string     `json:"status"` // "present_ontime", "present_late", "on_leave", "absent"
+	ClockInTime  *time.Time `json:"clock_in_time,omitempty"`
+	ClockOutTime *time.Time `json:"clock_out_time,omitempty"`
+	WorkHours    *float64   `json:"work_hours,omitempty"`
+	MinutesLate  int        `json:"minutes_late,omitempty"`
+	LeaveReason  string     `json:"leave_reason,omitempty"`
+	LeaveStatus  string     `json:"leave_status,omitempty"`
 }
 
 func GetDailyAttendanceDashboard(c *gin.Context) {
@@ -447,6 +449,8 @@ func GetDailyAttendanceDashboard(c *gin.Context) {
 				summary["present_ontime"]++
 			}
 			status.ClockInTime = &att.ClockInTime
+			status.ClockOutTime = att.ClockOutTime
+			status.WorkHours = att.WorkHours
 		} else {
 			// No attendance and no leave
 			status.Status = "absent"

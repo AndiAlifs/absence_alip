@@ -175,8 +175,10 @@ export class ApiService {
   }
 
   updateSessionDuration(durationHours: number): Observable<any> {
+    // Ensure it's a number, not a string
+    const numericDuration = Number(durationHours);
     return this.http.put(`${this.apiUrl}/admin/settings/session-duration`, 
-      { duration_hours: durationHours }, 
+      { duration_hours: numericDuration }, 
       this.getHeaders()
     );
   }

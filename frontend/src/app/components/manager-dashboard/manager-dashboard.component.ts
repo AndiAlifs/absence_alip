@@ -346,15 +346,15 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     <select 
                       [(ngModel)]="sessionDurationHours" 
                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200">
-                      <option [value]="1">1 Jam</option>
-                      <option [value]="2">2 Jam</option>
-                      <option [value]="4">4 Jam</option>
-                      <option [value]="8">8 Jam</option>
-                      <option [value]="12">12 Jam</option>
-                      <option [value]="24">24 Jam (1 Hari)</option>
-                      <option [value]="48">48 Jam (2 Hari)</option>
-                      <option [value]="72">72 Jam (3 Hari)</option>
-                      <option [value]="168">168 Jam (7 Hari)</option>
+                      <option [ngValue]="1">1 Jam</option>
+                      <option [ngValue]="2">2 Jam</option>
+                      <option [ngValue]="4">4 Jam</option>
+                      <option [ngValue]="8">8 Jam</option>
+                      <option [ngValue]="12">12 Jam</option>
+                      <option [ngValue]="24">24 Jam (1 Hari)</option>
+                      <option [ngValue]="48">48 Jam (2 Hari)</option>
+                      <option [ngValue]="72">72 Jam (3 Hari)</option>
+                      <option [ngValue]="168">168 Jam (7 Hari)</option>
                     </select>
                     <button 
                       (click)="updateSessionDuration()"
@@ -772,7 +772,16 @@ export class ManagerDashboardComponent implements OnInit {
   loadSessionDuration() {
     this.apiService.getSessionDuration().subscribe({
       next: (response) => {
-        this.sessionDurationHours = parseInt(response.setting_value, 10) || 24;
+        const parsedValue = parseInt(response.setting_value, 10);
+        console.log('Loaded session duration from DB:', response.setting_value, 'Parsed:', parsedValue);
+        
+        // Validate the loaded value
+        if (parsedValue >= 1 && parsedValue <= 168) {
+          this.sessionDurationHours = parsedValue;
+        } else {
+          console.warn('Invalid session duration in database:', parsedValue, 'Using default 24');
+          this.sessionDurationHours = 24; // Use safe default if DB value is invalid
+        }
       },
       error: (error) => {
         console.error('Failed to load session duration:', error);
@@ -782,6 +791,16 @@ export class ManagerDashboardComponent implements OnInit {
   }
 
   updateSessionDuration() {
+    // Frontend validation
+    if (this.sessionDurationHours < 1 || this.sessionDurationHours > 168) {
+      this.sessionSettingsMessage = `Nilai tidak valid: ${this.sessionDurationHours}. Durasi harus antara 1-168 jam.`;
+      this.isSessionSettingsError = true;
+      setTimeout(() => this.sessionSettingsMessage = '', 5000);
+      return;
+    }
+
+    console.log('Sending session duration:', this.sessionDurationHours, 'Type:', typeof this.sessionDurationHours);
+    
     this.isSavingSessionDuration = true;
     this.sessionSettingsMessage = '';
     this.isSessionSettingsError = false;

@@ -35,7 +35,10 @@ func UpdateSessionDuration(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Durasi harus antara 1-168 jam (1 jam - 7 hari)"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "Durasi harus antara 1-168 jam (1 jam - 7 hari)",
+			"detail": err.Error(),
+		})
 		return
 	}
 
