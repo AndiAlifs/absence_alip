@@ -15,10 +15,11 @@ import { OfficeManagementComponent } from './components/office-management/office
 import { LeaveManagementComponent } from './components/leave-management/leave-management.component';
 import { AttendanceReportsComponent } from './components/attendance-reports/attendance-reports.component';
 import { MyAttendanceHistoryComponent } from './components/my-attendance-history/my-attendance-history.component';
+import { LandingPageComponent } from './components/landing-page/landing-page.component';
 import { AuthGuard } from './auth.guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', component: LandingPageComponent },
   { path: 'login', component: LoginComponent },
   { path: 'clock-in', component: ClockInComponent, canActivate: [AuthGuard] },
   { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard] },
@@ -42,7 +43,8 @@ const routes: Routes = [
     ManagerDashboardComponent,
     AttendanceReportsComponent,
     MyAttendanceHistoryComponent,
-    LeaveManagementComponent
+    LeaveManagementComponent,
+    LandingPageComponent
   ],
   imports: [
     BrowserModule,
