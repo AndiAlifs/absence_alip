@@ -31,6 +31,10 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/clock-in`, data, this.getHeaders());
   }
 
+  clockOut(data: { latitude: number, longitude: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/clock-out`, data, this.getHeaders());
+  }
+
   getTodayAttendance(): Observable<any> {
     return this.http.get(`${this.apiUrl}/my-attendance/today`, this.getHeaders());
   }

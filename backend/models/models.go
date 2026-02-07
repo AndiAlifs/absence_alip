@@ -25,10 +25,14 @@ type Attendance struct {
 	ID               uint            `gorm:"primaryKey" json:"id"`
 	UserID           uint            `gorm:"not null" json:"user_id"`
 	ClockInTime      time.Time       `gorm:"not null" json:"clock_in_time"`
+	ClockOutTime     *time.Time      `json:"clock_out_time,omitempty"`
 	Latitude         float64         `gorm:"type:decimal(10,8)" json:"latitude"`
 	Longitude        float64         `gorm:"type:decimal(11,8)" json:"longitude"`
+	LatitudeOut      *float64        `gorm:"type:decimal(10,8)" json:"latitude_out,omitempty"`
+	LongitudeOut     *float64        `gorm:"type:decimal(11,8)" json:"longitude_out,omitempty"`
 	Status           string          `gorm:"type:enum('approved','pending','rejected');default:'approved'" json:"status"`
 	Distance         float64         `gorm:"type:decimal(10,2)" json:"distance"`
+	WorkHours        *float64        `gorm:"type:decimal(10,2)" json:"work_hours,omitempty"`
 	IsLate           bool            `gorm:"default:false" json:"is_late"`
 	MinutesLate      int             `gorm:"default:0" json:"minutes_late"`
 	ApprovedOfficeID *uint           `json:"approved_office_id,omitempty"` // Which office validated this
