@@ -42,8 +42,8 @@ import { Component } from '@angular/core';
             <a routerLink="/login" class="px-8 py-4 rounded-full bg-white text-blue-700 font-bold text-lg hover:bg-gray-100 transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
               Mulai Sekarang Gratis
             </a>
-            <a href="#demo" class="px-8 py-4 rounded-full border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition">
-              Lihat Demo
+            <a href="#kontak" class="px-8 py-4 rounded-full border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition">
+              Hubungi Kami
             </a>
           </div>
         </div>
@@ -113,6 +113,279 @@ import { Component } from '@angular/core';
               <p class="text-gray-600 leading-relaxed">
                 Jika karyawan berada dalam radius kantor, sistem otomatis menyetujui. Hemat 80% waktu manajer untuk review manual. 
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Device Showcase: Employee (Phone) -->
+      <section id="fitur" class="py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-16">
+            <span class="inline-block px-4 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4">TAMPILAN KARYAWAN</span>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Semua yang Karyawan Butuhkan<br>dalam Genggaman</h2>
+            <p class="text-xl text-gray-500 max-w-2xl mx-auto">Dioptimalkan untuk smartphone. Satu klik absensi, cuti, dan riwayat.</p>
+          </div>
+          
+          <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+            <!-- Phone Frame -->
+            <div class="flex-shrink-0 relative">
+              <div class="relative mx-auto" style="width: 280px; height: 580px;">
+                <!-- Phone Body -->
+                <div class="absolute inset-0 bg-gray-900 rounded-[3rem] shadow-2xl border-4 border-gray-800">
+                  <!-- Notch -->
+                  <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-2xl z-20"></div>
+                  <!-- Screen -->
+                  <div class="absolute top-3 left-3 right-3 bottom-3 bg-white rounded-[2.5rem] overflow-hidden">
+                    <!-- Status Bar -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 pt-10 pb-4">
+                      <div class="flex items-center justify-between text-white text-xs mb-3">
+                        <span>09:41</span>
+                        <div class="flex items-center space-x-1">
+                          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/></svg>
+                          <span>NYAMPE</span>
+                        </div>
+                      </div>
+                      <h3 class="text-white font-bold text-lg">Selamat Pagi, Budi 👋</h3>
+                      <p class="text-blue-200 text-xs mt-1">Jum'at, 7 Feb 2026</p>
+                    </div>
+                    <!-- Clock-In Card -->
+                    <div class="px-4 py-3">
+                      <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-3">
+                        <div class="flex items-center justify-between mb-3">
+                          <span class="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">📍 CLOCK IN</span>
+                          <span class="text-xs text-green-600 font-bold">✅ Approved</span>
+                        </div>
+                        <div class="text-center py-2">
+                          <div class="text-3xl font-bold text-gray-900">08:47</div>
+                          <div class="text-xs text-gray-500 mt-1">Kantor Kendari • 23m dari lokasi</div>
+                        </div>
+                        <div class="bg-blue-600 text-white text-center py-3 rounded-xl font-bold text-sm mt-2 shadow-md">
+                          🎯 Sudah Clock In Hari Ini
+                        </div>
+                      </div>
+                      <!-- Quick Actions -->
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 text-center">
+                          <div class="text-lg mb-1">📋</div>
+                          <div class="text-xs font-semibold text-gray-700">Ajukan Cuti</div>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-100 rounded-xl p-3 text-center">
+                          <div class="text-lg mb-1">📊</div>
+                          <div class="text-xs font-semibold text-gray-700">Riwayat</div>
+                        </div>
+                      </div>
+                      <!-- Leave Status -->
+                      <div class="mt-3 bg-green-50 border border-green-100 rounded-xl p-3">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center">
+                            <span class="text-sm mr-2">🏖️</span>
+                            <div>
+                              <div class="text-xs font-semibold text-gray-700">Cuti 10-12 Feb</div>
+                              <div class="text-xs text-gray-500">Liburan keluarga</div>
+                            </div>
+                          </div>
+                          <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-semibold">Pending</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Phone Button -->
+                <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-gray-600 rounded-full"></div>
+              </div>
+              <!-- Reflection -->
+              <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-48 h-8 bg-gradient-to-b from-gray-200/50 to-transparent rounded-full filter blur-xl"></div>
+            </div>
+
+            <!-- Feature List (Employee) -->
+            <div class="flex-1 space-y-6">
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Clock-In Satu Klik</h4>
+                  <p class="text-gray-600">Buka aplikasi, tekan tombol, selesai. GPS otomatis terdeteksi dan divalidasi dengan lokasi kantor terdekat.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-green-200 transition">
+                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Auto-Approval Instan</h4>
+                  <p class="text-gray-600">Dalam radius kantor? Langsung disetujui otomatis. Tidak perlu tunggu manajer. Cepat & tanpa ribet.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition">
+                  <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Pengajuan Cuti Digital</h4>
+                  <p class="text-gray-600">Ajukan cuti langsung dari HP. Pilih tanggal, isi alasan, kirim. Pantau status approval real-time.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition">
+                  <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Riwayat Kehadiran Lengkap</h4>
+                  <p class="text-gray-600">Lihat semua riwayat absensi dan cuti. Filter berdasarkan bulan. Transparan dan mudah diakses kapan saja.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Device Showcase: Manager (Tablet) -->
+      <section id="demo" class="py-24 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-16">
+            <span class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-4">TAMPILAN MANAJER</span>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Dashboard Lengkap untuk<br>Kontrol Penuh</h2>
+            <p class="text-xl text-gray-500 max-w-2xl mx-auto">Dioptimalkan untuk tablet & desktop. Monitor semua cabang dari satu layar.</p>
+          </div>
+          
+          <div class="flex flex-col lg:flex-row-reverse items-center gap-12 lg:gap-20">
+            <!-- Tablet Frame -->
+            <div class="flex-shrink-0 relative">
+              <div class="relative mx-auto" style="width: 520px; max-width: 90vw; height: 380px;">
+                <!-- Tablet Body -->
+                <div class="absolute inset-0 bg-gray-900 rounded-[1.5rem] shadow-2xl border-4 border-gray-800">
+                  <!-- Camera -->
+                  <div class="absolute top-3 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-700 rounded-full z-20"></div>
+                  <!-- Screen -->
+                  <div class="absolute top-4 left-4 right-4 bottom-4 bg-white rounded-xl overflow-hidden">
+                    <!-- Top Bar -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-3 flex items-center justify-between">
+                      <div class="flex items-center space-x-3">
+                        <span class="text-white font-bold text-sm tracking-wider">NYAMPE</span>
+                        <span class="text-blue-200 text-xs">|</span>
+                        <span class="text-blue-200 text-xs">Panel Manajer</span>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <span class="bg-green-400 w-2 h-2 rounded-full"></span>
+                        <span class="text-white text-xs">Admin</span>
+                      </div>
+                    </div>
+                    <!-- Dashboard Content -->
+                    <div class="p-4">
+                      <!-- Stats Row -->
+                      <div class="grid grid-cols-4 gap-2 mb-3">
+                        <div class="bg-green-50 border border-green-100 rounded-lg p-2 text-center">
+                          <div class="text-lg font-bold text-green-600">42</div>
+                          <div class="text-[9px] text-gray-500 font-medium">Hadir</div>
+                        </div>
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-2 text-center">
+                          <div class="text-lg font-bold text-red-600">3</div>
+                          <div class="text-[9px] text-gray-500 font-medium">Tidak Hadir</div>
+                        </div>
+                        <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-2 text-center">
+                          <div class="text-lg font-bold text-yellow-600">7</div>
+                          <div class="text-[9px] text-gray-500 font-medium">Terlambat</div>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-2 text-center">
+                          <div class="text-lg font-bold text-blue-600">5</div>
+                          <div class="text-[9px] text-gray-500 font-medium">Cuti</div>
+                        </div>
+                      </div>
+                      <!-- Table -->
+                      <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                        <div class="grid grid-cols-5 gap-0 text-[9px] font-bold text-gray-500 uppercase bg-gray-100 px-3 py-2">
+                          <span>Nama</span><span>Kantor</span><span>Waktu</span><span>Jarak</span><span>Status</span>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                          <div class="grid grid-cols-5 gap-0 text-[10px] px-3 py-2 items-center">
+                            <span class="font-medium text-gray-800">Budi S.</span>
+                            <span class="text-gray-500">Kendari</span>
+                            <span class="text-gray-500">08:47</span>
+                            <span class="text-gray-500">23m</span>
+                            <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full text-center text-[8px] font-bold">Approved</span>
+                          </div>
+                          <div class="grid grid-cols-5 gap-0 text-[10px] px-3 py-2 items-center">
+                            <span class="font-medium text-gray-800">Siti A.</span>
+                            <span class="text-gray-500">Jakarta</span>
+                            <span class="text-gray-500">09:12</span>
+                            <span class="text-gray-500">15m</span>
+                            <span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full text-center text-[8px] font-bold">Late</span>
+                          </div>
+                          <div class="grid grid-cols-5 gap-0 text-[10px] px-3 py-2 items-center">
+                            <span class="font-medium text-gray-800">Andi R.</span>
+                            <span class="text-gray-500">Makassar</span>
+                            <span class="text-gray-500">08:55</span>
+                            <span class="text-red-500">520m</span>
+                            <span class="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full text-center text-[8px] font-bold">Pending</span>
+                          </div>
+                          <div class="grid grid-cols-5 gap-0 text-[10px] px-3 py-2 items-center">
+                            <span class="font-medium text-gray-800">Dewi L.</span>
+                            <span class="text-gray-500">Palopo</span>
+                            <span class="text-gray-500">08:30</span>
+                            <span class="text-gray-500">8m</span>
+                            <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full text-center text-[8px] font-bold">Approved</span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Bottom Actions -->
+                      <div class="flex items-center justify-between mt-3">
+                        <div class="flex space-x-2">
+                          <span class="bg-indigo-100 text-indigo-700 text-[9px] font-bold px-2 py-1 rounded-lg">🏢 4 Kantor Aktif</span>
+                          <span class="bg-blue-100 text-blue-700 text-[9px] font-bold px-2 py-1 rounded-lg">📊 Laporan</span>
+                        </div>
+                        <div class="flex space-x-1">
+                          <span class="bg-orange-100 text-orange-700 text-[9px] font-bold px-2 py-1 rounded-lg">⏳ 2 Pending</span>
+                          <span class="bg-purple-100 text-purple-700 text-[9px] font-bold px-2 py-1 rounded-lg">📝 3 Cuti</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Reflection -->
+              <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-64 h-8 bg-gradient-to-b from-gray-200/50 to-transparent rounded-full filter blur-xl"></div>
+            </div>
+
+            <!-- Feature List (Manager) -->
+            <div class="flex-1 space-y-6">
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-200 transition">
+                  <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Dashboard Real-Time</h4>
+                  <p class="text-gray-600">Lihat siapa yang sudah hadir, terlambat, atau belum datang. Data update otomatis tanpa perlu refresh.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Kelola Multi-Kantor</h4>
+                  <p class="text-gray-600">Atur hingga 4 kantor cabang sekaligus. Set radius, jam masuk, dan lokasi GPS tiap kantor dengan mudah.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition">
+                  <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Approval Cuti & Absensi</h4>
+                  <p class="text-gray-600">Setujui atau tolak permintaan cuti dan clock-in yang di luar radius. Semua dari satu dashboard terpusat.</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-4 group">
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-green-200 transition">
+                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold text-gray-900">Laporan & Export</h4>
+                  <p class="text-gray-600">Rekap kehadiran harian, bulanan, per karyawan. Filter data, lihat statistik keterlambatan, dan cetak laporan.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
