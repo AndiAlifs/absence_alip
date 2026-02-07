@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
@@ -52,7 +52,7 @@ import { ApiService } from '../../services/api.service';
   `,
   styles: []
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   error = '';
 
@@ -66,6 +66,19 @@ export class LoginComponent {
       password: ['', Validators.required],
       rememberMe: [false]
     });
+  }
+
+  ngOnInit() {
+    // Redirect if already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      const role = localStorage.getItem('role');
+      if (role === 'manager') {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/clock-in']);
+      }
+    }
   }
 
   onSubmit() {
