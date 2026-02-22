@@ -10,11 +10,9 @@ import { ApiService } from '../../services/api.service';
       <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
         <div class="text-center">
           <div class="mb-4">
-            <h1 class="text-4xl font-extrabold text-blue-600 tracking-tight">NYAMPE</h1>
-            <p class="text-xs text-blue-400 font-medium uppercase tracking-wider mt-1">Nyaman Manajemen Presensi Elektronik</p>
+            <img src="assets/ypa_logo.png" alt="YPA Logo" class="mx-auto h-24 w-auto">
           </div>
-          <h2 class="text-2xl font-bold text-gray-900">Masuk</h2>
-          <p class="mt-2 text-sm text-gray-600">Selamat datang kembali</p>
+          <h2 class="text-2xl font-bold text-gray-900">YPA-HANDAYANI</h2>
         </div>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
           <div>

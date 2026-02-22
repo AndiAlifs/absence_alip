@@ -16,10 +16,12 @@ import { LeaveManagementComponent } from './components/leave-management/leave-ma
 import { AttendanceReportsComponent } from './components/attendance-reports/attendance-reports.component';
 import { MyAttendanceHistoryComponent } from './components/my-attendance-history/my-attendance-history.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
+import { LegacyLandingPageComponent } from './components/landing-page/legacy-landing-page.component';
 import { AuthGuard } from './auth.guard';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent },
+  { path: 'legacy', component: LegacyLandingPageComponent },
   { path: 'login', component: LoginComponent },
   { path: 'clock-in', component: ClockInComponent, canActivate: [AuthGuard] },
   { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard] },
@@ -44,7 +46,8 @@ const routes: Routes = [
     AttendanceReportsComponent,
     MyAttendanceHistoryComponent,
     LeaveManagementComponent,
-    LandingPageComponent
+    LandingPageComponent,
+    LegacyLandingPageComponent
   ],
   imports: [
     BrowserModule,
