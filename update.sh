@@ -15,7 +15,7 @@ echo ""
 
 # Check what to update
 echo "What would you like to update?"
-echo "1) Backend only"
+echo "1) Backend only" 
 echo "2) Frontend only"
 echo "3) Both backend and frontend"
 read -p "Enter choice [1-3]: " CHOICE
