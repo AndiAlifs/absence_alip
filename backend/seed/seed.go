@@ -291,6 +291,16 @@ func SeedAttendanceRecords() {
 
 		for i := 0; i < numRecords && i < len(shuffledEmployees); i++ {
 			employee := shuffledEmployees[i]
+
+			// Check if attendance record already exists for this user on this day
+			startOfDay := time.Date(recordDate.Year(), recordDate.Month(), recordDate.Day(), 0, 0, 0, 0, recordDate.Location())
+			endOfDay := time.Date(recordDate.Year(), recordDate.Month(), recordDate.Day(), 23, 59, 59, 999999999, recordDate.Location())
+			var existingRecord models.Attendance
+			if err := database.DB.Where("user_id = ? AND clock_in_time BETWEEN ? AND ?", employee.ID, startOfDay, endOfDay).First(&existingRecord).Error; err == nil {
+				log.Printf("Attendance record for employee %d on %s already exists, skipping", employee.ID, recordDate.Format("2006-01-02"))
+				continue
+			}
+
 			office := offices[rand.Intn(len(offices))]
 
 			// Determine status with constraints
