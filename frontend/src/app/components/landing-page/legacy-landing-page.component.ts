@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-legacy-landing-page',
   template: `
     <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
       <!-- Navbar -->
-      <nav class="bg-white shadow-sm sticky top-0 z-50">
+      <nav *ngIf="!isLoggedIn" class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center h-16">
             <div class="flex items-center space-x-2">
@@ -470,6 +471,24 @@ import { Component } from '@angular/core';
         </div>
       </footer>
     </div>
-  `
+  `,
+  styles: []
 })
-export class LegacyLandingPageComponent { }
+export class LegacyLandingPageComponent implements OnInit {
+  constructor(private router: Router) { }
+
+  get isLoggedIn() {
+    return !!localStorage.getItem('token');
+  }
+
+  ngOnInit() {
+    if (this.isLoggedIn) {
+      const role = localStorage.getItem('role');
+      if (role === 'manager') {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/clock-in']);
+      }
+    }
+  }
+}

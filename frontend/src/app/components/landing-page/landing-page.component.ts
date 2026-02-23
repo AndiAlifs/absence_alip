@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-landing-page',
   template: `
     <div class="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-indigo-500/30">
       <!-- Premium Glassmorphism Navbar -->
-      <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/50">
+      <nav *ngIf="!isLoggedIn" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/50">
         <div class="max-w-7xl mx-auto px-6 sm:px-8">
           <div class="flex justify-between items-center h-20">
             <div class="flex items-center group cursor-pointer" routerLink="/">
@@ -166,7 +167,7 @@ import { Component } from '@angular/core';
             Siap Maju Bersama <br>YPA-Handayani?
           </h2>
           <p class="text-2xl text-indigo-100 mb-16 opacity-90 max-w-3xl mx-auto font-medium">
-            Gabung dalam ekosistem kerja digital yang lebih transparan, efisien, dan modern.
+            Gabung dalam ekosistem kerja digital yang lebih transparan, efisien, and modern.
           </p>
           <div class="flex flex-col sm:flex-row justify-center gap-6">
             <a routerLink="/login" class="px-12 py-6 rounded-2xl bg-white text-indigo-600 font-black text-2xl shadow-2xl hover:scale-105 transition-transform active:scale-95">
@@ -259,4 +260,21 @@ import { Component } from '@angular/core';
     }
   `]
 })
-export class LandingPageComponent { }
+export class LandingPageComponent implements OnInit {
+  constructor(private router: Router) { }
+
+  get isLoggedIn() {
+    return !!localStorage.getItem('token');
+  }
+
+  ngOnInit() {
+    if (this.isLoggedIn) {
+      const role = localStorage.getItem('role');
+      if (role === 'manager') {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/clock-in']);
+      }
+    }
+  }
+}
