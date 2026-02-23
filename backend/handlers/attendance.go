@@ -84,14 +84,14 @@ func ClockIn(c *gin.Context) {
 		}
 	}
 
-	// Always approve, but track if outside radius via approvedOfficeID
-	status := "approved"
+	// Auto-approve if within radius, set pending if outside all office radii
+	status := "pending"
 	var approvedOfficeID *uint
 
 	if isWithinRadius {
+		status = "approved"
 		approvedOfficeID = &closestOffice.ID
 	}
-	// If approvedOfficeID is nil, it means employee was outside all office radii
 
 	// Calculate if employee is late
 	isLate := false
