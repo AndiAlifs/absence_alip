@@ -289,14 +289,23 @@ func SeedAttendanceRecords() {
 			shuffledEmployees[i], shuffledEmployees[j] = shuffledEmployees[j], shuffledEmployees[i]
 		})
 
+		// Fetch all existing attendance user IDs for this day upfront
+		startOfDay := time.Date(recordDate.Year(), recordDate.Month(), recordDate.Day(), 0, 0, 0, 0, recordDate.Location())
+		nextDay := startOfDay.AddDate(0, 0, 1)
+		var existingRecords []models.Attendance
+		database.DB.Select("user_id").
+			Where("clock_in_time >= ? AND clock_in_time < ?", startOfDay, nextDay).
+			Find(&existingRecords)
+		existingUserIDs := make(map[uint]bool, len(existingRecords))
+		for _, r := range existingRecords {
+			existingUserIDs[r.UserID] = true
+		}
+
 		for i := 0; i < numRecords && i < len(shuffledEmployees); i++ {
 			employee := shuffledEmployees[i]
 
 			// Check if attendance record already exists for this user on this day
-			startOfDay := time.Date(recordDate.Year(), recordDate.Month(), recordDate.Day(), 0, 0, 0, 0, recordDate.Location())
-			endOfDay := time.Date(recordDate.Year(), recordDate.Month(), recordDate.Day(), 23, 59, 59, 999999999, recordDate.Location())
-			var existingRecord models.Attendance
-			if err := database.DB.Where("user_id = ? AND clock_in_time BETWEEN ? AND ?", employee.ID, startOfDay, endOfDay).First(&existingRecord).Error; err == nil {
+			if existingUserIDs[employee.ID] {
 				log.Printf("Attendance record for employee %d on %s already exists, skipping", employee.ID, recordDate.Format("2006-01-02"))
 				continue
 			}
