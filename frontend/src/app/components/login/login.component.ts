@@ -6,7 +6,8 @@ import { ApiService } from '../../services/api.service';
 @Component({
   selector: 'app-login',
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <app-navbar [showLoginButton]="false"></app-navbar>
+    <div class="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
         <div class="text-center">
           <div class="mb-4">

@@ -17,6 +17,7 @@ import { AttendanceReportsComponent } from './components/attendance-reports/atte
 import { MyAttendanceHistoryComponent } from './components/my-attendance-history/my-attendance-history.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
 import { LegacyLandingPageComponent } from './components/landing-page/legacy-landing-page.component';
+import { NavbarComponent } from './components/shared/navbar/navbar.component';
 import { AuthGuard } from './auth.guard';
 
 const routes: Routes = [
@@ -47,7 +48,8 @@ const routes: Routes = [
     MyAttendanceHistoryComponent,
     LeaveManagementComponent,
     LandingPageComponent,
-    LegacyLandingPageComponent
+    LegacyLandingPageComponent,
+    NavbarComponent
   ],
   imports: [
     BrowserModule,
