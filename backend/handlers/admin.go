@@ -25,7 +25,7 @@ func GetAllRecords(c *gin.Context) {
 
 	if manager.IsSuperAdmin {
 		// Super admin can see all attendance records
-		if result := database.DB.Preload("User").Where("status = ?", "approved").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+		if result := database.DB.Preload("User").Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
 			return
 		}
@@ -52,7 +52,7 @@ func GetAllRecords(c *gin.Context) {
 			return
 		}
 
-		if result := database.DB.Preload("User").Where("status = ? AND user_id IN ?", "approved", userIDs).Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
+		if result := database.DB.Preload("User").Where("user_id IN ?", userIDs).Order("clock_in_time DESC").Find(&attendances); result.Error != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch records"})
 			return
 		}

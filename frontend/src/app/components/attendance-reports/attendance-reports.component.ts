@@ -130,7 +130,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         </div>
 
         <!-- Summary Statistics -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
             <p class="text-xs text-gray-600 mb-1">Total Catatan</p>
             <p class="text-2xl font-bold text-blue-700">{{ filteredRecords.length }}</p>
@@ -144,6 +144,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <p class="text-xs text-gray-600 mb-1">Terlambat</p>
             <p class="text-2xl font-bold text-orange-700">{{ getLateCount() }}</p>
             <p class="text-xs text-gray-500">{{ getLatePercentage() }}%</p>
+          </div>
+          <div class="bg-white rounded-lg shadow p-4 border-l-4 border-indigo-500">
+            <p class="text-xs text-gray-600 mb-1">Rata-rata Jam Kerja</p>
+            <p class="text-2xl font-bold text-indigo-700">{{ getAverageWorkHours() }}</p>
+            <p class="text-xs text-gray-500">jam</p>
           </div>
           <div class="bg-white rounded-lg shadow p-4 border-l-4 border-gray-500">
             <p class="text-xs text-gray-600 mb-1">Rata-rata Terlambat</p>
@@ -582,24 +587,28 @@ export class AttendanceReportsComponent implements OnInit {
     return (total / lateRecords.length).toFixed(1);
   }
 
+  getAverageWorkHours(): string {
+    const recordsWithHours = this.filteredRecords.filter(r => r.work_hours);
+    if (recordsWithHours.length === 0) return '0';
+    const total = recordsWithHours.reduce((sum, r) => sum + r.work_hours, 0);
+    return (total / recordsWithHours.length).toFixed(1);
+  }
+
   exportToCSV() {
     if (this.filteredRecords.length === 0) {
       alert('Tidak ada data untuk diekspor');
       return;
     }
 
-    const headers = ['Tanggal', 'Nama', 'Username', 'Jam Masuk', 'Kantor', 'Status', 'Tepat Waktu', 'Menit Terlambat', 'Jarak (m)', 'Koordinat'];
+    const headers = ['Nama', 'Jam Masuk', 'Jam Keluar', 'Total Jam Kerja', 'Kantor', 'Ketepatan', 'Jarak (m)'];
     const rows = this.filteredRecords.map(r => [
-      new Date(r.clock_in_time).toLocaleDateString('id-ID'),
-      r.user?.full_name || '',
-      r.user?.username || '',
+      r.user?.full_name || r.user?.username || '',
       new Date(r.clock_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      r.clock_out_time ? new Date(r.clock_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '',
+      r.work_hours ? r.work_hours.toFixed(1) : '',
       this.getOfficeName(r.approved_office_id),
-      r.status,
-      r.is_late ? 'Terlambat' : 'Tepat Waktu',
-      r.is_late ? r.minutes_late : '0',
-      r.distance?.toFixed(2) || '',
-      `${r.latitude}, ${r.longitude}`
+      r.is_late ? 'Terlambat ' + r.minutes_late + ' menit' : 'Tepat Waktu',
+      r.distance?.toFixed(0) || ''
     ]);
 
     let csv = headers.join(',') + '\n';
