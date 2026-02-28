@@ -54,18 +54,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                 <option *ngFor="let office of offices" [value]="office.id">{{ office.name }}</option>
               </select>
             </div>
-
-            <!-- Status Filter -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select [(ngModel)]="filterStatus" (change)="applyFilters()"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Semua Status</option>
-                <option value="approved">Disetujui</option>
-                <option value="pending">Menunggu</option>
-                <option value="rejected">Ditolak</option>
-              </select>
-            </div>
           </div>
 
           <!-- Search & Quick Filters -->
@@ -197,7 +185,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Keluar</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kantor</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Ketepatan</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jarak</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
@@ -232,17 +219,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                       </div>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <span *ngIf="record.status === 'approved'" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        ✓ Disetujui
-                      </span>
-                      <span *ngIf="record.status === 'pending'" class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        ⏳ Menunggu
-                      </span>
-                      <span *ngIf="record.status === 'rejected'" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                        ✗ Ditolak
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
                       <span *ngIf="!record.is_late" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                         ✓ Tepat Waktu
                       </span>
@@ -262,7 +238,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     </td>
                   </tr>
                   <tr *ngIf="expandedRecordId === record.id">
-                    <td colspan="10" class="px-4 py-4 bg-gray-50">
+                    <td colspan="9" class="px-4 py-4 bg-gray-50">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h4 class="font-semibold text-gray-900 mb-2">Informasi Detail</h4>
@@ -340,7 +316,6 @@ export class AttendanceReportsComponent implements OnInit {
   filterStartDate: string = '';
   filterEndDate: string = '';
   selectedOfficeId: number | string = '';
-  filterStatus: string = '';
   searchQuery: string = '';
   quickFilter: string = 'week';
   
@@ -468,11 +443,6 @@ export class AttendanceReportsComponent implements OnInit {
       filtered = filtered.filter(r => r.approved_office_id === officeId);
     }
     
-    // Status filter
-    if (this.filterStatus) {
-      filtered = filtered.filter(r => r.status === this.filterStatus);
-    }
-    
     // Search filter
     if (this.searchQuery) {
       const query = this.searchQuery.toLowerCase();
@@ -547,7 +517,6 @@ export class AttendanceReportsComponent implements OnInit {
     this.filterStartDate = '';
     this.filterEndDate = '';
     this.selectedOfficeId = '';
-    this.filterStatus = '';
     this.searchQuery = '';
     this.quickFilter = '';
     this.applyFilters();

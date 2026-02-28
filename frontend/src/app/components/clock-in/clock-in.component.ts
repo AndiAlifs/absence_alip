@@ -20,7 +20,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             </svg>
             Status Absensi Hari Ini
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
               <p class="text-xs text-gray-600 mb-1">Waktu Clock-In</p>
               <p class="text-lg font-semibold text-gray-900">{{ todayAttendance.clock_in_time | date:'HH:mm' }}</p>
@@ -28,12 +28,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
             <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg" *ngIf="todayAttendance.clock_out_time">
               <p class="text-xs text-gray-600 mb-1">Waktu Clock-Out</p>
               <p class="text-lg font-semibold text-gray-900">{{ todayAttendance.clock_out_time | date:'HH:mm' }}</p>
-            </div>
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
-              <p class="text-xs text-gray-600 mb-1">Status</p>
-              <span [class]="todayAttendance.status === 'approved' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800' : todayAttendance.status === 'pending' ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800' : 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800'">
-                {{ todayAttendance.status === 'approved' ? 'Disetujui' : todayAttendance.status === 'pending' ? 'Menunggu' : 'Ditolak' }}
-              </span>
             </div>
             <div [class]="todayAttendance.is_late ? 'bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg' : 'bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg'">
               <p class="text-xs text-gray-600 mb-1">Ketepatan Waktu</p>
@@ -75,7 +69,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   ✓ Dalam Jangkauan
                 </span>
                 <span *ngIf="!office.isWithinRange && office.distance !== undefined" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                  ⚠ Perlu Approval
+                  ⚠ Diluar Jangkauan
                 </span>
               </div>
               
@@ -379,14 +373,7 @@ export class ClockInComponent implements OnInit {
     
     this.apiService.clockIn(this.location).subscribe({
       next: (res) => {
-        const status = res.status || res.data?.status;
-        const needsApproval = res.needs_approval;
-        
-        if (needsApproval || status === 'pending') {
-          this.successMessage = res.message || 'Clock-in dicatat. Menunggu persetujuan manajer karena lokasi terlalu jauh dari kantor.';
-        } else {
-          this.successMessage = res.message || 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
-        }
+        this.successMessage = res.message || 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
         
         // Reload today's attendance to show updated status
         this.loadTodayAttendance();
