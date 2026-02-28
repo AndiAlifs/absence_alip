@@ -419,11 +419,13 @@ export class AttendanceReportsComponent implements OnInit {
   applyFilters() {
     let filtered = [...this.allRecords];
     
-    // Date range filter
+    // Date range filter - compare dates in local timezone
     if (this.filterStartDate) {
       filtered = filtered.filter(r => {
         const recordDate = new Date(r.clock_in_time);
-        const startDate = new Date(this.filterStartDate);
+        // Parse filter date as local time (YYYY-MM-DD at midnight local)
+        const [year, month, day] = this.filterStartDate.split('-').map(Number);
+        const startDate = new Date(year, month - 1, day, 0, 0, 0, 0);
         return recordDate >= startDate;
       });
     }
@@ -431,8 +433,9 @@ export class AttendanceReportsComponent implements OnInit {
     if (this.filterEndDate) {
       filtered = filtered.filter(r => {
         const recordDate = new Date(r.clock_in_time);
-        const endDate = new Date(this.filterEndDate);
-        endDate.setHours(23, 59, 59, 999);
+        // Parse filter date as local time (YYYY-MM-DD at end of day local)
+        const [year, month, day] = this.filterEndDate.split('-').map(Number);
+        const endDate = new Date(year, month - 1, day, 23, 59, 59, 999);
         return recordDate <= endDate;
       });
     }
