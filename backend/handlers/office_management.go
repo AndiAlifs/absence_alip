@@ -378,18 +378,31 @@ func GetEmployeeOffices(c *gin.Context) {
 		return
 	}
 
-	// Get employee's manager (same logic as ClockIn)
-	var manager models.User
-	if err := database.DB.Where("role = ?", "manager").First(&manager).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Manager tidak ditemukan"})
-		return
+	// Find the manager who manages the employee's assigned office
+	var managerID uint
+	if user.OfficeID != nil {
+		// Find manager via the manager_offices junction table
+		var managerOffice models.ManagerOffice
+		if err := database.DB.Where("office_id = ?", *user.OfficeID).First(&managerOffice).Error; err == nil {
+			managerID = managerOffice.ManagerID
+		}
+	}
+
+	// Fallback: if no manager found via office, use first manager
+	if managerID == 0 {
+		var manager models.User
+		if err := database.DB.Where("role = ?", "manager").First(&manager).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Manager tidak ditemukan"})
+			return
+		}
+		managerID = manager.ID
 	}
 
 	// Get all offices managed by the manager
 	var offices []models.OfficeLocation
 	database.DB.
 		Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
-		Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", manager.ID, true).
+		Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", managerID, true).
 		Find(&offices)
 
 	c.JSON(http.StatusOK, gin.H{"data": offices, "count": len(offices)})
