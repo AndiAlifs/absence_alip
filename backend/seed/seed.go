@@ -34,7 +34,8 @@ func SeedSuperAdmins() {
 		isSuperAdmin bool
 	}{
 		{"admin", "Administrator 1", "admin", true},
-		{"admin2", "Administrator 2", "admin2", false}, // Regular manager, not super admin
+		{"admin2", "Administrator 2", "admin2", false},                    // Regular manager, not super admin
+		{"admin_kendari", "Admin Kantor Kendari", "admin_kendari", false}, // Kendari office manager
 	}
 
 	for _, admin := range admins {
@@ -93,6 +94,9 @@ func SeedOffices() {
 		{"Kantor Jakarta", "", -6.17433700, 106.79221800, 350.00, "09:20"},
 		{"Kantor Palopo", "", -3.00378910, 120.18998010, 300.00, "02:12"},
 		{"Kantor Makassar", "", -5.15187740, 119.44655790, 300.00, "10:00"},
+		{"Kampus B", "", -3.989306312396674, 122.50644229642265, 300.00, "08:00"},
+		{"Lapangan MTQ", "", -3.9742242989210776, 122.51430769144108, 300.00, "08:00"},
+		{"Kampus A", "", -3.961466180535831, 122.53117878627592, 300.00, "08:00"},
 	}
 
 	for _, office := range offices {
@@ -126,14 +130,18 @@ func SeedOffices() {
 
 // SeedDefaultOfficeAssignment assigns offices to managers
 func SeedDefaultOfficeAssignment() {
-	// Get both admins
-	var admin1, admin2 models.User
+	// Get all admins
+	var admin1, admin2, adminKendari models.User
 	if err := database.DB.Where("username = ?", "admin").First(&admin1).Error; err != nil {
 		log.Println("Admin user not found, skipping office assignment")
 		return
 	}
 	if err := database.DB.Where("username = ?", "admin2").First(&admin2).Error; err != nil {
 		log.Println("Admin2 user not found, skipping office assignment")
+		return
+	}
+	if err := database.DB.Where("username = ?", "admin_kendari").First(&adminKendari).Error; err != nil {
+		log.Println("Admin Kendari user not found, skipping office assignment")
 		return
 	}
 
@@ -144,39 +152,39 @@ func SeedDefaultOfficeAssignment() {
 		return
 	}
 
-	if len(offices) < 4 {
+	if len(offices) < 7 {
 		log.Println("Not enough offices, skipping assignment")
 		return
 	}
 
-	// Assign first 2 offices to admin1 (Kendari, Jakarta)
-	for i := 0; i < 2; i++ {
+	// Helper function to assign office to manager
+	assignOffice := func(managerID uint, office models.OfficeLocation, managerName string) {
 		var existingAssignment models.ManagerOffice
-		if err := database.DB.Where("manager_id = ? AND office_id = ?", admin1.ID, offices[i].ID).
+		if err := database.DB.Where("manager_id = ? AND office_id = ?", managerID, office.ID).
 			First(&existingAssignment).Error; err != nil {
 			assignment := models.ManagerOffice{
-				ManagerID: admin1.ID,
-				OfficeID:  offices[i].ID,
+				ManagerID: managerID,
+				OfficeID:  office.ID,
 			}
 			if err := database.DB.Create(&assignment).Error; err == nil {
-				log.Printf("✓ Office '%s' assigned to admin", offices[i].Name)
+				log.Printf("✓ Office '%s' assigned to %s", office.Name, managerName)
 			}
 		}
 	}
 
-	// Assign last 2 offices to admin2 (Palopo, Makassar)
+	// Assign first 2 offices to admin1 (Kendari, Jakarta)
+	for i := 0; i < 2; i++ {
+		assignOffice(admin1.ID, offices[i], "admin")
+	}
+
+	// Assign offices 2-3 to admin2 (Palopo, Makassar)
 	for i := 2; i < 4; i++ {
-		var existingAssignment models.ManagerOffice
-		if err := database.DB.Where("manager_id = ? AND office_id = ?", admin2.ID, offices[i].ID).
-			First(&existingAssignment).Error; err != nil {
-			assignment := models.ManagerOffice{
-				ManagerID: admin2.ID,
-				OfficeID:  offices[i].ID,
-			}
-			if err := database.DB.Create(&assignment).Error; err == nil {
-				log.Printf("✓ Office '%s' assigned to admin2", offices[i].Name)
-			}
-		}
+		assignOffice(admin2.ID, offices[i], "admin2")
+	}
+
+	// Assign offices 4-6 to admin_kendari (Kampus B, Lapangan MTQ, Kampus A)
+	for i := 4; i < 7; i++ {
+		assignOffice(adminKendari.ID, offices[i], "admin_kendari")
 	}
 }
 
@@ -184,7 +192,7 @@ func SeedDefaultOfficeAssignment() {
 func SeedEmployees() {
 	// Get all offices
 	var offices []models.OfficeLocation
-	if err := database.DB.Find(&offices).Error; err != nil || len(offices) < 4 {
+	if err := database.DB.Find(&offices).Error; err != nil || len(offices) < 7 {
 		log.Println("Not enough offices found, skipping employee creation")
 		return
 	}
@@ -246,6 +254,37 @@ func SeedEmployees() {
 		log.Printf("  Password: %s", username)
 		log.Printf("  Full Name: %s", employeeNames[i-1])
 		log.Printf("  Office: %s", offices[officeIndex].Name)
+	}
+
+	// Create hidayat employee for admin_kendari (assigned to Kampus B - office 4)
+	var existingHidayat models.User
+	if err := database.DB.Where("username = ?", "hidayat").First(&existingHidayat).Error; err != nil {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("hidayat"), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Failed to hash password for hidayat: %v", err)
+		} else {
+			kampusBID := offices[4].ID // Kampus B
+			hidayat := models.User{
+				Username:     "hidayat",
+				FullName:     "Andi Hidayat Hasim",
+				PasswordHash: string(hashedPassword),
+				Role:         "employee",
+				OfficeID:     &kampusBID,
+				IsSuperAdmin: false,
+			}
+
+			if err := database.DB.Create(&hidayat).Error; err != nil {
+				log.Printf("Failed to create employee hidayat: %v", err)
+			} else {
+				log.Printf("✓ Employee 'hidayat' created successfully")
+				log.Printf("  Username: hidayat")
+				log.Printf("  Password: hidayat")
+				log.Printf("  Full Name: Andi Hidayat Hasim")
+				log.Printf("  Office: %s", offices[4].Name)
+			}
+		}
+	} else {
+		log.Printf("Employee 'hidayat' already exists, skipping")
 	}
 }
 
