@@ -260,6 +260,17 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                 </select>
               </div>
 
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kantor</label>
+                <select 
+                  [(ngModel)]="employeeForm.office_id" 
+                  name="office_id"
+                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                  <option [ngValue]="null">-- Pilih Kantor --</option>
+                  <option *ngFor="let office of offices" [ngValue]="office.id">{{ office.name }}</option>
+                </select>
+              </div>
+
               <div *ngIf="employeeModalError" class="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p class="text-sm text-red-800">{{ employeeModalError }}</p>
               </div>
@@ -424,7 +435,8 @@ export class ManagerDashboardComponent implements OnInit {
     username: '',
     full_name: '',
     password: '',
-    role: 'employee'
+    role: 'employee',
+    office_id: null
   };
   employeeModalError = '';
   employeeModalSuccess = '';
@@ -486,7 +498,8 @@ export class ManagerDashboardComponent implements OnInit {
       username: '',
       full_name: '',
       password: '',
-      role: 'employee'
+      role: 'employee',
+      office_id: this.offices.length > 0 ? this.offices[0].id : null
     };
     this.employeeModalError = '';
     this.employeeModalSuccess = '';
@@ -499,7 +512,8 @@ export class ManagerDashboardComponent implements OnInit {
       username: employee.username,
       full_name: employee.full_name || '',
       password: '',
-      role: employee.role
+      role: employee.role,
+      office_id: employee.office_id || (this.offices.length > 0 ? this.offices[0].id : null)
     };
     this.employeeModalError = '';
     this.employeeModalSuccess = '';
@@ -513,7 +527,8 @@ export class ManagerDashboardComponent implements OnInit {
       username: '',
       full_name: '',
       password: '',
-      role: 'employee'
+      role: 'employee',
+      office_id: null
     };
     this.employeeModalError = '';
     this.employeeModalSuccess = '';
@@ -544,7 +559,8 @@ export class ManagerDashboardComponent implements OnInit {
     const payload: any = {
       username: this.employeeForm.username,
       full_name: this.employeeForm.full_name,
-      role: this.employeeForm.role
+      role: this.employeeForm.role,
+      office_id: this.employeeForm.office_id
     };
 
     if (this.employeeForm.password) {

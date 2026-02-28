@@ -214,9 +214,12 @@ type CreateEmployeeInput struct {
 	FullName string `json:"full_name"`
 	Password string `json:"password" binding:"required,min=6"`
 	Role     string `json:"role" binding:"required,oneof=employee manager"`
+	OfficeID *uint  `json:"office_id"`
 }
 
 func CreateEmployee(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
 	var input CreateEmployeeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -228,6 +231,43 @@ func CreateEmployee(c *gin.Context) {
 	if result := database.DB.Where("username = ?", input.Username).First(&existingUser); result.Error == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
 		return
+	}
+
+	// Get the manager to check their offices
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
+		return
+	}
+
+	// Determine which office to assign the employee to
+	var officeID *uint
+	if input.OfficeID != nil {
+		// Validate that the manager has access to this office (or is super admin)
+		if manager.IsSuperAdmin {
+			// Super admin can assign to any office
+			var office models.OfficeLocation
+			if err := database.DB.Where("id = ? AND is_active = ?", *input.OfficeID, true).First(&office).Error; err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Kantor tidak ditemukan"})
+				return
+			}
+			officeID = input.OfficeID
+		} else {
+			// Regular manager must be assigned to this office
+			var count int64
+			database.DB.Model(&models.ManagerOffice{}).Where("manager_id = ? AND office_id = ?", userID, *input.OfficeID).Count(&count)
+			if count == 0 {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Anda tidak dapat assign karyawan ke kantor yang tidak di-assign ke Anda"})
+				return
+			}
+			officeID = input.OfficeID
+		}
+	} else {
+		// Auto-assign to manager's first office
+		var managerOffice models.ManagerOffice
+		if err := database.DB.Where("manager_id = ?", userID).First(&managerOffice).Error; err == nil {
+			officeID = &managerOffice.OfficeID
+		}
 	}
 
 	// Hash password
@@ -242,12 +282,16 @@ func CreateEmployee(c *gin.Context) {
 		FullName:     input.FullName,
 		PasswordHash: hashedPassword,
 		Role:         input.Role,
+		OfficeID:     officeID,
 	}
 
 	if result := database.DB.Create(&user); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create employee"})
 		return
 	}
+
+	// Preload office for response
+	database.DB.Preload("Office").First(&user, user.ID)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Employee created successfully", "data": user})
 }
@@ -257,13 +301,22 @@ type UpdateEmployeeInput struct {
 	FullName string `json:"full_name"`
 	Password string `json:"password"`
 	Role     string `json:"role" binding:"omitempty,oneof=employee manager"`
+	OfficeID *uint  `json:"office_id"`
 }
 
 func UpdateEmployee(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	id := c.Param("id")
 	var input UpdateEmployeeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get the manager to check permissions
+	var manager models.User
+	if err := database.DB.First(&manager, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Manager tidak ditemukan"})
 		return
 	}
 
@@ -304,10 +357,35 @@ func UpdateEmployee(c *gin.Context) {
 		user.Role = input.Role
 	}
 
+	// Update office_id if provided
+	if input.OfficeID != nil {
+		if manager.IsSuperAdmin {
+			// Super admin can assign to any office
+			var office models.OfficeLocation
+			if err := database.DB.Where("id = ? AND is_active = ?", *input.OfficeID, true).First(&office).Error; err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Kantor tidak ditemukan"})
+				return
+			}
+			user.OfficeID = input.OfficeID
+		} else {
+			// Regular manager must be assigned to this office
+			var count int64
+			database.DB.Model(&models.ManagerOffice{}).Where("manager_id = ? AND office_id = ?", userID, *input.OfficeID).Count(&count)
+			if count == 0 {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Anda tidak dapat assign karyawan ke kantor yang tidak di-assign ke Anda"})
+				return
+			}
+			user.OfficeID = input.OfficeID
+		}
+	}
+
 	if result := database.DB.Save(&user); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update employee"})
 		return
 	}
+
+	// Preload office for response
+	database.DB.Preload("Office").First(&user, user.ID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Employee updated successfully", "data": user})
 }
