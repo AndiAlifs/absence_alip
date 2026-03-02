@@ -67,7 +67,7 @@ git clone YOUR_REPO_URL .
 
 ### Default Login
 - Username: `admin`
-- Password: `admin123`
+- Password: `admin`
 - **⚠️ CHANGE THIS IMMEDIATELY AFTER FIRST LOGIN!**
 
 ### Essential Commands

@@ -300,7 +300,7 @@ sudo certbot --nginx -d YOUR_DOMAIN.com -d www.YOUR_DOMAIN.com
 2. You should see the login page
 3. Login with default credentials:
    - Username: `admin`
-   - Password: `admin123`
+   - Password: `admin`
 
 ## Troubleshooting
 
