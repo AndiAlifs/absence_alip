@@ -215,7 +215,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                         ✓ Terpenuhi
                       </span>
                       <span *ngIf="record.work_hours && record.work_hours < 8" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                        ✗ Tidak Terpenuhi (Kurang {{ (8 - record.work_hours) | number:'1.1-1' }} jam)
+                        ✗ {{ getWorkHoursStatus(record.work_hours) }}
                       </span>
                       <span *ngIf="!record.work_hours" class="text-sm text-gray-400">-</span>
                     </td>
@@ -576,6 +576,13 @@ export class AttendanceReportsComponent implements OnInit {
     return (total / recordsWithHours.length).toFixed(1);
   }
 
+  getWorkHoursStatus(workHours: number | null | undefined): string {
+    if (!workHours) return '-';
+    if (workHours >= 8) return 'Terpenuhi';
+    const kurang = (8 - workHours).toFixed(1);
+    return `Tidak Terpenuhi (Kurang ${kurang} jam)`;
+  }
+
   exportToCSV() {
     if (this.filteredRecords.length === 0) {
       alert('Tidak ada data untuk diekspor');
@@ -588,7 +595,7 @@ export class AttendanceReportsComponent implements OnInit {
       new Date(r.clock_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       r.clock_out_time ? new Date(r.clock_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '',
       r.work_hours ? r.work_hours.toFixed(1) : '',
-      r.work_hours ? (r.work_hours >= 8 ? 'Terpenuhi' : 'Tidak Terpenuhi (Kurang ' + (8 - r.work_hours).toFixed(1) + ' jam)') : '',
+      this.getWorkHoursStatus(r.work_hours),
       this.getOfficeName(r.approved_office_id),
       r.is_late ? 'Terlambat ' + r.minutes_late + ' menit' : 'Tepat Waktu',
       r.distance?.toFixed(0) || ''

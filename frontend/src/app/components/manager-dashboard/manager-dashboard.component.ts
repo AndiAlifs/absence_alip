@@ -120,7 +120,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     <span *ngIf="emp.work_hours_status === 'Terpenuhi'" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                       ✓ Terpenuhi
                     </span>
-                    <span *ngIf="emp.work_hours_status && emp.work_hours_status !== 'Terpenuhi' && emp.work_hours_status !== '-'" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                    <span *ngIf="emp.work_hours_status?.startsWith('Tidak Terpenuhi')" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                       ✗ {{ emp.work_hours_status }}
                     </span>
                     <span *ngIf="!emp.work_hours_status || emp.work_hours_status === '-'" class="text-sm text-gray-400">-</span>
