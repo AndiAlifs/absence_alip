@@ -184,6 +184,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Keluar</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kantor</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Ketepatan</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jarak</th>
@@ -208,6 +209,15 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-600">
                       {{ record.work_hours ? (record.work_hours | number:'1.1-1') + ' jam' : '-' }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <span *ngIf="record.work_hours && record.work_hours >= 8" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        ✓ Terpenuhi
+                      </span>
+                      <span *ngIf="record.work_hours && record.work_hours < 8" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                        ✗ {{ getWorkHoursStatus(record.work_hours) }}
+                      </span>
+                      <span *ngIf="!record.work_hours" class="text-sm text-gray-400">-</span>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm">
                       <div *ngIf="record.approved_office_id" class="text-gray-600">
@@ -238,7 +248,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                     </td>
                   </tr>
                   <tr *ngIf="expandedRecordId === record.id">
-                    <td colspan="9" class="px-4 py-4 bg-gray-50">
+                    <td colspan="10" class="px-4 py-4 bg-gray-50">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <h4 class="font-semibold text-gray-900 mb-2">Informasi Detail</h4>
@@ -566,18 +576,26 @@ export class AttendanceReportsComponent implements OnInit {
     return (total / recordsWithHours.length).toFixed(1);
   }
 
+  getWorkHoursStatus(workHours: number | null | undefined): string {
+    if (!workHours) return '-';
+    if (workHours >= 8) return 'Terpenuhi';
+    const kurang = (8 - workHours).toFixed(1);
+    return `Tidak Terpenuhi (Kurang ${kurang} jam)`;
+  }
+
   exportToCSV() {
     if (this.filteredRecords.length === 0) {
       alert('Tidak ada data untuk diekspor');
       return;
     }
 
-    const headers = ['Nama', 'Jam Masuk', 'Jam Keluar', 'Total Jam Kerja', 'Kantor', 'Ketepatan', 'Jarak (m)'];
+    const headers = ['Nama', 'Jam Masuk', 'Jam Keluar', 'Total Jam Kerja', 'Jam Kerja', 'Kantor', 'Ketepatan', 'Jarak (m)'];
     const rows = this.filteredRecords.map(r => [
       r.user?.full_name || r.user?.username || '',
       new Date(r.clock_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       r.clock_out_time ? new Date(r.clock_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '',
       r.work_hours ? r.work_hours.toFixed(1) : '',
+      this.getWorkHoursStatus(r.work_hours),
       this.getOfficeName(r.approved_office_id),
       r.is_late ? 'Terlambat ' + r.minutes_late + ' menit' : 'Tepat Waktu',
       r.distance?.toFixed(0) || ''

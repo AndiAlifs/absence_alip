@@ -83,6 +83,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-In</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-Out</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Keterangan</th>
                 </tr>
               </thead>
@@ -114,6 +115,15 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
                     {{ emp.work_hours ? (emp.work_hours | number:'1.1-1') + ' jam' : '-' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span *ngIf="emp.work_hours_status === 'Terpenuhi'" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      ✓ Terpenuhi
+                    </span>
+                    <span *ngIf="emp.work_hours_status?.startsWith('Tidak Terpenuhi')" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                      ✗ {{ emp.work_hours_status }}
+                    </span>
+                    <span *ngIf="!emp.work_hours_status || emp.work_hours_status === '-'" class="text-sm text-gray-400">-</span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     <span *ngIf="emp.status === 'present_late'">Terlambat {{ emp.minutes_late }} menit</span>
