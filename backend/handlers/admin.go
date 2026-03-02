@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -417,16 +418,31 @@ func hashPassword(password string) (string, error) {
 }
 
 type EmployeeDailyStatus struct {
-	UserID       uint       `json:"user_id"`
-	FullName     string     `json:"full_name"`
-	Username     string     `json:"username"`
-	Status       string     `json:"status"` // "present_ontime", "present_late", "on_leave", "absent"
-	ClockInTime  *time.Time `json:"clock_in_time,omitempty"`
-	ClockOutTime *time.Time `json:"clock_out_time,omitempty"`
-	WorkHours    *float64   `json:"work_hours,omitempty"`
-	MinutesLate  int        `json:"minutes_late,omitempty"`
-	LeaveReason  string     `json:"leave_reason,omitempty"`
-	LeaveStatus  string     `json:"leave_status,omitempty"`
+	UserID          uint       `json:"user_id"`
+	FullName        string     `json:"full_name"`
+	Username        string     `json:"username"`
+	Status          string     `json:"status"` // "present_ontime", "present_late", "on_leave", "absent"
+	ClockInTime     *time.Time `json:"clock_in_time,omitempty"`
+	ClockOutTime    *time.Time `json:"clock_out_time,omitempty"`
+	WorkHours       *float64   `json:"work_hours,omitempty"`
+	WorkHoursStatus string     `json:"work_hours_status"`
+	MinutesLate     int        `json:"minutes_late,omitempty"`
+	LeaveReason     string     `json:"leave_reason,omitempty"`
+	LeaveStatus     string     `json:"leave_status,omitempty"`
+}
+
+func getWorkHoursStatus(workHours *float64) string {
+	if workHours == nil {
+		return "-"
+	}
+	if *workHours >= 8 {
+		return "Terpenuhi"
+	}
+	kurang := 8 - *workHours
+	if kurang == float64(int(kurang)) {
+		return fmt.Sprintf("Tidak Terpenuhi (Kurang %.0f jam)", kurang)
+	}
+	return fmt.Sprintf("Tidak Terpenuhi (Kurang %.1f jam)", kurang)
 }
 
 func GetDailyAttendanceDashboard(c *gin.Context) {
@@ -529,6 +545,7 @@ func GetDailyAttendanceDashboard(c *gin.Context) {
 			status.ClockInTime = &att.ClockInTime
 			status.ClockOutTime = att.ClockOutTime
 			status.WorkHours = att.WorkHours
+			status.WorkHoursStatus = getWorkHoursStatus(att.WorkHours)
 		} else {
 			// No attendance and no leave
 			status.Status = "absent"
