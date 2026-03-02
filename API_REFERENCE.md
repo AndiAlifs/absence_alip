@@ -21,7 +21,7 @@ Authorization: Bearer <your-jwt-token>
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "admin"
 }
 ```
 **Response**:
@@ -86,6 +86,27 @@ Authorization: Bearer <your-jwt-token>
 
 ---
 
+### POST /clock-out
+**Purpose**: Submit clock-out with GPS coordinates, calculates work hours  
+**Auth Required**: Yes (Employee or Manager)  
+**Body**:
+```json
+{
+  "latitude": 31.5204,
+  "longitude": 74.3587
+}
+```
+**Response**:
+```json
+{
+  "message": "Berhasil melakukan clock-out",
+  "work_hours": "8.50"
+}
+```
+**Notes**: Requires prior clock-in today. Can only clock out once per day.
+
+---
+
 ### GET /my-attendance/today
 **Purpose**: Get employee's attendance record for today  
 **Auth Required**: Yes (Employee or Manager)  
@@ -102,6 +123,35 @@ Authorization: Bearer <your-jwt-token>
   "minutes_late": 0,
   "clock_in_time": "2026-02-01T08:55:00Z",
   "created_at": "2026-02-01T08:55:00Z"
+}
+```
+
+---
+
+### GET /my-attendance/history
+**Purpose**: Get employee's full attendance history  
+**Auth Required**: Yes (Employee or Manager)  
+**Query Params** (optional):
+- `limit` - Records per page (default: 50)
+- `offset` - Pagination offset (default: 0)
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": 123,
+      "clock_in_time": "2026-02-01T08:55:00Z",
+      "clock_out_time": "2026-02-01T17:05:00Z",
+      "status": "approved",
+      "is_late": false,
+      "distance_meters": 45.2,
+      "work_hours": 8.17
+    }
+  ],
+  "total": 42,
+  "limit": 50,
+  "offset": 0
 }
 ```
 
@@ -131,6 +181,25 @@ Authorization: Bearer <your-jwt-token>
 
 ---
 
+### GET /my-leave/history
+**Purpose**: Get employee's full leave request history  
+**Auth Required**: Yes (Employee or Manager)  
+**Response**:
+```json
+[
+  {
+    "id": 45,
+    "start_date": "2026-05-01T00:00:00Z",
+    "end_date": "2026-05-05T00:00:00Z",
+    "reason": "Family vacation",
+    "status": "approved",
+    "created_at": "2026-01-25T10:00:00Z"
+  }
+]
+```
+
+---
+
 ### POST /leave
 **Purpose**: Submit leave request  
 **Auth Required**: Yes (Employee or Manager)  
@@ -154,7 +223,7 @@ Authorization: Bearer <your-jwt-token>
 ---
 
 ### GET /office-location
-**Purpose**: View configured office location settings  
+**Purpose**: View configured office location settings (legacy single-office endpoint)  
 **Auth Required**: Yes (Employee or Manager)  
 **Response**:
 ```json
@@ -166,6 +235,27 @@ Authorization: Bearer <your-jwt-token>
   "allowed_radius_meters": 500,
   "clock_in_time": "09:00"
 }
+```
+
+---
+
+### GET /my-offices
+**Purpose**: Get all active office locations (for employee reference - shows all manager's offices)  
+**Auth Required**: Yes (Employee or Manager)  
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "name": "Kantor Pusat",
+    "address": "Jl. Sudirman No. 1",
+    "latitude": -3.9985,
+    "longitude": 122.5129,
+    "allowed_radius_meters": 100,
+    "clock_in_time": "08:00",
+    "is_active": true
+  }
+]
 ```
 
 ---
@@ -475,6 +565,186 @@ All manager endpoints require `role = "manager"` in JWT token.
 
 ---
 
+## 🏢 Office Management Endpoints (Manager only)
+
+### GET /admin/offices
+**Purpose**: Get office list (super admin: all active offices; regular manager: only assigned offices)  
+**Auth Required**: Yes (Manager only)  
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "name": "Kantor Kendari",
+    "address": "Jl. Sudirman No. 1, Kendari",
+    "latitude": -3.9985,
+    "longitude": 122.5129,
+    "allowed_radius_meters": 100,
+    "clock_in_time": "08:00",
+    "is_active": true
+  }
+]
+```
+
+---
+
+### POST /admin/offices
+**Purpose**: Create new office location  
+**Auth Required**: Yes (Manager only)  
+**Body**:
+```json
+{
+  "name": "Kantor Baru",
+  "address": "Jl. Merdeka No. 10",
+  "latitude": -3.9985,
+  "longitude": 122.5129,
+  "allowed_radius_meters": 150,
+  "clock_in_time": "08:00"
+}
+```
+**Response**:
+```json
+{
+  "message": "Kantor berhasil dibuat",
+  "office": { "id": 5, "name": "Kantor Baru", ... }
+}
+```
+**Notes**: Office is automatically assigned to the creating manager.
+
+---
+
+### PUT /admin/offices/:id
+**Purpose**: Update existing office location  
+**Auth Required**: Yes (Manager only — super admin or manager assigned to that office)  
+**URL Params**: `id` - Office ID  
+**Body**: Same fields as POST (all optional)  
+**Response**:
+```json
+{
+  "message": "Kantor berhasil diperbarui",
+  "office": { ... }
+}
+```
+
+---
+
+### DELETE /admin/offices/:id
+**Purpose**: Soft-delete (deactivate) office location  
+**Auth Required**: Yes (Manager only)  
+**URL Params**: `id` - Office ID  
+**Notes**: Enforces minimum 1 active office constraint.  
+**Response**:
+```json
+{
+  "message": "Kantor berhasil dinonaktifkan"
+}
+```
+
+---
+
+### GET /admin/my-offices
+**Purpose**: Get the calling manager's assigned offices with count  
+**Auth Required**: Yes (Manager only)  
+**Response**:
+```json
+{
+  "offices": [ { "id": 1, "name": "Kantor Kendari", ... } ],
+  "count": 2
+}
+```
+
+---
+
+### POST /admin/offices/assign
+**Purpose**: Assign an office to a manager (super admin only)  
+**Auth Required**: Yes (Super Admin only)  
+**Body**:
+```json
+{
+  "manager_id": 2,
+  "office_id": 3
+}
+```
+**Response**:
+```json
+{
+  "message": "Kantor berhasil di-assign ke manager"
+}
+```
+**Notes**: Enforces maximum 4 offices per manager. Prevents duplicate assignments.
+
+---
+
+### POST /admin/offices/unassign
+**Purpose**: Remove an office assignment from a manager (super admin only)  
+**Auth Required**: Yes (Super Admin only)  
+**Body**:
+```json
+{
+  "manager_id": 2,
+  "office_id": 3
+}
+```
+**Response**:
+```json
+{
+  "message": "Kantor berhasil di-unassign dari manager"
+}
+```
+**Notes**: Enforces minimum 1 office per manager.
+
+---
+
+## ⚙️ System Settings Endpoints (Manager only)
+
+### GET /admin/settings
+**Purpose**: Get all system settings as key-value map  
+**Auth Required**: Yes (Manager only)  
+**Response**:
+```json
+{
+  "settings": {
+    "session_duration_hours": "24"
+  }
+}
+```
+
+---
+
+### GET /admin/settings/session-duration
+**Purpose**: Get current JWT session duration setting  
+**Auth Required**: Yes (Manager only)  
+**Response**:
+```json
+{
+  "setting_key": "session_duration_hours",
+  "setting_value": "24",
+  "description": "Durasi sesi login default (jam)"
+}
+```
+
+---
+
+### PUT /admin/settings/session-duration
+**Purpose**: Update JWT session duration (super admin only)  
+**Auth Required**: Yes (Super Admin only)  
+**Body**:
+```json
+{
+  "duration_hours": 48
+}
+```
+**Constraints**: `duration_hours` must be between 1 and 168 (1 hour to 7 days)  
+**Response**:
+```json
+{
+  "message": "Durasi sesi berhasil diperbarui",
+  "duration_hours": 48
+}
+```
+
+---
+
 ## 🔒 Error Responses
 
 All endpoints may return these common error responses:
@@ -522,7 +792,7 @@ All endpoints may return these common error responses:
 ```bash
 curl -X POST http://localhost:8080/api/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"admin"}'
 ```
 
 ### Clock-In Example

@@ -358,12 +358,12 @@ USER                             BACKEND                    DATABASE
 
 1. Enter credentials:
    username: "admin"
-   password: "admin123"
+   password: "admin"
       │
       ├─► POST /api/login  ─────────────────►  Query user:
       │   {                                    SELECT * FROM users
       │     username: "admin",                 WHERE username = "admin"
-      │     password: "admin123"               
+      │     password: "admin"               
       │   }                                    ◄───┤
       │                                            │
       │                                        Compare password:

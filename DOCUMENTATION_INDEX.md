@@ -36,7 +36,7 @@ Start with: **[SYSTEM_FLOW.md](SYSTEM_FLOW.md)**
 |------|----------|---------|-----------|
 | **[README.md](README.md)** | Everyone | Main entry point, setup guide, feature overview | 15 min |
 | **[FEATURE_SUMMARY.md](FEATURE_SUMMARY.md)** | Non-technical | What features exist? What's coming? | 5 min |
-| **[USER_STORIES.md](USER_STORIES.md)** | Product/Dev | All 65 user stories with acceptance criteria | 30 min |
+| **[USER_STORIES.md](USER_STORIES.md)** | Product/Dev | All user stories with acceptance criteria and status | 30 min |
 | **[API_REFERENCE.md](API_REFERENCE.md)** | Developers | Complete API endpoint documentation | Reference |
 | **[SYSTEM_FLOW.md](SYSTEM_FLOW.md)** | Technical | Architecture & workflow diagrams | 10 min |
 

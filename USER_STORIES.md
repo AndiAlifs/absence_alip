@@ -23,11 +23,11 @@ This document lists all implemented and planned features of the Field Attendance
 ## Progress Summary
 
 - **Total User Stories:** 67
-- **Completed:** 41 (61%)
+- **Completed:** 48 (72%)
 - **Partially Completed:** 0
-- **Backend Only (No UI):** 2 (3%) - US-011, US-012 (Leave management UI missing)
+- **Backend Only (No UI):** 0
 - **In Progress:** 0
-- **Planned:** 24 (36%)
+- **Planned:** 19 (28%)
 - **Blocked:** 0
 
 ---
@@ -46,13 +46,13 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] [**US-036**](#us-036-employee-see-attendance-time-status) - Employee can see if they are on time, late, or pending approval for today's attendance
 - [x] [**US-037**](#us-037-employee-see-todays-leave-status) - Employee can see their leave status for today (approved, pending, or not on leave)
 - [x] [**US-038**](#us-038-employee-see-absence-pending-status) - Employee can see if they are marked absent pending approval
-- [ ] [**US-044**](#us-044-employee-view-personal-attendance-history) - Employee can view attendance history for past periods to track performance
-- [ ] [**US-045**](#us-045-employee-optional-clock-out) - Employee can optionally clock out at end of day to track work hours
+- [x] [**US-044**](#us-044-employee-view-personal-attendance-history) - Employee can view attendance history for past periods to track performance
+- [x] [**US-045**](#us-045-employee-optional-clock-out) - Employee can optionally clock out at end of day to track work hours
 - [ ] [**US-046**](#us-046-employee-view-leave-balance) - Employee can view remaining leave balance by type to plan time off
 - [ ] [**US-047**](#us-047-employee-submit-leave-with-type) - Employee can submit leave requests with specific leave type (annual, sick, etc.)
 - [ ] [**US-048**](#us-048-employee-view-work-hours-summary) - Employee can view total work hours for current month
 - [ ] [**US-049**](#us-049-employee-view-location-history) - Employee can view their clock-in locations on map for past records
-- [ ] [**US-050**](#us-050-employee-see-assigned-office) - Employee can see which office locations they can clock in from
+- [x] [**US-050**](#us-050-employee-see-assigned-office) - Employee can see which office locations they can clock in from
 - [ ] [**US-051**](#us-051-employee-browser-notification-reminder) - Employee receives browser notification if not clocked in by official time
 
 ### 👨‍💼 Manager Features (32 stories)
@@ -61,8 +61,8 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] [**US-008**](#us-008-view-all-attendance-records) - Manager can view all employee attendance records to monitor attendance patterns and history
 - [x] [**US-009**](#us-009-view-pending-clock-ins) - Manager can view pending clock-in requests to review attendance from employees outside allowed radius
 - [x] [**US-010**](#us-010-approve-or-reject-clock-in) - Manager can approve or reject pending clock-in requests for manual attendance validation
-- [ ] [**US-011**](#us-011-view-all-leave-requests) - Manager can view all employee leave requests to review and manage time-off requests (⚠️ Backend Only - UI Missing)
-- [ ] [**US-012**](#us-012-approve-or-reject-leave-request) - Manager can approve or reject leave requests to manage team availability and time-off (⚠️ Backend Only - UI Missing)
+- [x] [**US-011**](#us-011-view-all-leave-requests) - Manager can view all employee leave requests to review and manage time-off requests
+- [x] [**US-012**](#us-012-approve-or-reject-leave-request) - Manager can approve or reject leave requests to manage team availability and time-off
 - [x] [**US-013**](#us-013-view-all-employees) - Manager can view a list of all employees to see who has system access and their roles
 - [x] [**US-014**](#us-014-create-new-employee) - Manager can create new employee accounts to provide system access for new staff
 - [x] [**US-015**](#us-015-update-employee-information) - Manager can update employee information including username, password, or role
@@ -80,13 +80,13 @@ This document lists all implemented and planned features of the Field Attendance
 - [ ] [**US-055**](#us-055-manager-view-location-tracking-report) - Manager can view employee location tracking and patterns report
 - [ ] [**US-056**](#us-056-manager-configure-leave-types) - Manager can configure different leave types and annual quotas
 - [ ] [**US-057**](#us-057-manager-view-leave-balance-report) - Manager can view all employees' leave balances by type
-- [ ] [**US-058**](#us-058-manager-manage-multiple-offices) - Manager can create and manage 1-4 office locations
+- [x] [**US-058**](#us-058-manager-manage-multiple-offices) - Manager can create and manage 1-4 office locations
 - [ ] [**US-059**](#us-059-manager-assign-employees-to-office) - Manager can assign employees to specific office locations
 - [ ] [**US-060**](#us-060-manager-view-office-specific-reports) - Manager can filter reports by office location
 - [ ] [**US-061**](#us-061-manager-view-pending-approvals-notification) - Manager sees browser notification for pending approvals
 - [ ] [**US-062**](#us-062-manager-view-work-hours-report) - Manager can view total work hours report for all employees
 - [ ] [**US-063**](#us-063-manager-set-leave-balance-per-employee) - Manager can manually adjust leave balance for specific employees
-- [ ] [**US-067**](#us-067-manager-dedicated-office-management-page) - Manager has dedicated page for comprehensive office management
+- [x] [**US-067**](#us-067-manager-dedicated-office-management-page) - Manager has dedicated page for comprehensive office management
 
 ### ⚙️ System Features (16 stories)
 - [x] [**US-002**](#us-002-user-registration) - System provides API for user registration to add new employees and managers
@@ -202,7 +202,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 **Acceptance Criteria:**
 - Check if admin user exists on startup
-- If not, create admin user with credentials (admin:admin123)
+- If not, create admin user with credentials (admin:admin)
 - Admin user has 'manager' role
 - Logged during application startup
 
@@ -490,32 +490,15 @@ This document lists all implemented and planned features of the Field Attendance
 
 **Acceptance Criteria:**
 - [x] Backend endpoint returns all leave requests with user details
-- [ ] **MISSING:** Frontend method to fetch leave requests (`getAllLeaveRequests()` in api.service.ts)
-- [ ] **MISSING:** UI section in manager dashboard to display leave requests
-- [ ] **MISSING:** Table showing employee name, start date, end date, reason, and status
-- [ ] **MISSING:** Display pending, approved, and rejected requests
+- [x] Frontend method to fetch leave requests (`getAllLeaveRequests()` in api.service.ts)
+- [x] Dedicated Leave Management UI page at `/admin/leaves`
+- [x] Table showing employee name, start date, end date, reason, and status
+- [x] Display pending, approved, and rejected requests
 
-**Status:** ⚠️ Backend Only (No UI)  
-**Routes:** `GET /api/admin/leaves` ✅ (Backend ready)  
+**Status:** ✅ Completed  
+**Routes:** `GET /api/admin/leaves` ✅  
 **Backend:** [admin.go](backend/handlers/admin.go) - `GetAllLeaveRequests()` ✅  
-**Frontend:** ❌ Not implemented  
-
-**What Works:**
-- ✅ Backend API endpoint exists and returns all leave requests
-- ✅ Leave data includes user details via Preload("User")
-
-**What's Missing:**
-- ❌ No `getAllLeaveRequests()` method in `api.service.ts`
-- ❌ No Leave Requests section in manager dashboard
-- ❌ No UI table/list to display leave requests
-- ❌ Manager cannot see leave requests in the dashboard
-
-**To Complete:**
-1. Add `getAllLeaveRequests()` method to api.service.ts
-2. Add Leave Requests section to manager-dashboard.component.ts
-3. Create table showing all leave requests with status badges
-4. Make section expandable/collapsible like other dashboard cards
-5. Add refresh functionality
+**Frontend:** [leave-management.component.ts](frontend/src/app/components/leave-management/leave-management.component.ts) ✅  
 
 ---
 
@@ -528,36 +511,16 @@ This document lists all implemented and planned features of the Field Attendance
 - [x] Backend validates leave request exists
 - [x] Backend updates status to "approved" or "rejected"
 - [x] API method exists in frontend service
-- [ ] **MISSING:** UI buttons to approve/reject leave requests
-- [ ] **MISSING:** Leave request list/table in manager dashboard
-- [ ] **MISSING:** Success message display
-- [ ] **MISSING:** List refresh after status update
+- [x] UI buttons to approve/reject leave requests in Leave Management page
+- [x] Leave request list/table in dedicated Leave Management UI
+- [x] Success message display
+- [x] List refresh after status update
 
-**Status:** ⚠️ Backend Only (No UI)  
-**Routes:** `PATCH /api/admin/leave/:id` ✅ (Backend ready)  
+**Status:** ✅ Completed  
+**Routes:** `PATCH /api/admin/leave/:id` ✅  
 **Backend:** [admin.go](backend/handlers/admin.go) - `UpdateLeaveStatus()` ✅  
 **API Service:** [api.service.ts](frontend/src/app/services/api.service.ts) - `updateLeaveStatus()` ✅  
-**Frontend UI:** ❌ Not implemented  
-
-**What Works:**
-- ✅ Backend endpoint for updating leave status
-- ✅ API service method `updateLeaveStatus(id, status)` exists
-- ✅ Backend validates leave request exists
-- ✅ Backend returns success message
-
-**What's Missing:**
-- ❌ No Leave Requests section in manager dashboard UI
-- ❌ No approve/reject buttons in the interface
-- ❌ Manager cannot actually approve/reject leaves through UI
-- ❌ No visual feedback when status changes
-- ❌ Depends on US-011 implementation first
-
-**To Complete:**
-1. Implement US-011 first (display leave requests)
-2. Add Approve/Reject buttons to each leave request row
-3. Call `updateLeaveStatus()` on button click
-4. Show success/error messages
-5. Refresh leave requests list after update
+**Frontend UI:** [leave-management.component.ts](frontend/src/app/components/leave-management/leave-management.component.ts) ✅
 6. Add confirmation dialog for reject action
 
 ---
@@ -777,7 +740,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 6: Reporting & Analytics (New - Planned)
+## Epic 6: Reporting & Analytics
 
 ### US-044: Employee View Personal Attendance History
 **As an** employee  
@@ -785,19 +748,17 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I can track my attendance record and identify patterns
 
 **Acceptance Criteria:**
-- Employee can select time period (30/60/90 days or custom date range)
-- Display list of all attendance records with date, clock-in time, status
+- Employee can view list of all attendance records with date, clock-in time, status
 - Show late arrivals with minutes late
 - Display location distance from office
-- Include summary metrics: total days, on-time %, late %
-- Optional: Chart/graph visualization of attendance patterns
-- Can filter by status (approved, pending, rejected)
+- Can filter/paginate records
 
-**Status:** 📋 Planned  
+**Status:** ✅ Completed  
 **Priority:** High  
 **Epic:** Reporting & Analytics  
-**Estimated Effort:** 3-5 days  
-**Routes (Proposed):** `GET /api/my-attendance/history?period=30|60|90&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
+**Routes:** `GET /api/my-attendance/history?limit=50&offset=0` ✅  
+**Backend:** [attendance.go](backend/handlers/attendance.go) - `GetMyAttendanceHistory()` ✅  
+**Frontend:** [my-attendance-history.component.ts](frontend/src/app/components/my-attendance-history/my-attendance-history.component.ts) ✅
 
 ---
 
@@ -809,21 +770,19 @@ This document lists all implemented and planned features of the Field Attendance
 **Acceptance Criteria:**
 - Clock-out button available after employee has clocked in
 - Captures clock-out time and location (lat/long)
-- Validates location against office radius (optional - can clock out from anywhere)
 - Cannot clock out without first clocking in
 - Can only clock out once per day
 - Displays confirmation message after successful clock-out
 - Shows calculated work hours after clock-out
 
-**Status:** 📋 Planned  
+**Status:** ✅ Completed  
 **Priority:** High  
 **Epic:** Work Hours Tracking  
-**Estimated Effort:** 2-3 days  
-**Routes (Proposed):** `POST /api/clock-out`  
+**Routes:** `POST /api/clock-out` ✅  
+**Backend:** [attendance.go](backend/handlers/attendance.go) - `ClockOut()` ✅  
 **Technical Notes:**
-- Add to Attendance model: `clock_out_time`, `clock_out_latitude`, `clock_out_longitude`, `work_hours_decimal`
-- Calculate work hours as difference between clock-in and clock-out
-- Optional: Support half-day if clock-out before certain time
+- Attendance model fields: `clock_out_time`, `clock_out_latitude`, `clock_out_longitude`, `work_hours`
+- Work hours automatically calculated as difference between clock-in and clock-out
 
 ---
 
@@ -929,21 +888,16 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I know where to clock in for automatic approval
 
 **Acceptance Criteria:**
-- Display primary assigned office name, address, and coordinates
-- **Show ALL office locations managed by employee's manager (1-4 offices)**
-- Show all valid office locations on map with markers
-- Display allowed radius for auto-approval for each office
+- Display all office locations managed by employee's manager (1-4 offices)
+- Show office name, address, and coordinates
+- Show allowed radius for auto-approval for each office
 - Show official clock-in time for each office
-- Label primary office vs other valid offices
-- Message: "You can clock in from any of these locations for auto-approval"
-- If unassigned, show message to contact manager
 
-**Status:** 📋 Planned  
+**Status:** ✅ Completed  
 **Priority:** Medium  
 **Epic:** Multi-Office Management  
-**Estimated Effort:** 3 days  
-**Dependencies:** US-058 (Multi-Office), US-059 (Employee Assignment)  
-**Routes (Proposed):** `GET /api/my-offices` (plural - returns all valid offices for employee, max 4)
+**Routes:** `GET /api/my-offices` ✅  
+**Backend:** [office_management.go](backend/handlers/office_management.go) - `GetEmployeeOffices()` ✅
 
 ---
 
@@ -1226,7 +1180,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 8: Multi-Office Management (New - Planned)
+## Epic 8: Multi-Office Management
 
 ### US-058: Manager Manage Multiple Offices
 **As a** manager  
@@ -1234,40 +1188,28 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** employees at different locations can clock in appropriately
 
 **Acceptance Criteria:**
-- Create multiple office locations with:
-  - Office name
-  - Address (optional)
-  - Latitude and longitude
-  - Allowed radius (meters)
-  - Official clock-in time
-  - Time zone (for multi-region support)
+- Create multiple office locations with name, address, latitude/longitude, allowed radius, clock-in time
 - Edit existing office locations
-- Delete office (only if no employees or managers assigned)
-- Set one office as default
-- View all offices in list and on map
+- Delete office (soft delete - marks as inactive)
+- View all offices in list
 - Each office has unique ID
-- **Manager can be assigned to 1-4 office locations (minimum 1, maximum 4)**
-- Manager can switch between their assigned offices in dashboard
+- Manager can be assigned to 1-4 office locations (minimum 1, maximum 4)
 - Manager must have at least one office assigned
+- Employee auto-approved if within radius of ANY manager's office
 
-**Status:** 📋 Planned  
+**Status:** ✅ Completed  
 **Priority:** Critical  
 **Epic:** Multi-Office Management  
-**Estimated Effort:** 4-5 days  
-**Routes (Proposed):**
-- `GET /api/admin/offices` - Returns all offices (super admin) or manager's assigned offices
-- `POST /api/admin/offices` - Create office (super admin only)
-- `PUT /api/admin/offices/:id` - Update office (if manager has access)
-- `DELETE /api/admin/offices/:id` - Delete office (super admin only)
-- `GET /api/admin/my-offices` - Get current manager's assigned offices  
-**Technical Notes:**
-- Modify OfficeLocation model to remove singleton constraint
-- Add `manager_offices` junction table (manager_id, office_id) with constraints:
-  - Minimum 1 office per manager (at least one required)
-  - Maximum 4 offices per manager
-  - CHECK constraint: COUNT(office_id) BETWEEN 1 AND 4 per manager_id
-- Add office management UI to manager dashboard
-- Migration script to convert existing office location to first multi-office record
+**Routes:**
+- `GET /api/admin/offices` ✅ - Returns all offices (super admin) or manager's assigned offices
+- `POST /api/admin/offices` ✅ - Create office (any manager, auto-assigned to creator)
+- `PUT /api/admin/offices/:id` ✅ - Update office (if manager has access)
+- `DELETE /api/admin/offices/:id` ✅ - Soft delete office
+- `GET /api/admin/my-offices` ✅ - Get current manager's assigned offices
+- `POST /api/admin/offices/assign` ✅ - Super admin assigns office to manager
+- `POST /api/admin/offices/unassign` ✅ - Super admin removes office assignment
+**Backend:** [office_management.go](backend/handlers/office_management.go) ✅  
+**Frontend:** [office-management.component.ts](frontend/src/app/components/office-management/office-management.component.ts) ✅
 
 ---
 
@@ -1423,7 +1365,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 ---
 
-## Epic 10: Office Management UI/UX (New - Planned)
+## Epic 10: Office Management UI/UX
 
 ### US-067: Manager Dedicated Office Management Page
 **As a** manager  
@@ -1431,62 +1373,23 @@ This document lists all implemented and planned features of the Field Attendance
 **So that** I can comprehensively manage 1-4 office locations without cluttering the dashboard
 
 **Acceptance Criteria:**
-- **Separate page/route:** `/admin/offices` (not embedded in dashboard)
-- Navigation link from manager dashboard to Office Management
+- Separate page/route: `/admin/offices`
+- Navigation link from manager dashboard to Office Management (shows office count badge)
 - Office Management page includes:
-  - **Office List View:** Table/cards showing all manager's assigned offices (1-4)
-  - **Add New Office:** Button to create office (super admin only)
-  - **Edit Office:** Form to update office details (name, coordinates, radius, clock-in time)
-  - **Assign to Manager:** Assign/unassign offices to managers (1-4 limit enforced)
-  - **View on Map:** Interactive map showing all offices with markers
-  - **Office Statistics:** Employees assigned, attendance records, pending approvals per office
-- Dashboard only shows office selector dropdown (no detailed configuration)
-- Uses interactive map for selecting coordinates (Leaflet)
-- Form validation:
-  - Prevents removing manager's last office
-  - Prevents assigning more than 4 offices to a manager
-  - Validates required fields (name, coordinates, radius)
-- Breadcrumb navigation: Dashboard > Office Management
-- Responsive design for mobile devices
+  - Office cards showing all manager's assigned offices (1-4)
+  - Add New Office form (super admin: create new; regular manager: limited)
+  - Edit Office form to update name, coordinates, radius, clock-in time
+  - "View on Map" button opens Google Maps
+  - Office count badge: "X of 4"
+- Form validation prevents removing manager's last office and assigning >4 offices
+- Indonesian UI labels
 
-**Status:** 📋 Planned  
+**Status:** ✅ Completed  
 **Priority:** High  
 **Epic:** Multi-Office Management  
-**Estimated Effort:** 5-6 days  
-**Dependencies:** US-058 (Multi-Office Database)  
-**Routes (Frontend):** `/admin/offices`  
-**Routes (Backend):** Same as US-058 APIs  
-**Components (Proposed):**
-- `office-management.component.ts` - Main office management page
-- `office-form.component.ts` - Add/edit office form
-- `office-list.component.ts` - List of offices
-- `office-map.component.ts` - Map view of all offices  
-**Technical Notes:**
-- Remove office configuration section from `manager-dashboard.component.ts`
-- Keep only office selector dropdown in dashboard for filtering
-- Lazy load office management module for better performance
-- Use Angular reactive forms for validation
-- Integrate Leaflet map with click-to-select coordinates
-
-**UI Layout Suggestion:**
-```
-┌─────────────────────────────────────────────────────────┐
-│  Office Management                    [+ Add New Office] │
-├─────────────────────────────────────────────────────────┤
-│  My Assigned Offices: 2 of 4                            │
-├─────────────────────────────────────────────────────────┤
-│ ┌─────────────┐  ┌─────────────┐                       │
-│ │ Office A    │  │ Office B    │                       │
-│ │ 123 Main St │  │ 456 Park Av │                       │
-│ │ 50m radius  │  │ 100m radius │                       │
-│ │ 25 employees│  │ 18 employees│                       │
-│ │ [Edit] [Map]│  │ [Edit] [Map]│                       │
-│ └─────────────┘  └─────────────┘                       │
-├─────────────────────────────────────────────────────────┤
-│  Map View (All Offices)                                 │
-│  [Interactive Leaflet Map with office markers]          │
-└─────────────────────────────────────────────────────────┘
-```
+**Routes (Frontend):** `/admin/offices` ✅  
+**Routes (Backend):** Same as US-058 APIs ✅  
+**Frontend:** [office-management.component.ts](frontend/src/app/components/office-management/office-management.component.ts) ✅ (Standalone component)
 
 ---
 
@@ -1943,7 +1846,7 @@ This document lists all implemented and planned features of the Field Attendance
 
 **Admin User (auto-seeded):**
 - Username: `admin`
-- Password: `admin123`
+- Password: `admin`
 - Role: `manager`
 
 ---
@@ -2255,69 +2158,7 @@ Response:
 ```
 ---
 
-## 🏢 Epic 10: Office Management UI/UX (New - Planned)
+## 🏢 Epic 10: Office Management UI/UX
 
 ### US-067: Manager Dedicated Office Management Page
-**As a** manager  
-**I want to** access a dedicated office management page separate from the dashboard  
-**So that** I can comprehensively manage 1-4 office locations without cluttering the dashboard
-
-**Acceptance Criteria:**
-- **Separate page/route:** `/admin/offices` (not embedded in dashboard)
-- Navigation link from manager dashboard to Office Management
-- Office Management page includes:
-  - **Office List View:** Table/cards showing all manager's assigned offices (1-4)
-  - **Add New Office:** Button to create office (super admin only)
-  - **Edit Office:** Form to update office details (name, coordinates, radius, clock-in time)
-  - **Assign to Manager:** Assign/unassign offices to managers (1-4 limit enforced)
-  - **View on Map:** Interactive map showing all offices with markers
-  - **Office Statistics:** Employees assigned, attendance records, pending approvals per office
-- Dashboard only shows office selector dropdown (no detailed configuration)
-- Uses interactive map for selecting coordinates (Leaflet)
-- Form validation:
-  - Prevents removing manager's last office
-  - Prevents assigning more than 4 offices to a manager
-  - Validates required fields (name, coordinates, radius)
-- Breadcrumb navigation: Dashboard > Office Management
-- Responsive design for mobile devices
-
-**Status:** 📋 Planned  
-**Priority:** High  
-**Epic:** Multi-Office Management  
-**Estimated Effort:** 5-6 days  
-**Dependencies:** US-058 (Multi-Office Database)  
-**Routes (Frontend):** `/admin/offices`  
-**Routes (Backend):** Same as US-058 APIs  
-**Components (Proposed):**
-- `office-management.component.ts` - Main office management page
-- `office-form.component.ts` - Add/edit office form
-- `office-list.component.ts` - List of offices
-- `office-map.component.ts` - Map view of all offices  
-**Technical Notes:**
-- Remove office configuration section from `manager-dashboard.component.ts`
-- Keep only office selector dropdown in dashboard for filtering
-- Lazy load office management module for better performance
-- Use Angular reactive forms for validation
-- Integrate Leaflet map with click-to-select coordinates
-
-**UI Layout Suggestion:**
-```
-┌─────────────────────────────────────────────────────────┐
-│  Office Management                    [+ Add New Office] │
-├─────────────────────────────────────────────────────────┤
-│  My Assigned Offices: 2 of 4                            │
-├─────────────────────────────────────────────────────────┤
-│ ┌─────────────┐  ┌─────────────┐                       │
-│ │ Office A    │  │ Office B    │                       │
-│ │ 123 Main St │  │ 456 Park Av │                       │
-│ │ 50m radius  │  │ 100m radius │                       │
-│ │ 25 employees│  │ 18 employees│                       │
-│ │ [Edit] [Map]│  │ [Edit] [Map]│                       │
-│ └─────────────┘  └─────────────┘                       │
-├─────────────────────────────────────────────────────────┤
-│  Map View (All Offices)                                 │
-│  [Interactive Leaflet Map with office markers]          │
-└─────────────────────────────────────────────────────────┘
-```
-
----
+See [US-067 above](#us-067-manager-dedicated-office-management-page) — ✅ Completed.

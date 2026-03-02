@@ -28,15 +28,18 @@ Traditional attendance systems are vulnerable to fraud (buddy punching, fake loc
 | Feature | Description | User | Status |
 |---------|-------------|------|--------|
 | 📍 **Smart Clock-In** | One-click attendance with GPS auto-capture | Employee | ✅ Live |
+| 🕐 **Clock-Out** | Record end-of-day with GPS and work hours calculation | Employee | ✅ Live |
 | ✅ **Auto-Approval** | Instant approval when within office radius | System | ✅ Live |
 | 🗺️ **Location Validation** | Haversine formula calculates exact distance | System | ✅ Live |
 | ⏰ **Lateness Detection** | Auto-calculates late arrivals vs office time | System | ✅ Live |
 | 📊 **Manager Dashboard** | Real-time view of who's present/absent/on leave | Manager | ✅ Live |
 | 👔 **Manual Approval** | Review & approve off-site clock-ins | Manager | ✅ Live |
-| 🏖️ **Leave Management** | Submit and approve time-off requests | Both | ✅ Live |
+| 🏖️ **Leave Management** | Submit and approve time-off requests with full UI | Both | ✅ Live |
 | 👥 **Employee Management** | Add/edit/remove employee accounts | Manager | ✅ Live |
-
-**Coming Soon:** Multi-office support, attendance reports, work hours tracking, leave balances ([see roadmap](USER_STORIES.md#progress-summary))
+| 🏢 **Multi-Office Support** | Manage 1-4 offices per manager, auto-approve at any | Manager | ✅ Live |
+| 📋 **Attendance History** | Employees view their full attendance history | Employee | ✅ Live |
+| 📅 **Leave History** | Employees view all their past leave requests | Employee | ✅ Live |
+| 📊 **Attendance Reports** | Manager views detailed attendance reports | Manager | ✅ Live |
 
 ---
 
@@ -80,7 +83,7 @@ Next Day → Check "Today's Status" section
          → Approve Sarah's vacation (May 1-5)
          → Deny conflicting request (team already understaffed)
          
-5:00 PM  → Quick monthly report check (coming soon)
+5:00 PM  → Quick monthly report check (Dashboard → Attendance Reports)
          → Export attendance data for payroll
 ```
 
@@ -158,11 +161,11 @@ Before running the application, ensure you have:
 ## 👥 User Management
 
 ### Default Admin Account
-The system **automatically creates** a default admin account on first startup:
-- **Username**: `admin`
-- **Password**: `admin123`
-- **Role**: Manager
-- ⚠️ **Security Note**: Change this password immediately after first login!
+The system **automatically creates** default admin accounts on first startup:
+- **Super Admin**: Username `admin` / Password `admin` (full control, IsSuperAdmin: true)
+- **Manager 2**: Username `admin2` / Password `admin2`
+- **Manager Kendari**: Username `admin_kendari` / Password `admin_kendari`
+- ⚠️ **Security Note**: Change these passwords immediately after first login!
 
 ### Adding More Employees
 Managers can add employees two ways:
@@ -191,7 +194,7 @@ curl -X POST http://localhost:8080/api/register \
 1. Open your browser to `http://localhost:4200`
 2. **First login** - Use default admin credentials:
    - **Username**: `admin`
-   - **Password**: `admin123`
+   - **Password**: `admin`
    - **Role**: Manager (has full access)
 3. Based on role, you'll be redirected:
    - **Employees** → Clock-In page
@@ -219,19 +222,24 @@ curl -X POST http://localhost:8080/api/register \
 
 #### Employee Features
 - **📍 Smart Clock-In**: One-click attendance with automatic GPS capture and location validation
+- **🕐 Clock-Out**: Record end of day with GPS, work hours automatically calculated
 - **⏰ Real-Time Status**: See if you're on time, late, or pending manager approval
 - **🗺️ Location Preview**: Interactive map shows your location vs office location
 - **🏖️ Leave Requests**: Submit time-off requests with date range and reason
-- **📊 Today's Status**: Dashboard showing clock-in status and leave status
+- **📅 Leave History**: View all past leave requests and their approval status
+- **📊 Attendance History**: View full personal attendance history with filters
+- **📋 Today's Status**: Dashboard showing clock-in status and leave status
 
 #### Manager Features
 - **👥 Employee Management**: Add, edit, delete employee accounts
-- **⚙️ Office Configuration**: Set GPS coordinates, radius, and clock-in time
+- **🏢 Multi-Office Management**: Create and manage 1-4 office locations per manager
+- **⚙️ Office Configuration**: Set GPS coordinates, radius, and clock-in time per office
 - **📊 Daily Dashboard**: Real-time view of all employees (present/absent/on leave/late)
 - **✅ Approval Workflow**: Review and approve/reject off-site clock-ins
-- **🏖️ Leave Management**: Approve or reject leave requests
+- **🏖️ Leave Management**: View and approve/reject leave requests via dedicated UI
 - **🗺️ Location Tracking**: View employee clock-in locations on Google Maps
 - **🔍 Attendance Records**: Browse all historical attendance records
+- **📊 Attendance Reports**: Dedicated reports view for manager analysis
 
 ---
 
@@ -246,27 +254,27 @@ Browser captures GPS (latitude, longitude)
         ↓
 Sent to backend: POST /api/clock-in
         ↓
-Backend retrieves office location settings:
+Backend retrieves ALL manager's assigned offices (1-4):
   - Office GPS coordinates
   - Allowed radius (meters)
   - Official clock-in time (e.g., 09:00)
         ↓
-Haversine Formula calculates distance:
+Haversine Formula calculates distance to EACH office:
   distance = calculateDistance(
     employee_lat, employee_lon,
     office_lat, office_lon
   )
         ↓
-Dual-Status Decision:
-  - Within radius? → status="approved" (auto-approved ✅)
-  - Outside radius? → status="pending" (needs manager review 🔍)
+Dual-Status Decision (checks all offices, breaks on first match):
+  - Within radius of ANY office? → status="approved" (auto-approved ✅)
+  - Outside ALL offices? → status="pending" (needs manager review 🔍)
         ↓
-Lateness Check:
+Lateness Check (uses closest office's clock-in time):
   current_time > office.clock_in_time?
   - YES → is_late=true, minutes_late calculated
   - NO → is_late=false
         ↓
-Attendance record saved to database
+Attendance record saved (includes approved_office_id when auto-approved)
         ↓
 Employee sees confirmation + status badge
 ```
@@ -283,18 +291,20 @@ func CalculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
 ```
 
 **Auto-Approval Logic** ([handlers/attendance.go](backend/handlers/attendance.go))  
-- ✅ **Auto-approved**: `distance <= allowed_radius_meters`
-- 🔍 **Pending**: `distance > allowed_radius_meters` (manager must review)
+- ✅ **Auto-approved**: employee within `allowed_radius_meters` of ANY managed office
+- 🔍 **Pending**: employee outside ALL managed offices (manager must review)
+- Records `approved_office_id` to track which office validated the clock-in
 
 **Lateness Detection**  
-- Compares current time to `OfficeLocation.ClockInTime` (format: "HH:MM")
+- Compares current time to closest office's `ClockInTime` (format: "HH:MM")
 - Calculates exact minutes late for reporting
 - Still allows clock-in even if late (records lateness for review)
 
 **Security**  
-- JWT tokens with 24-hour expiry
+- JWT tokens with configurable expiry (default 24 hours, adjustable via System Settings)
 - Role-based middleware: `AuthMiddleware()` + `ManagerMiddleware()`
 - Passwords hashed with bcrypt
+- Super admin flag for elevated permissions (office creation/assignment)
 
 ---
 
@@ -305,7 +315,7 @@ This project has comprehensive documentation organized by audience:
 
 **For Product Managers / Stakeholders:**
 - **[FEATURE_SUMMARY.md](FEATURE_SUMMARY.md)** - ⭐ **START HERE** - What can this system do? Quick feature overview
-- **[USER_STORIES.md](USER_STORIES.md)** - All 65 user stories with acceptance criteria
+- **[USER_STORIES.md](USER_STORIES.md)** - All user stories with acceptance criteria
 
 **For Developers:**
 - **[README.md](README.md)** - This file - Setup & usage guide
@@ -355,13 +365,17 @@ field-attendance-system/
 │   ├── database/
 │   │   └── db.go            # MySQL connection & auto-migration
 │   ├── handlers/
-│   │   ├── auth.go          # Login & registration
-│   │   ├── attendance.go    # Clock-in logic & GPS validation
-│   │   ├── leave.go         # Leave request submission
-│   │   ├── office.go        # Office location config
-│   │   └── admin.go         # Manager dashboard & approvals
+│   │   ├── auth.go               # Login & registration
+│   │   ├── attendance.go         # Clock-in/out logic & GPS validation
+│   │   ├── leave.go              # Leave request submission & history
+│   │   ├── office.go             # Office location config (legacy)
+│   │   ├── office_management.go  # Multi-office CRUD & assignment
+│   │   ├── admin.go              # Manager dashboard & approvals
+│   │   └── settings.go           # System settings (session duration)
 │   ├── models/
-│   │   └── models.go        # Database models (User, Attendance, Leave, Office)
+│   │   └── models.go        # Database models (User, Attendance, Leave, Office, ManagerOffice, SystemSettings)
+│   ├── seed/
+│   │   └── seed.go          # Database seeding (admins, offices, employees)
 │   └── utils/
 │       └── distance.go      # Haversine distance calculation
 │
@@ -369,10 +383,17 @@ field-attendance-system/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── components/
-│   │   │   │   ├── login/           # Login page
-│   │   │   │   ├── clock-in/        # Employee clock-in + map
-│   │   │   │   ├── leave-request/   # Leave submission
-│   │   │   │   └── manager-dashboard/ # Manager controls
+│   │   │   │   ├── login/                  # Login page
+│   │   │   │   ├── clock-in/               # Employee clock-in + map
+│   │   │   │   ├── leave-request/          # Leave submission
+│   │   │   │   ├── leave-history/          # Employee leave history
+│   │   │   │   ├── my-attendance-history/  # Employee attendance history
+│   │   │   │   ├── office-management/      # Multi-office management (standalone)
+│   │   │   │   ├── leave-management/       # Manager leave approval UI
+│   │   │   │   ├── attendance-reports/     # Manager attendance reports
+│   │   │   │   ├── landing-page/           # Public landing page
+│   │   │   │   ├── manager-dashboard/      # Manager controls & daily view
+│   │   │   │   └── shared/navbar/          # Shared navigation bar
 │   │   │   ├── services/
 │   │   │   │   └── api.service.ts   # HTTP client with JWT headers
 │   │   │   └── auth.guard.ts    # Route protection
@@ -381,9 +402,12 @@ field-attendance-system/
 │
 └── Documentation/
     ├── README.md             # This file
-    ├── USER_STORIES.md       # Feature specifications
+    ├── FEATURE_SUMMARY.md    # Feature overview & roadmap
+    ├── USER_STORIES.md       # All user stories with acceptance criteria
+    ├── API_REFERENCE.md      # Complete API endpoint documentation
+    ├── SYSTEM_FLOW.md        # Architecture & workflow diagrams
     ├── DEPLOYMENT_GUIDE.md   # Production setup
-    └── QUICK_DEPLOY.md       # Quick reference
+    └── QUICK_DEPLOY.md       # Quick reference commands
 ```
 
 ---
