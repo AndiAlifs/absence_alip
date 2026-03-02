@@ -110,3 +110,56 @@ func GetSessionDurationHours() int {
 
 	return hours
 }
+
+// GetMinimumWorkHours returns the current manager's minimum work hours setting
+func GetMinimumWorkHours(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User tidak ditemukan"})
+		return
+	}
+
+	minHours := user.MinimumWorkHours
+	if minHours <= 0 {
+		minHours = 8 // default
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"minimum_work_hours": minHours,
+	})
+}
+
+// UpdateMinimumWorkHours updates the manager's minimum work hours setting
+func UpdateMinimumWorkHours(c *gin.Context) {
+	var input struct {
+		MinimumWorkHours float64 `json:"minimum_work_hours" binding:"required,min=1,max=24"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "Jam kerja minimum harus antara 1-24 jam",
+			"detail": err.Error(),
+		})
+		return
+	}
+
+	userID := c.MustGet("userID").(uint)
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User tidak ditemukan"})
+		return
+	}
+
+	user.MinimumWorkHours = input.MinimumWorkHours
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan pengaturan jam kerja minimum"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":            "Jam kerja minimum berhasil diperbarui",
+		"minimum_work_hours": user.MinimumWorkHours,
+	})
+}

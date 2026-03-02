@@ -182,4 +182,16 @@ export class ApiService {
       this.getHeaders()
     );
   }
+
+  // Minimum Work Hours Settings
+  getMinimumWorkHours(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/settings/minimum-work-hours`, this.getHeaders());
+  }
+
+  updateMinimumWorkHours(hours: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/settings/minimum-work-hours`,
+      { minimum_work_hours: hours },
+      this.getHeaders()
+    );
+  }
 }

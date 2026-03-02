@@ -468,14 +468,17 @@ type EmployeeDailyStatus struct {
 	LeaveStatus     string     `json:"leave_status,omitempty"`
 }
 
-func getWorkHoursStatus(workHours *float64) string {
+func getWorkHoursStatus(workHours *float64, minimumHours float64) string {
 	if workHours == nil {
 		return "-"
 	}
-	if *workHours >= 8 {
+	if minimumHours <= 0 {
+		minimumHours = 8 // fallback default
+	}
+	if *workHours >= minimumHours {
 		return "Terpenuhi"
 	}
-	kurang := 8 - *workHours
+	kurang := minimumHours - *workHours
 	if kurang == float64(int(kurang)) {
 		return fmt.Sprintf("Tidak Terpenuhi (Kurang %.0f jam)", kurang)
 	}
@@ -582,7 +585,7 @@ func GetDailyAttendanceDashboard(c *gin.Context) {
 			status.ClockInTime = &att.ClockInTime
 			status.ClockOutTime = att.ClockOutTime
 			status.WorkHours = att.WorkHours
-			status.WorkHoursStatus = getWorkHoursStatus(att.WorkHours)
+			status.WorkHoursStatus = getWorkHoursStatus(att.WorkHours, manager.MinimumWorkHours)
 		} else {
 			// No attendance and no leave
 			status.Status = "absent"
@@ -592,9 +595,15 @@ func GetDailyAttendanceDashboard(c *gin.Context) {
 		dailyStatus = append(dailyStatus, status)
 	}
 
+	minHours := manager.MinimumWorkHours
+	if minHours <= 0 {
+		minHours = 8
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"data":    dailyStatus,
-		"summary": summary,
+		"data":               dailyStatus,
+		"summary":            summary,
+		"minimum_work_hours": minHours,
 	})
 }
 

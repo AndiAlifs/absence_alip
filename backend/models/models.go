@@ -6,15 +6,16 @@ import (
 
 // User represents a system user (Employee or Manager)
 type User struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	Username     string    `gorm:"unique;not null" json:"username"`
-	FullName     string    `gorm:"type:varchar(255)" json:"full_name"`
-	PasswordHash string    `gorm:"not null" json:"-"`
-	Role         string    `gorm:"type:enum('employee','manager');default:'employee'" json:"role"`
-	OfficeID     *uint     `json:"office_id,omitempty"` // Employee's primary office
-	IsSuperAdmin bool      `gorm:"default:false" json:"is_super_admin"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID               uint      `gorm:"primaryKey" json:"id"`
+	Username         string    `gorm:"unique;not null" json:"username"`
+	FullName         string    `gorm:"type:varchar(255)" json:"full_name"`
+	PasswordHash     string    `gorm:"not null" json:"-"`
+	Role             string    `gorm:"type:enum('employee','manager');default:'employee'" json:"role"`
+	OfficeID         *uint     `json:"office_id,omitempty"` // Employee's primary office
+	IsSuperAdmin     bool      `gorm:"default:false" json:"is_super_admin"`
+	MinimumWorkHours float64   `gorm:"default:8.0" json:"minimum_work_hours"` // Manager specific setting
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 
 	// Relations
 	Office *OfficeLocation `gorm:"foreignKey:OfficeID" json:"office,omitempty"`

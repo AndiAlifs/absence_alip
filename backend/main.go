@@ -94,6 +94,8 @@ func main() {
 			admin.GET("/settings", handlers.GetSystemSettings)
 			admin.GET("/settings/session-duration", handlers.GetSessionDuration)
 			admin.PUT("/settings/session-duration", handlers.UpdateSessionDuration)
+			admin.GET("/settings/minimum-work-hours", handlers.GetMinimumWorkHours)
+			admin.PUT("/settings/minimum-work-hours", handlers.UpdateMinimumWorkHours)
 		}
 	}
 

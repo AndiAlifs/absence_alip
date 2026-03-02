@@ -83,7 +83,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-In</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Clock-Out</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
-                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja (Min: {{ minimumWorkHours }} jam)</th>
                   <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Keterangan</th>
                 </tr>
               </thead>
@@ -409,6 +409,66 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           </div>
         </div>
 
+        <!-- Minimum Work Hours Settings Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <svg class="h-6 w-6 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pengaturan Jam Kerja Minimum
+          </h2>
+
+          <div class="space-y-6">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200">
+              <p class="text-sm text-gray-600 mb-4">
+                Atur jumlah jam kerja minimum yang harus dipenuhi karyawan per hari. 
+                Pengaturan ini berlaku khusus untuk Anda sebagai manajer dan akan digunakan untuk menentukan status "Jam Kerja Mencukupi" pada dashboard absensi.
+              </p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Jam Kerja Minimum (jam)</label>
+                  <div class="flex items-center gap-3">
+                    <input 
+                      type="number" 
+                      [(ngModel)]="minimumWorkHours" 
+                      min="1" 
+                      max="24" 
+                      step="0.5"
+                      class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
+                      placeholder="Contoh: 8">
+                    <button 
+                      (click)="updateMinimumWorkHours()"
+                      [disabled]="isSavingMinWorkHours"
+                      class="px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                      {{ isSavingMinWorkHours ? 'Menyimpan...' : 'Simpan' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                  <p class="text-sm font-medium text-gray-700 mb-2">Info Jam Kerja</p>
+                  <ul class="text-xs text-gray-600 space-y-1">
+                    <li>• Jam kerja minimum saat ini: <strong>{{ minimumWorkHours }} jam</strong></li>
+                    <li>• Status "Terpenuhi" jika ≥ {{ minimumWorkHours }} jam</li>
+                    <li>• Pengaturan ini per-manajer</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div *ngIf="minWorkHoursMessage" class="mt-4 p-3 rounded-lg" 
+                   [class.bg-green-100]="!isMinWorkHoursError"
+                   [class.bg-red-100]="isMinWorkHoursError">
+                <p class="text-sm" 
+                   [class.text-green-800]="!isMinWorkHoursError"
+                   [class.text-red-800]="isMinWorkHoursError">
+                  {{ minWorkHoursMessage }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   `,
@@ -475,6 +535,12 @@ export class ManagerDashboardComponent implements OnInit {
   sessionSettingsMessage = '';
   isSessionSettingsError = false;
 
+  // Minimum work hours settings
+  minimumWorkHours: number = 8;
+  isSavingMinWorkHours = false;
+  minWorkHoursMessage = '';
+  isMinWorkHoursError = false;
+
   constructor(
     private apiService: ApiService,
     private sanitizer: DomSanitizer
@@ -494,6 +560,9 @@ export class ManagerDashboardComponent implements OnInit {
       next: (response) => {
         this.dailyAttendance = response.data || [];
         this.dailySummary = response.summary || this.dailySummary;
+        if (response.minimum_work_hours) {
+          this.minimumWorkHours = response.minimum_work_hours;
+        }
       },
       error: (error) => {
         console.error('Failed to load daily attendance:', error);
@@ -843,6 +912,35 @@ export class ManagerDashboardComponent implements OnInit {
         this.sessionSettingsMessage = error.error?.error || 'Gagal memperbarui durasi sesi. Hanya super admin yang dapat mengubah pengaturan ini.';
         this.isSessionSettingsError = true;
         setTimeout(() => this.sessionSettingsMessage = '', 5000);
+      }
+    });
+  }
+
+  updateMinimumWorkHours() {
+    if (this.minimumWorkHours < 1 || this.minimumWorkHours > 24) {
+      this.minWorkHoursMessage = 'Jam kerja minimum harus antara 1-24 jam';
+      this.isMinWorkHoursError = true;
+      setTimeout(() => this.minWorkHoursMessage = '', 5000);
+      return;
+    }
+
+    this.isSavingMinWorkHours = true;
+    this.minWorkHoursMessage = '';
+    this.isMinWorkHoursError = false;
+
+    this.apiService.updateMinimumWorkHours(this.minimumWorkHours).subscribe({
+      next: (response) => {
+        this.isSavingMinWorkHours = false;
+        this.minWorkHoursMessage = response.message || 'Jam kerja minimum berhasil diperbarui';
+        this.isMinWorkHoursError = false;
+        this.loadDailyAttendance(); // Reload to reflect new status
+        setTimeout(() => this.minWorkHoursMessage = '', 5000);
+      },
+      error: (error) => {
+        this.isSavingMinWorkHours = false;
+        this.minWorkHoursMessage = error.error?.error || 'Gagal memperbarui jam kerja minimum';
+        this.isMinWorkHoursError = true;
+        setTimeout(() => this.minWorkHoursMessage = '', 5000);
       }
     });
   }

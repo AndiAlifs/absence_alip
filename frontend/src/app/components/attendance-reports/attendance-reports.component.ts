@@ -184,7 +184,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   </th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Keluar</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Total Jam Kerja</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja</th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Kerja (Min: {{ minimumWorkHours }} jam)</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kantor</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Ketepatan</th>
                   <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jarak</th>
@@ -211,10 +211,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                       {{ record.work_hours ? (record.work_hours | number:'1.1-1') + ' jam' : '-' }}
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
-                      <span *ngIf="record.work_hours && record.work_hours >= 8" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      <span *ngIf="record.work_hours && record.work_hours >= minimumWorkHours" class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                         ✓ Terpenuhi
                       </span>
-                      <span *ngIf="record.work_hours && record.work_hours < 8" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                      <span *ngIf="record.work_hours && record.work_hours < minimumWorkHours" class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                         ✗ {{ getWorkHoursStatus(record.work_hours) }}
                       </span>
                       <span *ngIf="!record.work_hours" class="text-sm text-gray-400">-</span>
@@ -340,6 +340,9 @@ export class AttendanceReportsComponent implements OnInit {
   
   // Expanded details
   expandedRecordId: number | null = null;
+
+  // Minimum work hours setting
+  minimumWorkHours: number = 8;
   
   // For template access
   Math = Math;
@@ -351,8 +354,22 @@ export class AttendanceReportsComponent implements OnInit {
 
   ngOnInit() {
     this.loadOffices();
+    this.loadMinimumWorkHours();
     this.setQuickFilter('week'); // Default to last 7 days
     this.loadRecords();
+  }
+
+  loadMinimumWorkHours() {
+    this.apiService.getMinimumWorkHours().subscribe({
+      next: (response) => {
+        if (response.minimum_work_hours) {
+          this.minimumWorkHours = response.minimum_work_hours;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load minimum work hours:', error);
+      }
+    });
   }
 
   loadOffices() {
@@ -578,8 +595,8 @@ export class AttendanceReportsComponent implements OnInit {
 
   getWorkHoursStatus(workHours: number | null | undefined): string {
     if (!workHours) return '-';
-    if (workHours >= 8) return 'Terpenuhi';
-    const kurang = (8 - workHours).toFixed(1);
+    if (workHours >= this.minimumWorkHours) return 'Terpenuhi';
+    const kurang = (this.minimumWorkHours - workHours).toFixed(1);
     return `Tidak Terpenuhi (Kurang ${kurang} jam)`;
   }
 
