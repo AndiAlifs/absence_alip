@@ -399,11 +399,48 @@ func DeleteEmployee(c *gin.Context) {
 		return
 	}
 
-	if result := database.DB.Delete(&user); result.Error != nil {
+	// Prevent deleting managers/super admins through this endpoint
+	if user.Role == "manager" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Tidak dapat menghapus akun manager"})
+		return
+	}
+
+	// Use transaction to delete associated records first, then the user
+	tx := database.DB.Begin()
+	if tx.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee"})
 		return
 	}
 
+	// Delete associated attendance records
+	if err := tx.Where("user_id = ?", user.ID).Delete(&models.Attendance{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee attendance records"})
+		return
+	}
+
+	// Delete associated leave requests
+	if err := tx.Where("user_id = ?", user.ID).Delete(&models.LeaveRequest{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee leave requests"})
+		return
+	}
+
+	// Delete associated manager office assignments (in case role was changed)
+	if err := tx.Where("manager_id = ?", user.ID).Delete(&models.ManagerOffice{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee office assignments"})
+		return
+	}
+
+	// Now delete the user
+	if err := tx.Delete(&user).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete employee"})
+		return
+	}
+
+	tx.Commit()
 	c.JSON(http.StatusOK, gin.H{"message": "Employee deleted successfully"})
 }
 
