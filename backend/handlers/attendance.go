@@ -13,13 +13,13 @@ import (
 )
 
 type ClockInInput struct {
-	Latitude  float64 `json:"latitude" binding:"required"`
-	Longitude float64 `json:"longitude" binding:"required"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 type ClockOutInput struct {
-	Latitude  float64 `json:"latitude" binding:"required"`
-	Longitude float64 `json:"longitude" binding:"required"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 func ClockIn(c *gin.Context) {
@@ -58,42 +58,46 @@ func ClockIn(c *gin.Context) {
 		managerID = manager.ID
 	}
 
-	// **CRITICAL: Get ALL offices managed by the manager (up to 4)**
-	var managerOffices []models.OfficeLocation
-	database.DB.
-		Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
-		Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", managerID, true).
-		Find(&managerOffices)
+	noLocation := input.Latitude == 0 && input.Longitude == 0
 
-	if len(managerOffices) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Lokasi kantor belum diatur. Silakan hubungi manajer Anda."})
-		return
-	}
-
-	// Check distance against ALL manager's offices
+	// Check distance against ALL manager's offices (skip if no location provided)
 	var closestOffice *models.OfficeLocation
 	var minDistance float64 = -1
 	var isWithinRadius bool = false
 
-	for i := range managerOffices {
-		office := &managerOffices[i]
-		distance := utils.CalculateDistance(
-			input.Latitude,
-			input.Longitude,
-			office.Latitude,
-			office.Longitude,
-		)
+	if !noLocation {
+		// **CRITICAL: Get ALL offices managed by the manager (up to 4)**
+		var managerOffices []models.OfficeLocation
+		database.DB.
+			Joins("JOIN manager_offices ON manager_offices.office_id = office_locations.id").
+			Where("manager_offices.manager_id = ? AND office_locations.is_active = ?", managerID, true).
+			Find(&managerOffices)
 
-		if minDistance == -1 || distance < minDistance {
-			minDistance = distance
-			closestOffice = office
+		if len(managerOffices) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Lokasi kantor belum diatur. Silakan hubungi manajer Anda."})
+			return
 		}
 
-		if distance <= office.AllowedRadiusMeters {
-			isWithinRadius = true
-			closestOffice = office
-			minDistance = distance
-			break // Found a valid office, no need to check others
+		for i := range managerOffices {
+			office := &managerOffices[i]
+			distance := utils.CalculateDistance(
+				input.Latitude,
+				input.Longitude,
+				office.Latitude,
+				office.Longitude,
+			)
+
+			if minDistance == -1 || distance < minDistance {
+				minDistance = distance
+				closestOffice = office
+			}
+
+			if distance <= office.AllowedRadiusMeters {
+				isWithinRadius = true
+				closestOffice = office
+				minDistance = distance
+				break // Found a valid office, no need to check others
+			}
 		}
 	}
 
@@ -104,7 +108,7 @@ func ClockIn(c *gin.Context) {
 	if isWithinRadius {
 		approvedOfficeID = &closestOffice.ID
 	}
-	// If approvedOfficeID is nil, it means employee was outside all office radii
+	// If approvedOfficeID is nil, it means employee was outside all office radii or had no location
 
 	// Calculate if employee is late
 	isLate := false
@@ -146,11 +150,18 @@ func ClockIn(c *gin.Context) {
 	}
 
 	message := "Berhasil melakukan clock-in"
-	if !isWithinRadius {
+	if noLocation {
+		message += " - Tanpa Lokasi GPS"
+	} else if !isWithinRadius {
 		message += " - Masuk diluar radius kantor"
 	}
 	if isLate {
 		message += " - Terlambat " + strconv.Itoa(minutesLate) + " menit"
+	}
+
+	officeName := ""
+	if closestOffice != nil {
+		officeName = closestOffice.Name
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -161,7 +172,7 @@ func ClockIn(c *gin.Context) {
 		"outside_radius":  !isWithinRadius,
 		"is_late":         isLate,
 		"minutes_late":    minutesLate,
-		"office_used":     closestOffice.Name,
+		"office_used":     officeName,
 	})
 }
 
@@ -203,8 +214,10 @@ func ClockOut(c *gin.Context) {
 
 	// Update attendance record
 	attendance.ClockOutTime = &clockOutTime
-	attendance.LatitudeOut = &input.Latitude
-	attendance.LongitudeOut = &input.Longitude
+	if input.Latitude != 0 || input.Longitude != 0 {
+		attendance.LatitudeOut = &input.Latitude
+		attendance.LongitudeOut = &input.Longitude
+	}
 	attendance.WorkHours = &workHours
 
 	if err := database.DB.Save(&attendance).Error; err != nil {

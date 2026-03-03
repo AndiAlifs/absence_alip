@@ -145,26 +145,50 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               <div class="ml-3 flex-1">
                 <p class="text-sm text-red-700">{{ error }}</p>
                 <div class="mt-3">
-                  <!-- Permission denied: must change browser setting then reload -->
-                  <button
-                    *ngIf="locationErrorCode === 1"
-                    (click)="reloadPage()"
-                    class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200">
-                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Muat Ulang Halaman
-                  </button>
-                  <!-- GPS unavailable or timeout: retry is meaningful -->
-                  <button
-                    *ngIf="locationErrorCode !== 1"
-                    (click)="retryLocation()"
-                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200">
-                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Coba Lagi
-                  </button>
+                  <div class="flex flex-wrap gap-2">
+                    <!-- Permission denied: must change browser setting then reload -->
+                    <button
+                      *ngIf="locationErrorCode === 1"
+                      (click)="reloadPage()"
+                      class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                      <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Muat Ulang Halaman
+                    </button>
+                    <!-- GPS unavailable or timeout: retry is meaningful -->
+                    <button
+                      *ngIf="locationErrorCode !== 1"
+                      (click)="retryLocation()"
+                      class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                      <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Coba Lagi
+                    </button>
+                    <!-- Clock-In without location -->
+                    <button
+                      [disabled]="submittingNoLocation || !!todayAttendance"
+                      (click)="submitClockInWithoutLocation()"
+                      class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition duration-200">
+                      <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
+                      <span *ngIf="!submittingNoLocation">{{ todayAttendance ? 'Sudah Clock-In' : 'Clock-In Tanpa Lokasi' }}</span>
+                      <span *ngIf="submittingNoLocation">Mengirim...</span>
+                    </button>
+                    <!-- Clock-Out without location -->
+                    <button
+                      [disabled]="submittingClockOutNoLocation || !todayAttendance || !!todayAttendance?.clock_out_time"
+                      (click)="submitClockOutWithoutLocation()"
+                      class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition duration-200">
+                      <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span *ngIf="!submittingClockOutNoLocation">{{ !todayAttendance ? 'Clock-In Dulu' : todayAttendance?.clock_out_time ? 'Sudah Clock-Out' : 'Clock-Out Tanpa Lokasi' }}</span>
+                      <span *ngIf="submittingClockOutNoLocation">Mengirim...</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -259,6 +283,8 @@ export class ClockInComponent implements OnInit {
   loading = false;
   submitting = false;
   submittingClockOut = false;
+  submittingNoLocation = false;
+  submittingClockOutNoLocation = false;
   error = '';
   successMessage = '';
   distanceFromOffice: number | null = null;
@@ -365,6 +391,45 @@ export class ClockInComponent implements OnInit {
 
   reloadPage() {
     window.location.reload();
+  }
+
+  submitClockInWithoutLocation() {
+    if (this.todayAttendance) return;
+    this.submittingNoLocation = true;
+    this.error = '';
+    this.successMessage = '';
+    this.apiService.clockIn({ latitude: 0, longitude: 0 }).subscribe({
+      next: (res) => {
+        this.successMessage = res.message || 'Absen berhasil pada ' + new Date().toLocaleTimeString('id-ID');
+        this.loadTodayAttendance();
+        this.submittingNoLocation = false;
+      },
+      error: (err) => {
+        this.error = err.error?.error || 'Gagal melakukan absen.';
+        this.submittingNoLocation = false;
+      }
+    });
+  }
+
+  submitClockOutWithoutLocation() {
+    if (!this.todayAttendance || this.todayAttendance?.clock_out_time) return;
+    this.submittingClockOutNoLocation = true;
+    this.error = '';
+    this.successMessage = '';
+    this.apiService.clockOut({ latitude: 0, longitude: 0 }).subscribe({
+      next: (res) => {
+        this.successMessage = res.message || 'Clock-out berhasil pada ' + new Date().toLocaleTimeString('id-ID');
+        if (res.work_hours) {
+          this.successMessage += '. Total jam kerja: ' + res.work_hours + ' jam';
+        }
+        this.loadTodayAttendance();
+        this.submittingClockOutNoLocation = false;
+      },
+      error: (err) => {
+        this.error = err.error?.error || 'Gagal melakukan clock-out.';
+        this.submittingClockOutNoLocation = false;
+      }
+    });
   }
 
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
