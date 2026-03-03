@@ -132,7 +132,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
           
           <div *ngIf="loading" class="flex items-center justify-center py-12">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span class="ml-3 text-gray-600">Mengambil lokasi...</span>
+            <span class="ml-3 text-gray-600">Mengambil lokasi GPS (maks 10 detik)...</span>
           </div>
           
           <div *ngIf="error" class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
@@ -142,8 +142,30 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                 </svg>
               </div>
-              <div class="ml-3">
+              <div class="ml-3 flex-1">
                 <p class="text-sm text-red-700">{{ error }}</p>
+                <div class="mt-3">
+                  <!-- Permission denied: must change browser setting then reload -->
+                  <button
+                    *ngIf="locationErrorCode === 1"
+                    (click)="reloadPage()"
+                    class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Muat Ulang Halaman
+                  </button>
+                  <!-- GPS unavailable or timeout: retry is meaningful -->
+                  <button
+                    *ngIf="locationErrorCode !== 1"
+                    (click)="retryLocation()"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Coba Lagi
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -233,6 +255,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class ClockInComponent implements OnInit {
   location: { latitude: number, longitude: number } | null = null;
+  locationErrorCode: number | null = null;
   loading = false;
   submitting = false;
   submittingClockOut = false;
@@ -294,6 +317,8 @@ export class ClockInComponent implements OnInit {
 
   getLocation() {
     this.loading = true;
+    this.error = '';
+    this.locationErrorCode = null;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -306,14 +331,40 @@ export class ClockInComponent implements OnInit {
           this.calculateDistancesFromOffices();
         },
         (err) => {
-          this.error = 'Gagal mendapatkan lokasi. Silakan aktifkan izin lokasi.';
+          this.locationErrorCode = err.code;
+          switch (err.code) {
+            case 1: // PERMISSION_DENIED
+              this.error = 'Izin lokasi ditolak. Klik ikon kunci 🔒 di address bar browser, ubah izin lokasi ke "Izin", lalu muat ulang halaman.';
+              break;
+            case 2: // POSITION_UNAVAILABLE
+              this.error = 'Lokasi tidak tersedia. Pastikan GPS aktif atau hubungkan ke jaringan WiFi/mobile, lalu coba lagi.';
+              break;
+            case 3: // TIMEOUT
+              this.error = 'Waktu habis saat mengambil lokasi. Silakan coba lagi.';
+              break;
+            default:
+              this.error = 'Gagal mendapatkan lokasi. Silakan coba lagi.';
+          }
           this.loading = false;
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
+      this.locationErrorCode = -1;
       this.error = 'Geolokasi tidak didukung oleh browser ini.';
       this.loading = false;
     }
+  }
+
+  retryLocation() {
+    this.location = null;
+    this.error = '';
+    this.locationErrorCode = null;
+    this.getLocation();
+  }
+
+  reloadPage() {
+    window.location.reload();
   }
 
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
