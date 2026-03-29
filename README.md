@@ -2,14 +2,13 @@
 
 > **Previously known as:** Field Attendance System
 
-
-> **TL;DR:** GPS-based attendance tracker with automatic location validation. Employees clock in with one click, system auto-approves when on-site, managers see real-time presence dashboard.
+> **TL;DR:** GPS-based attendance tracker with automatic location validation. Employees clock in with one click, the system auto-approves when on-site within configured radii, and managers handle off-site exceptions and team oversight via a real-time dashboard.
 
 > 📚 **NEW TO THIS PROJECT?** Start with [FEATURE_SUMMARY.md](FEATURE_SUMMARY.md) for a 5-minute overview, or browse [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) to find exactly what you need.
 
 ## 🎯 What Problem Does This Solve?
 
-Traditional attendance systems are vulnerable to fraud (buddy punching, fake locations) and create administrative overhead. This system uses **GPS coordinates + Haversine distance calculation** to automatically verify employee location, eliminating fraud and reducing manual approval workload by 80%.
+Traditional attendance systems are vulnerable to fraud (buddy punching, fake locations) and create heavy administrative overhead. This system uses **HTML5 GPS coordinates + Server-Side Haversine distance calculation** to automatically verify employee locations, eliminating fraud and reducing manual approval workload by up to 80%.
 
 ### Before vs After
 
@@ -18,104 +17,96 @@ Traditional attendance systems are vulnerable to fraud (buddy punching, fake loc
 | ❌ Manual time cards (forgeable) | ✅ GPS-verified clock-ins |
 | ❌ Buddy punching possible | ✅ Location validation per employee |
 | ❌ Manager manually checks everyone | ✅ Auto-approval for on-site staff |
-| ❌ No location proof | ✅ Google Maps location links |
+| ❌ No location proof | ✅ Exact coordinate tracking and validation |
 | ❌ Late arrivals not tracked | ✅ Automatic lateness calculation |
-| ❌ Paper-based leave requests | ✅ Digital workflow with approvals |
+| ❌ Paper-based leave requests | ✅ Digital workflow with manager approvals |
 | ⏱️ ~30 min/day manager overhead | ⏱️ ~5 min/day (83% reduction) |
 
 ## ✨ Key Features at a Glance
 
-| Feature | Description | User | Status |
-|---------|-------------|------|--------|
+| Feature | Description | User Role | Status |
+|---------|-------------|-----------|--------|
 | 📍 **Smart Clock-In** | One-click attendance with GPS auto-capture | Employee | ✅ Live |
-| 🕐 **Clock-Out** | Record end-of-day with GPS and work hours calculation | Employee | ✅ Live |
-| ✅ **Auto-Approval** | Instant approval when within office radius | System | ✅ Live |
-| 🗺️ **Location Validation** | Haversine formula calculates exact distance | System | ✅ Live |
-| ⏰ **Lateness Detection** | Auto-calculates late arrivals vs office time | System | ✅ Live |
-| 📊 **Manager Dashboard** | Real-time view of who's present/absent/on leave | Manager | ✅ Live |
-| 👔 **Manual Approval** | Review & approve off-site clock-ins | Manager | ✅ Live |
-| 🏖️ **Leave Management** | Submit and approve time-off requests with full UI | Both | ✅ Live |
-| 👥 **Employee Management** | Add/edit/remove employee accounts | Manager | ✅ Live |
-| 🏢 **Multi-Office Support** | Manage 1-4 offices per manager, auto-approve at any | Manager | ✅ Live |
-| 📋 **Attendance History** | Employees view their full attendance history | Employee | ✅ Live |
-| 📅 **Leave History** | Employees view all their past leave requests | Employee | ✅ Live |
-| 📊 **Attendance Reports** | Manager views detailed attendance reports | Manager | ✅ Live |
+| 🕐 **Clock-Out** | Record end-of-day with GPS and auto-calculated work hours | Employee | ✅ Live |
+| ✅ **Auto-Approval** | Instant approval when within configured office radius | System | ✅ Live |
+| 🗺️ **Location Validation** | Haversine formula calculates exact distance in meters | System | ✅ Live |
+| ⏰ **Lateness Detection** | Auto-calculates late arrivals vs specific office target time | System | ✅ Live |
+| 📊 **Manager Dashboard** | Real-time queue of Present/Absent/Late/On Leave personnel | Manager | ✅ Live |
+| 👔 **Manual Exception Handling**| Review & approve/reject off-site "Pending" clock-ins | Manager | ✅ Live |
+| 🏖️ **Leave Management** | Submit, review, and approve time-off requests | Both | ✅ Live |
+| 🏢 **Multi-Office Support** | Manage 1-4 offices per manager, custom coordinates & radii | Manager | ✅ Live |
+| ⚙️ **Global Settings** | Configure dynamic system variables (e.g., minimum work hours) | Super Admin | ✅ Live |
+| 📋 **Self-Service History** | Employees view their full attendance & leave ledgers | Employee | ✅ Live |
 
 ---
 
 ## 📖 Typical Day in the Life
 
 ### For Employees
-```
+```text
 8:55 AM  → Open app on phone/computer
          → Click "Clock In" button
          → Browser requests location permission (one-time)
          → GPS captured automatically
          
-8:56 AM  → See green badge: "Approved - On Time ✅"
+8:56 AM  → See green badge: "Approved - On Time ✅" (Within office radius)
          → Go about your work day
          
 12:00 PM → Need time off next week?
          → Navigate to "Leave Request"
          → Select dates & enter reason
-         → Submit for approval
+         → Submit for manager approval
 
-Next Day → Check "Today's Status" section
-         → See yesterday's attendance confirmed
-         → See leave request status (pending/approved)
+5:00 PM  → Click "Clock Out"
+         → System calculates exact hours worked
 ```
 
 ### For Managers
-```
+```text
 9:05 AM  → Open Manager Dashboard
-         → See real-time overview:
+         → See real-time overview for assigned offices:
             • 18 employees clocked in on time ✅
             • 2 employees late ⚠️
             • 3 employees on approved leave 🏖️
             • 5 employees absent (no clock-in) ❌
          
 9:10 AM  → Review "Pending Approvals" section
-         → John clocked in from client site (50km away)
-         → View his location on Google Maps
+         → John clocked in from client site (5km away from office radius)
          → Click "Approve" - legitimate field work
          
-4:00 PM  → Review leave requests
+4:00 PM  → Review leave requests queue
          → Approve Sarah's vacation (May 1-5)
-         → Deny conflicting request (team already understaffed)
-         
-5:00 PM  → Quick monthly report check (Dashboard → Attendance Reports)
-         → Export attendance data for payroll
 ```
 
 ## 🏗️ Architecture
-- **Backend**: Go (Gin Gonic, GORM, MySQL)
+- **Backend**: Go 1.20+ (Gin Web Framework, GORM)
 - **Frontend**: Angular 16 (TypeScript, Reactive Forms, TailwindCSS)
 - **Database**: MySQL 8.0+
-- **Auth**: JWT with 24-hour expiry
+- **Security**: Stateless JWT authentication, Bcrypt hashing, Role-Based Access Control (RBAC)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 Before running the application, ensure you have:
 
-| Tool | Version | Download |
-|------|---------|----------|
-| Go | 1.20+ | [go.dev/dl](https://go.dev/dl/) |
-| Node.js & npm | LTS (18+) | [nodejs.org](https://nodejs.org/) |
-| MySQL | 8.0+ | [dev.mysql.com](https://dev.mysql.com/downloads/mysql/) |
-| Angular CLI | Latest | `npm install -g @angular/cli` |
+| Tool | Version |
+|------|---------|
+| Go | 1.20+ |
+| Node.js & npm | LTS (18+) |
+| MySQL | 8.0+ |
+| Angular CLI | Latest (`npm install -g @angular/cli`) |
 
 ---
 
 ## Step-by-Step Setup Guide
 
 ### 1. Database Setup
-1. Open your MySQL client (e.g., MySQL Workbench, DBeaver, or command line).
+1. Open your MySQL client.
 2. Create a new database named `attendance_db`:
    ```sql
    CREATE DATABASE attendance_db;
    ```
-3. (Optional) The backend is configured to auto-migrate the schema, but you can also manually run the script provided in `backend/migration.sql` to set up the tables.
+3. *Note: The Go backend utilizes GORM AutoMigrate, so tables will be generated automatically upon the first successful connection.*
 
 ### 2. Backend Setup
 1. Navigate to the backend directory:
@@ -126,13 +117,11 @@ Before running the application, ensure you have:
    ```bash
    go mod tidy
    ```
-3. Set environment variables (Optional). By default, the app connects to `root:password@tcp(127.0.0.1:3306)/attendance_db`. 
-   To customize this, set the `MYSQL_DSN` environment variable:
-   - **Linux/Mac**: `export MYSQL_DSN="your_user:your_password@tcp(127.0.0.1:3306)/attendance_db?charset=utf8mb4&parseTime=True&loc=Local"`
-   - **Windows (PowerShell)**: `$env:MYSQL_DSN="your_user:your_password@tcp(127.0.0.1:3306)/attendance_db?charset=utf8mb4&parseTime=True&loc=Local"`
-   
-   *Note: Make sure your MySQL user has access to the database.*
-
+3. Set your environment variables (or copy `.env.example` to `.env`). Ensure the `MYSQL_DSN` matches your local database credentials:
+   ```bash
+   # Linux/Mac Example
+   export MYSQL_DSN="root:password@tcp(127.0.0.1:3306)/attendance_db?charset=utf8mb4&parseTime=True&loc=Local"
+   ```
 4. Run the backend server:
    ```bash
    go run main.go
@@ -152,94 +141,23 @@ Before running the application, ensure you have:
    ```bash
    npm start
    ```
-   (This runs `ng serve`). The application will be available at `http://localhost:4200`.
+   The application will be available at `http://localhost:4200`.
 
 ---
 
----
+## 👥 User Management & Roles
 
-## 👥 User Management
+### Roles & Capabilities
+* **Employee:** Can clock in/out, apply for leave, and view personal historical data.
+* **Manager:** Can oversee assigned branches, approve/reject off-site attendance, and handle leave requests.
+* **Super Admin:** A manager with the `is_super_admin` flag. Can manage global system settings and master office configurations.
 
 ### Default Admin Account
-The system **automatically creates** default admin accounts on first startup:
-- **Super Admin**: Username `admin` / Password `admin` (full control, IsSuperAdmin: true)
-- **Manager 2**: Username `admin2` / Password `admin2`
-- **Manager Kendari**: Username `admin_kendari` / Password `admin_kendari`
-- ⚠️ **Security Note**: Change these passwords immediately after first login!
+The backend seeding logic automatically provisions default accounts on the first run (e.g., `admin` / `admin`). 
+*⚠️ Security Note: Change default passwords immediately upon deployment!*
 
-### Adding More Employees
-Managers can add employees two ways:
-
-**Method 1: Via Manager Dashboard (Recommended)**
-1. Log in as manager
-2. Go to "Manajemen Karyawan" section
-3. Fill form and click "Tambah Karyawan Baru"
-
-**Method 2: Via API (for bulk import)**
-```bash
-# Add a manager
-curl -X POST http://localhost:8080/api/register \
-   -H "Content-Type: application/json" \
-   -d '{"username": "manager2", "password": "secure_pass", "role": "manager", "full_name": "Jane Manager"}'
-
-# Add an employee
-curl -X POST http://localhost:8080/api/register \
-   -H "Content-Type: application/json" \
-   -d '{"username": "john_doe", "password": "secure_pass", "role": "employee", "full_name": "John Doe"}'
-```
-
-**Note**: There's no public registration UI (by design) - all users must be created by managers or via API.
-
-### Logging In
-1. Open your browser to `http://localhost:4200`
-2. **First login** - Use default admin credentials:
-   - **Username**: `admin`
-   - **Password**: `admin`
-   - **Role**: Manager (has full access)
-3. Based on role, you'll be redirected:
-   - **Employees** → Clock-In page
-   - **Managers** → Manager Dashboard
-
-### 🎬 First Steps After Login
-
-**For Managers (Start Here!):**
-1. ⚙️ **Configure Office Location** (Dashboard → "Pengaturan Lokasi Kantor" section)
-   - Set office GPS coordinates (or use current location)
-   - Set allowed radius (meters from office)
-   - Set official clock-in time (e.g., 09:00)
-2. 👥 **Add Employees** (Dashboard → "Manajemen Karyawan" section)
-   - Create employee accounts via form or API
-3. 📊 **Monitor Dashboard** - See real-time attendance status
-
-**For Employees:**
-1. 📍 **Clock In** - Click button to capture GPS location
-   - Green badge = Auto-approved (within radius)
-   - Yellow badge = Pending approval (outside radius)
-2. 🏖️ **Request Leave** - Navigate to Leave Request page
-3. 📋 **Check Status** - View today's attendance/leave status
-
-### 📱 Core Features Explained
-
-#### Employee Features
-- **📍 Smart Clock-In**: One-click attendance with automatic GPS capture and location validation
-- **🕐 Clock-Out**: Record end of day with GPS, work hours automatically calculated
-- **⏰ Real-Time Status**: See if you're on time, late, or pending manager approval
-- **🗺️ Location Preview**: Interactive map shows your location vs office location
-- **🏖️ Leave Requests**: Submit time-off requests with date range and reason
-- **📅 Leave History**: View all past leave requests and their approval status
-- **📊 Attendance History**: View full personal attendance history with filters
-- **📋 Today's Status**: Dashboard showing clock-in status and leave status
-
-#### Manager Features
-- **👥 Employee Management**: Add, edit, delete employee accounts
-- **🏢 Multi-Office Management**: Create and manage 1-4 office locations per manager
-- **⚙️ Office Configuration**: Set GPS coordinates, radius, and clock-in time per office
-- **📊 Daily Dashboard**: Real-time view of all employees (present/absent/on leave/late)
-- **✅ Approval Workflow**: Review and approve/reject off-site clock-ins
-- **🏖️ Leave Management**: View and approve/reject leave requests via dedicated UI
-- **🗺️ Location Tracking**: View employee clock-in locations on Google Maps
-- **🔍 Attendance Records**: Browse all historical attendance records
-- **📊 Attendance Reports**: Dedicated reports view for manager analysis
+### Adding Employees
+Managers and Admins can create new user accounts via the Manager Dashboard UI ("Manajemen Karyawan") or via API endpoints. Accounts are explicitly assigned a primary `office_id` during creation to dictate their validation coordinates.
 
 ---
 
@@ -247,85 +165,36 @@ curl -X POST http://localhost:8080/api/register \
 
 ### GPS-Based Auto-Approval Workflow
 
-```
+```text
 Employee Clicks "Clock In"
         ↓
-Browser captures GPS (latitude, longitude)
+Browser HTML5 Geolocation API captures GPS (latitude, longitude)
         ↓
-Sent to backend: POST /api/clock-in
+Sent to backend via protected JWT route: POST /api/clock-in
         ↓
-Backend retrieves ALL manager's assigned offices (1-4):
-  - Office GPS coordinates
+Backend retrieves the employee's assigned primary Office profile:
+  - Office Target GPS coordinates
   - Allowed radius (meters)
-  - Official clock-in time (e.g., 09:00)
+  - Target clock-in time (e.g., 09:00)
         ↓
-Haversine Formula calculates distance to EACH office:
-  distance = calculateDistance(
-    employee_lat, employee_lon,
-    office_lat, office_lon
-  )
+Server computes Haversine Distance:
+  distance = calculateDistance(emp_lat, emp_lon, office_lat, office_lon)
         ↓
-Dual-Status Decision (checks all offices, breaks on first match):
-  - Within radius of ANY office? → status="approved" (auto-approved ✅)
-  - Outside ALL offices? → status="pending" (needs manager review 🔍)
+Status Evaluation Matrix:
+  - Distance <= Allowed Radius? → status="approved" (Auto-Approved ✅)
+  - Distance > Allowed Radius? → status="pending" (Requires Manual Review 🔍)
         ↓
-Lateness Check (uses closest office's clock-in time):
-  current_time > office.clock_in_time?
-  - YES → is_late=true, minutes_late calculated
-  - NO → is_late=false
+Lateness Check:
+  - Compare current timestamp to office target time
+  - Flag is_late (boolean) and compute minutes_late (integer)
         ↓
-Attendance record saved (includes approved_office_id when auto-approved)
-        ↓
-Employee sees confirmation + status badge
+Database record committed. Employee UI updates with reactive state.
 ```
 
 ### Key Technical Components
-
-**Haversine Distance Calculation** ([utils/distance.go](backend/utils/distance.go))  
-Calculates great-circle distance between two GPS points on Earth's surface:
-```go
-func CalculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
-    // Returns distance in METERS (not kilometers)
-    // Accuracy: ~1 meter precision
-}
-```
-
-**Auto-Approval Logic** ([handlers/attendance.go](backend/handlers/attendance.go))  
-- ✅ **Auto-approved**: employee within `allowed_radius_meters` of ANY managed office
-- 🔍 **Pending**: employee outside ALL managed offices (manager must review)
-- Records `approved_office_id` to track which office validated the clock-in
-
-**Lateness Detection**  
-- Compares current time to closest office's `ClockInTime` (format: "HH:MM")
-- Calculates exact minutes late for reporting
-- Still allows clock-in even if late (records lateness for review)
-
-**Security**  
-- JWT tokens with configurable expiry (default 24 hours, adjustable via System Settings)
-- Role-based middleware: `AuthMiddleware()` + `ManagerMiddleware()`
-- Passwords hashed with bcrypt
-- Super admin flag for elevated permissions (office creation/assignment)
-
----
-
-## 📚 Additional Resources
-
-### 📖 Documentation Suite
-This project has comprehensive documentation organized by audience:
-
-**For Product Managers / Stakeholders:**
-- **[FEATURE_SUMMARY.md](FEATURE_SUMMARY.md)** - ⭐ **START HERE** - What can this system do? Quick feature overview
-- **[USER_STORIES.md](USER_STORIES.md)** - All user stories with acceptance criteria
-
-**For Developers:**
-- **[README.md](README.md)** - This file - Setup & usage guide
-- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete API endpoint documentation
-- **[SYSTEM_FLOW.md](SYSTEM_FLOW.md)** - Visual diagrams showing how everything works
-- **[.github/copilot-instructions.md](.github/copilot-instructions.md)** - AI agent development guide
-
-**For DevOps / Deployment:**
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment to VPS/cloud (detailed)
-- **[QUICK_DEPLOY.md](QUICK_DEPLOY.md)** - Fast deployment reference & commands
+* **Haversine Distance (`utils/distance.go`):** Computes the great-circle distance between two GPS points on a sphere, accurate to ~1 meter.
+* **RBAC Middleware (`auth/jwt.go`):** Validates the stateless JWT. Specific routes are guarded by `auth.ManagerMiddleware()` ensuring standard employees cannot access operational approval queues.
+* **Dynamic Configurations:** Super Admins can alter global rules (like Session Expiry and Minimum Work Hours) directly from the UI, persisting to the `system_settings` table.
 
 ---
 
@@ -333,97 +202,27 @@ This project has comprehensive documentation organized by audience:
 
 ### Common Issues
 
-**"Lokasi kantor belum diatur" error**
-- **Solution**: Manager must configure office location first (Dashboard → Pengaturan Lokasi Kantor)
+**"Lokasi kantor belum diatur" (Office Location Not Set)**
+* **Solution**: A Super Admin must configure at least one active office location and assign the user to it.
 
 **CORS errors in browser console**
-- **Check**: Backend allows `localhost:4200` by default (see [main.go](backend/main.go))
-- **Production**: Update CORS to allow your domain
+* **Check**: Ensure the backend CORS middleware in `main.go` is permitting your frontend's origin (defaults to `http://localhost:4200` for dev).
 
 **Geolocation permission denied**
-- **Solution**: Browser must have location permission enabled
-- **Chrome**: Click lock icon in address bar → Allow location
+* **Solution**: The user must click "Allow" when the browser prompts for location access. Ensure the site is served over HTTPS in production, as modern browsers block Geolocation APIs on insecure HTTP origins.
 
 **JWT token expired**
-- **Behavior**: Tokens expire after 24 hours
-- **Solution**: User must log in again
-
-**Database connection failed**
-- **Check**: MySQL is running (`sudo systemctl status mysql`)
-- **Verify**: Credentials in environment variables or default `root:password`
-
----
-
-## 📦 Project Structure
-
-```
-field-attendance-system/
-├── backend/
-│   ├── main.go              # Entry point, routes, CORS, admin seeding
-│   ├── auth/
-│   │   └── jwt.go           # JWT generation & validation
-│   ├── database/
-│   │   └── db.go            # MySQL connection & auto-migration
-│   ├── handlers/
-│   │   ├── auth.go               # Login & registration
-│   │   ├── attendance.go         # Clock-in/out logic & GPS validation
-│   │   ├── leave.go              # Leave request submission & history
-│   │   ├── office.go             # Office location config (legacy)
-│   │   ├── office_management.go  # Multi-office CRUD & assignment
-│   │   ├── admin.go              # Manager dashboard & approvals
-│   │   └── settings.go           # System settings (session duration)
-│   ├── models/
-│   │   └── models.go        # Database models (User, Attendance, Leave, Office, ManagerOffice, SystemSettings)
-│   ├── seed/
-│   │   └── seed.go          # Database seeding (admins, offices, employees)
-│   └── utils/
-│       └── distance.go      # Haversine distance calculation
-│
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── components/
-│   │   │   │   ├── login/                  # Login page
-│   │   │   │   ├── clock-in/               # Employee clock-in + map
-│   │   │   │   ├── leave-request/          # Leave submission
-│   │   │   │   ├── leave-history/          # Employee leave history
-│   │   │   │   ├── my-attendance-history/  # Employee attendance history
-│   │   │   │   ├── office-management/      # Multi-office management (standalone)
-│   │   │   │   ├── leave-management/       # Manager leave approval UI
-│   │   │   │   ├── attendance-reports/     # Manager attendance reports
-│   │   │   │   ├── landing-page/           # Public landing page
-│   │   │   │   ├── manager-dashboard/      # Manager controls & daily view
-│   │   │   │   └── shared/navbar/          # Shared navigation bar
-│   │   │   ├── services/
-│   │   │   │   └── api.service.ts   # HTTP client with JWT headers
-│   │   │   └── auth.guard.ts    # Route protection
-│   │   └── environments/     # API URLs for dev/prod
-│   └── angular.json
-│
-└── Documentation/
-    ├── README.md             # This file
-    ├── FEATURE_SUMMARY.md    # Feature overview & roadmap
-    ├── USER_STORIES.md       # All user stories with acceptance criteria
-    ├── API_REFERENCE.md      # Complete API endpoint documentation
-    ├── SYSTEM_FLOW.md        # Architecture & workflow diagrams
-    ├── DEPLOYMENT_GUIDE.md   # Production setup
-    └── QUICK_DEPLOY.md       # Quick reference commands
-```
-
----
-
-## 🤝 Contributing
-
-This is a private/internal project. For feature requests or issues, contact the development team.
+* **Behavior**: Requests return 401 Unauthorized. 
+* **Solution**: User must log in again. Token duration is configurable by Super Admins.
 
 ---
 
 ## 📄 License
 
-Proprietary - Internal use only
+Proprietary - Internal use only.
 
 ---
 
-**Last Updated:** February 1, 2026  
-**Version:** 3.0  
+**Last Updated:** March 29, 2026  
+**Version:** 3.1  
 **Status:** Production Ready
