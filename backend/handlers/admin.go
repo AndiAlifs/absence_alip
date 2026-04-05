@@ -214,7 +214,7 @@ type CreateEmployeeInput struct {
 	Username string `json:"username" binding:"required"`
 	FullName string `json:"full_name"`
 	Password string `json:"password" binding:"required,min=6"`
-	Role     string `json:"role" binding:"required,oneof=employee manager"`
+	Role     string `json:"role" binding:"required,oneof=employee manager instructor"`
 	OfficeID *uint  `json:"office_id"`
 }
 
@@ -301,7 +301,7 @@ type UpdateEmployeeInput struct {
 	Username string `json:"username"`
 	FullName string `json:"full_name"`
 	Password string `json:"password"`
-	Role     string `json:"role" binding:"omitempty,oneof=employee manager"`
+	Role     string `json:"role" binding:"omitempty,oneof=employee manager instructor"`
 	OfficeID *uint  `json:"office_id"`
 }
 

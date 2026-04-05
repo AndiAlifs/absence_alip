@@ -194,4 +194,49 @@ export class ApiService {
       this.getHeaders()
     );
   }
+
+  // Instructor - Students
+  createStudent(data: { name: string; total_quota_hours: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/instructor/students`, data, this.getHeaders());
+  }
+
+  getInstructorStudents(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/instructor/students`, this.getHeaders());
+  }
+
+  adjustStudentQuota(studentId: number, remainingQuotaHours: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/instructor/students/${studentId}/adjust-quota`,
+      { remaining_quota_hours: remainingQuotaHours },
+      this.getHeaders()
+    );
+  }
+
+  // Instructor - Learning plans
+  createLearningPlan(data: {
+    student_id: number;
+    scheduled_date: string;
+    start_time: string;
+    end_time: string;
+    status?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/instructor/schedule`, data, this.getHeaders());
+  }
+
+  getLearningPlans(period: 'week' | 'month' = 'month'): Observable<any> {
+    return this.http.get(`${this.apiUrl}/instructor/schedule?period=${period}`, this.getHeaders());
+  }
+
+  // Instructor - Student sessions
+  startStudentSession(data: { student_id: number; latitude: number; longitude: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/instructor/session/start`, data, this.getHeaders());
+  }
+
+  endStudentSession(data: { session_id?: number; student_id?: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/instructor/session/end`, data, this.getHeaders());
+  }
+
+  getActiveStudentSession(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/instructor/session/active`, this.getHeaders());
+  }
 }

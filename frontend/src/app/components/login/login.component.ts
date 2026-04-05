@@ -78,6 +78,8 @@ export class LoginComponent implements OnInit {
       const role = localStorage.getItem('role');
       if (role === 'manager') {
         this.router.navigate(['/admin']);
+      } else if (role === 'instructor') {
+        this.router.navigate(['/instructor/dashboard']);
       } else {
         this.router.navigate(['/clock-in']);
       }
@@ -95,6 +97,8 @@ export class LoginComponent implements OnInit {
           localStorage.setItem('username', res.username || '');
           if (res.role === 'manager') {
             this.router.navigate(['/admin']);
+          } else if (res.role === 'instructor') {
+            this.router.navigate(['/instructor/dashboard']);
           } else {
             this.router.navigate(['/clock-in']);
           }

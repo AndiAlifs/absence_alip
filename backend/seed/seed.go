@@ -17,9 +17,11 @@ import (
 func RunAll() {
 	log.Println("Starting database seeding...")
 	SeedSuperAdmins()
+	SeedInstructors()
 	SeedOffices()
 	SeedDefaultOfficeAssignment()
 	SeedEmployees()
+	SeedInstructorStudentsAndPlans()
 	SeedAttendanceRecords()
 	SeedSystemSettings()
 	log.Println("Database seeding completed!")
@@ -472,4 +474,222 @@ func SeedSystemSettings() {
 	}
 
 	log.Printf("✓ Created default system setting: %s = %s", setting.SettingKey, setting.SettingValue)
+}
+
+// SeedInstructors creates default instructor users.
+func SeedInstructors() {
+	instructors := []struct {
+		username string
+		fullName string
+		password string
+	}{
+		{"instructor1", "Instruktur Utama", "instructor1"},
+	}
+
+	for _, instructor := range instructors {
+		var existingUser models.User
+		if err := database.DB.Where("username = ?", instructor.username).First(&existingUser).Error; err == nil {
+			log.Printf("Instructor user '%s' already exists, skipping", instructor.username)
+			continue
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(instructor.password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Failed to hash password for %s: %v", instructor.username, err)
+			continue
+		}
+
+		user := models.User{
+			Username:     instructor.username,
+			FullName:     instructor.fullName,
+			PasswordHash: string(hashedPassword),
+			Role:         "instructor",
+			IsSuperAdmin: false,
+		}
+
+		if err := database.DB.Create(&user).Error; err != nil {
+			log.Printf("Failed to create instructor user %s: %v", instructor.username, err)
+			continue
+		}
+
+		log.Printf("✓ Instructor user '%s' created successfully", instructor.username)
+		log.Printf("  Username: %s", instructor.username)
+		log.Printf("  Password: %s", instructor.password)
+		log.Printf("  Role: instructor")
+	}
+}
+
+// SeedInstructorStudentsAndPlans creates sample students, learning plans, and session data for instructor users.
+func SeedInstructorStudentsAndPlans() {
+	var instructor models.User
+	if err := database.DB.Where("username = ? AND role = ?", "instructor1", "instructor").First(&instructor).Error; err != nil {
+		log.Println("Instructor user 'instructor1' not found, skipping instructor student/plan seed")
+		return
+	}
+
+	studentSeeds := []struct {
+		name  string
+		quota float64
+	}{
+		{"Aulia Rahman", 24},
+		{"Nadia Putri", 16},
+		{"Rizky Pratama", 20},
+	}
+
+	studentByName := make(map[string]models.Student)
+	for _, s := range studentSeeds {
+		var student models.Student
+		err := database.DB.Where("instructor_id = ? AND name = ?", instructor.ID, s.name).First(&student).Error
+		if err == nil {
+			studentByName[s.name] = student
+			log.Printf("Student '%s' already exists for instructor '%s', skipping", s.name, instructor.Username)
+			continue
+		}
+
+		student = models.Student{
+			Name:                s.name,
+			InstructorID:        instructor.ID,
+			TotalQuotaHours:     s.quota,
+			RemainingQuotaHours: s.quota,
+		}
+
+		if err := database.DB.Create(&student).Error; err != nil {
+			log.Printf("Failed to create student '%s': %v", s.name, err)
+			continue
+		}
+
+		studentByName[s.name] = student
+		log.Printf("✓ Student '%s' created for instructor '%s'", s.name, instructor.Username)
+	}
+
+	var existingStudents []models.Student
+	if err := database.DB.Where("instructor_id = ?", instructor.ID).Find(&existingStudents).Error; err == nil {
+		for _, st := range existingStudents {
+			studentByName[st.Name] = st
+		}
+	}
+
+	if len(studentByName) == 0 {
+		log.Printf("No students found for instructor '%s', skipping learning plan seed", instructor.Username)
+		return
+	}
+
+	today := time.Now()
+	plans := []struct {
+		studentName string
+		date        time.Time
+		startTime   string
+		endTime     string
+		status      string
+	}{
+		{"Aulia Rahman", today.AddDate(0, 0, 1), "09:00", "11:00", "planned"},
+		{"Nadia Putri", today.AddDate(0, 0, 2), "13:00", "15:00", "planned"},
+		{"Rizky Pratama", today.AddDate(0, 0, -1), "08:30", "10:00", "completed"},
+	}
+
+	for _, p := range plans {
+		student, ok := studentByName[p.studentName]
+		if !ok {
+			continue
+		}
+
+		scheduledDate := time.Date(p.date.Year(), p.date.Month(), p.date.Day(), 0, 0, 0, 0, p.date.Location())
+
+		var existingPlan models.LearningPlan
+		err := database.DB.Where(
+			"instructor_id = ? AND student_id = ? AND scheduled_date = ? AND start_time = ? AND end_time = ?",
+			instructor.ID,
+			student.ID,
+			scheduledDate,
+			p.startTime,
+			p.endTime,
+		).First(&existingPlan).Error
+		if err == nil {
+			log.Printf("Learning plan for '%s' on %s already exists, skipping", p.studentName, scheduledDate.Format("2006-01-02"))
+			continue
+		}
+
+		plan := models.LearningPlan{
+			InstructorID:  instructor.ID,
+			StudentID:     student.ID,
+			ScheduledDate: scheduledDate,
+			StartTime:     p.startTime,
+			EndTime:       p.endTime,
+			Status:        p.status,
+		}
+
+		if err := database.DB.Create(&plan).Error; err != nil {
+			log.Printf("Failed to create learning plan for '%s': %v", p.studentName, err)
+			continue
+		}
+
+		log.Printf("✓ Learning plan created for '%s' (%s %s-%s)", p.studentName, scheduledDate.Format("2006-01-02"), p.startTime, p.endTime)
+	}
+
+	seedInstructorSampleSessions(instructor, studentByName)
+}
+
+func seedInstructorSampleSessions(instructor models.User, studentByName map[string]models.Student) {
+	sampleStudent, ok := studentByName["Aulia Rahman"]
+	if !ok {
+		return
+	}
+
+	var existingCompleted int64
+	database.DB.Model(&models.StudentSession{}).
+		Where("instructor_id = ? AND student_id = ? AND check_out_time IS NOT NULL", instructor.ID, sampleStudent.ID).
+		Count(&existingCompleted)
+
+	if existingCompleted == 0 {
+		checkIn := time.Now().Add(-4 * time.Hour)
+		checkOut := checkIn.Add(90 * time.Minute)
+		deducted := checkOut.Sub(checkIn).Hours()
+
+		session := models.StudentSession{
+			StudentID:     sampleStudent.ID,
+			InstructorID:  instructor.ID,
+			CheckInTime:   checkIn,
+			CheckOutTime:  &checkOut,
+			DeductedHours: deducted,
+			Latitude:      -3.98929160,
+			Longitude:     122.50396530,
+		}
+
+		if err := database.DB.Create(&session).Error; err != nil {
+			log.Printf("Failed to create completed sample session: %v", err)
+		} else {
+			// Keep quota realistic if session was newly seeded.
+			if sampleStudent.RemainingQuotaHours >= deducted {
+				sampleStudent.RemainingQuotaHours -= deducted
+				_ = database.DB.Save(&sampleStudent).Error
+			}
+			log.Printf("✓ Completed sample student session created for '%s'", sampleStudent.Name)
+		}
+	}
+
+	var existingActive int64
+	database.DB.Model(&models.StudentSession{}).
+		Where("instructor_id = ? AND check_out_time IS NULL", instructor.ID).
+		Count(&existingActive)
+
+	if existingActive == 0 {
+		activeStudent, found := studentByName["Nadia Putri"]
+		if !found {
+			return
+		}
+
+		activeSession := models.StudentSession{
+			StudentID:    activeStudent.ID,
+			InstructorID: instructor.ID,
+			CheckInTime:  time.Now().Add(-25 * time.Minute),
+			Latitude:     -3.98930631,
+			Longitude:    122.50644229,
+		}
+
+		if err := database.DB.Create(&activeSession).Error; err != nil {
+			log.Printf("Failed to create active sample session: %v", err)
+		} else {
+			log.Printf("✓ Active sample student session created for '%s'", activeStudent.Name)
+		}
+	}
 }

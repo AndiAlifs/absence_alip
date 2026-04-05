@@ -15,7 +15,7 @@ type RegisterInput struct {
 	Username string `json:"username" binding:"required"`
 	FullName string `json:"full_name"`
 	Password string `json:"password" binding:"required"`
-	Role     string `json:"role" binding:"omitempty,oneof=employee manager"` // optional, defaults to employee if empty? Logic below.
+	Role     string `json:"role" binding:"omitempty,oneof=employee manager instructor"` // optional, defaults to employee if empty.
 }
 
 type LoginInput struct {

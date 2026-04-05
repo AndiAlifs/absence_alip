@@ -83,3 +83,16 @@ func ManagerMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// InstructorMiddleware ensures the user has instructor role.
+func InstructorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "instructor" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Instructor access required"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}

@@ -30,6 +30,9 @@ func main() {
 		&models.OfficeLocation{},
 		&models.ManagerOffice{},
 		&models.SystemSettings{},
+		&models.Student{},
+		&models.StudentSession{},
+		&models.LearningPlan{},
 	)
 
 	// Seed database with initial data
@@ -96,6 +99,22 @@ func main() {
 			admin.PUT("/settings/session-duration", handlers.UpdateSessionDuration)
 			admin.GET("/settings/minimum-work-hours", handlers.GetMinimumWorkHours)
 			admin.PUT("/settings/minimum-work-hours", handlers.UpdateMinimumWorkHours)
+		}
+
+		// Instructor routes
+		instructorGroup := protected.Group("/instructor")
+		instructorGroup.Use(auth.InstructorMiddleware())
+		{
+			instructorGroup.POST("/students", handlers.CreateStudent)
+			instructorGroup.GET("/students", handlers.GetStudents)
+			instructorGroup.PUT("/students/:id/adjust-quota", handlers.AdjustStudentQuota)
+
+			instructorGroup.POST("/schedule", handlers.CreateLearningPlan)
+			instructorGroup.GET("/schedule", handlers.GetLearningPlans)
+
+			instructorGroup.POST("/session/start", handlers.StartStudentSession)
+			instructorGroup.POST("/session/end", handlers.EndStudentSession)
+			instructorGroup.GET("/session/active", handlers.GetActiveStudentSession)
 		}
 	}
 

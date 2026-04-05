@@ -4,13 +4,13 @@ import (
 	"time"
 )
 
-// User represents a system user (Employee or Manager)
+// User represents a system user (Employee, Manager, or Instructor)
 type User struct {
 	ID               uint      `gorm:"primaryKey" json:"id"`
 	Username         string    `gorm:"unique;not null" json:"username"`
 	FullName         string    `gorm:"type:varchar(255)" json:"full_name"`
 	PasswordHash     string    `gorm:"not null" json:"-"`
-	Role             string    `gorm:"type:enum('employee','manager');default:'employee'" json:"role"`
+	Role             string    `gorm:"type:enum('employee','manager','instructor');default:'employee'" json:"role"`
 	OfficeID         *uint     `json:"office_id,omitempty"` // Employee's primary office
 	IsSuperAdmin     bool      `gorm:"default:false" json:"is_super_admin"`
 	MinimumWorkHours float64   `gorm:"default:8.0" json:"minimum_work_hours"` // Manager specific setting

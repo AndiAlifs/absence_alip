@@ -25,14 +25,20 @@ const routes: Routes = [
   { path: 'legacy', component: LegacyLandingPageComponent },
   { path: 'login', component: LoginComponent },
   { path: 'clock-in', component: ClockInComponent, canActivate: [AuthGuard] },
-  { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard] },
-  { path: 'leave-request', component: LeaveRequestComponent, canActivate: [AuthGuard] },
-  { path: 'leave-history', component: LeaveHistoryComponent, canActivate: [AuthGuard] },
-  { path: 'my-attendance', component: MyAttendanceHistoryComponent, canActivate: [AuthGuard] },
-  { path: 'admin', component: ManagerDashboardComponent, canActivate: [AuthGuard] },
-  { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard] },
-  { path: 'admin/reports', component: AttendanceReportsComponent, canActivate: [AuthGuard] },
-  { path: 'admin/leaves', component: LeaveManagementComponent, canActivate: [AuthGuard] },
+  { path: 'leave', component: LeaveRequestComponent, canActivate: [AuthGuard], data: { roles: ['employee'] } },
+  { path: 'leave-request', component: LeaveRequestComponent, canActivate: [AuthGuard], data: { roles: ['employee'] } },
+  { path: 'leave-history', component: LeaveHistoryComponent, canActivate: [AuthGuard], data: { roles: ['employee'] } },
+  { path: 'my-attendance', component: MyAttendanceHistoryComponent, canActivate: [AuthGuard], data: { roles: ['employee'] } },
+  { path: 'admin', component: ManagerDashboardComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/reports', component: AttendanceReportsComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/leaves', component: LeaveManagementComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  {
+    path: 'instructor',
+    canActivate: [AuthGuard],
+    data: { roles: ['instructor'] },
+    loadChildren: () => import('./instructor/instructor.module').then((m) => m.InstructorModule)
+  },
   { path: '**', redirectTo: '/login' }
 ];
 

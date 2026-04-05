@@ -38,6 +38,42 @@ func ClockIn(c *gin.Context) {
 		return
 	}
 
+	if user.Role == "instructor" {
+		clockInTime := time.Now()
+		attendance := models.Attendance{
+			UserID:      userID,
+			ClockInTime: clockInTime,
+			Latitude:    input.Latitude,
+			Longitude:   input.Longitude,
+			Status:      "approved",
+			Distance:    0,
+			IsLate:      false,
+			MinutesLate: 0,
+		}
+
+		if result := database.DB.Create(&attendance); result.Error != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save attendance record"})
+			return
+		}
+
+		message := "Berhasil melakukan clock-in instruktur"
+		if input.Latitude == 0 && input.Longitude == 0 {
+			message += " - Tanpa Lokasi GPS"
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":         message,
+			"data":            attendance,
+			"distance_meters": 0,
+			"status":          "approved",
+			"outside_radius":  false,
+			"is_late":         false,
+			"minutes_late":    0,
+			"office_used":     "",
+		})
+		return
+	}
+
 	// Find the manager who manages the employee's assigned office
 	var managerID uint
 	if user.OfficeID != nil {

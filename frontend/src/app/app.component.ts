@@ -28,7 +28,18 @@ import { Component } from '@angular/core';
             </a>
             
             <a 
-              *ngIf="!isManager"
+              *ngIf="isInstructor"
+              routerLink="/instructor/dashboard" 
+              routerLinkActive="bg-indigo-800"
+              class="flex items-center px-4 py-2 rounded-lg text-white hover:bg-indigo-800 transition-all duration-200 font-medium">
+              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-9a4 4 0 100 8 4 4 0 000-8zm0 0V3m0 18v-2m8-8h-2M5 13H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0-1.414 1.414M7.05 18.95l-1.414 1.414" />
+              </svg>
+              Dashboard Instruktur
+            </a>
+
+            <a 
+              *ngIf="!isManager && !isInstructor"
               routerLink="/leave-request" 
               routerLinkActive="bg-indigo-800"
               class="flex items-center px-4 py-2 rounded-lg text-white hover:bg-indigo-800 transition-all duration-200 font-medium">
@@ -39,7 +50,7 @@ import { Component } from '@angular/core';
             </a>
             
             <a 
-              *ngIf="!isManager"
+              *ngIf="!isManager && !isInstructor"
               routerLink="/leave-history" 
               routerLinkActive="bg-indigo-800"
               class="flex items-center px-4 py-2 rounded-lg text-white hover:bg-indigo-800 transition-all duration-200 font-medium">
@@ -50,7 +61,7 @@ import { Component } from '@angular/core';
             </a>
             
             <a 
-              *ngIf="!isManager"
+              *ngIf="!isManager && !isInstructor"
               routerLink="/my-attendance" 
               routerLinkActive="bg-indigo-800"
               class="flex items-center px-4 py-2 rounded-lg text-white hover:bg-indigo-800 transition-all duration-200 font-medium">
@@ -81,7 +92,7 @@ import { Component } from '@angular/core';
                 </svg>
                 <div>
                   <p class="text-sm text-white font-bold">{{ fullName || username }}</p>
-                  <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : 'Karyawan' }}</p>
+                      <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : (isInstructor ? 'Instruktur' : 'Karyawan') }}</p>
                 </div>
               </div>
             </div>
@@ -125,7 +136,19 @@ import { Component } from '@angular/core';
           </a>
           
           <a 
-            *ngIf="!isManager"
+            *ngIf="isInstructor"
+            routerLink="/instructor/dashboard" 
+            routerLinkActive="bg-indigo-900"
+            (click)="toggleMobileMenu()"
+            class="flex items-center px-3 py-2 rounded-md text-white hover:bg-indigo-900 transition-all font-medium">
+            <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2m-4-9a4 4 0 100 8 4 4 0 000-8zm0 0V3m0 18v-2m8-8h-2M5 13H3m15.364 6.364l-1.414-1.414M7.05 7.05 5.636 5.636m12.728 0-1.414 1.414M7.05 18.95l-1.414 1.414" />
+            </svg>
+            Dashboard Instruktur
+          </a>
+
+          <a 
+            *ngIf="!isManager && !isInstructor"
             routerLink="/leave-request" 
             routerLinkActive="bg-indigo-900"
             (click)="toggleMobileMenu()"
@@ -137,7 +160,7 @@ import { Component } from '@angular/core';
           </a>
           
           <a 
-            *ngIf="!isManager"
+            *ngIf="!isManager && !isInstructor"
             routerLink="/leave-history" 
             routerLinkActive="bg-indigo-900"
             (click)="toggleMobileMenu()"
@@ -149,7 +172,7 @@ import { Component } from '@angular/core';
           </a>
           
           <a 
-            *ngIf="!isManager"
+            *ngIf="!isManager && !isInstructor"
             routerLink="/my-attendance" 
             routerLinkActive="bg-indigo-900"
             (click)="toggleMobileMenu()"
@@ -179,7 +202,7 @@ import { Component } from '@angular/core';
               </svg>
               <div>
                 <p class="text-sm font-bold">{{ fullName || username }}</p>
-                <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : 'Karyawan' }}</p>
+                <p class="text-xs text-indigo-200">{{ isManager ? 'Manajer' : (isInstructor ? 'Instruktur' : 'Karyawan') }}</p>
               </div>
             </div>
           </div>
@@ -199,6 +222,10 @@ export class AppComponent {
 
   get isManager() {
     return localStorage.getItem('role') === 'manager';
+  }
+
+  get isInstructor() {
+    return localStorage.getItem('role') === 'instructor';
   }
 
   get fullName() {
