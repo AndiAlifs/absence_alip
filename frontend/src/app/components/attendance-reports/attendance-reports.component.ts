@@ -609,7 +609,7 @@ export class AttendanceReportsComponent implements OnInit {
     const headers = ['Nama', 'Tanggal', 'Jam Masuk', 'Jam Keluar', 'Total Jam Kerja', 'Jam Kerja', 'Kantor', 'Ketepatan', 'Jarak (m)'];
     const rows = this.filteredRecords.map(r => [
       r.user?.full_name || r.user?.username || '',
-      new Date(r.clock_in_time).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      new Date(r.clock_in_time).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
       new Date(r.clock_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       r.clock_out_time ? new Date(r.clock_out_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '',
       r.work_hours ? r.work_hours.toFixed(1) : '',
