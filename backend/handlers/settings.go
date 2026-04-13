@@ -90,8 +90,66 @@ func GetSystemSettings(c *gin.Context) {
 	if _, ok := settingsMap[models.SettingSessionDurationHours]; !ok {
 		settingsMap[models.SettingSessionDurationHours] = "24"
 	}
+	if _, ok := settingsMap[models.SettingQuotaPresetOptions]; !ok {
+		settingsMap[models.SettingQuotaPresetOptions] = "8,10"
+	}
 
 	c.JSON(http.StatusOK, gin.H{"settings": settingsMap})
+}
+
+// GetQuotaPresetsSetting returns the quota presets for the admin dashboard
+func GetQuotaPresetsSetting(c *gin.Context) {
+	var setting models.SystemSettings
+	if err := database.DB.Where("setting_key = ?", models.SettingQuotaPresetOptions).First(&setting).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"setting_key":   models.SettingQuotaPresetOptions,
+			"setting_value": "8,10",
+			"description":   "Opsi preset kuota murid (jam, dipisahkan koma)",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, setting)
+}
+
+// UpdateQuotaPresets updates the quota preset options (manager/super admin only)
+func UpdateQuotaPresets(c *gin.Context) {
+	var input struct {
+		Presets string `json:"presets" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format preset tidak valid"})
+		return
+	}
+
+	userID := c.MustGet("userID").(uint)
+	var user models.User
+	database.DB.First(&user, userID)
+
+	if !user.IsSuperAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hanya super admin yang dapat mengubah pengaturan ini"})
+		return
+	}
+
+	var setting models.SystemSettings
+	result := database.DB.Where("setting_key = ?", models.SettingQuotaPresetOptions).First(&setting)
+
+	if result.Error != nil {
+		setting = models.SystemSettings{
+			SettingKey:   models.SettingQuotaPresetOptions,
+			SettingValue: input.Presets,
+			Description:  "Opsi preset kuota murid (jam, dipisahkan koma)",
+		}
+		database.DB.Create(&setting)
+	} else {
+		setting.SettingValue = input.Presets
+		database.DB.Save(&setting)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Preset kuota berhasil diperbarui",
+		"presets": input.Presets,
+	})
 }
 
 // Helper function to get session duration from database

@@ -92,4 +92,5 @@ type SystemSettings struct {
 // Common setting keys
 const (
 	SettingSessionDurationHours = "session_duration_hours" // Default session duration in hours
+	SettingQuotaPresetOptions   = "quota_preset_options"   // Comma-separated quota hour presets (e.g., "8,10")
 )

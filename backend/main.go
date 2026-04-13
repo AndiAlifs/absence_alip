@@ -99,6 +99,8 @@ func main() {
 			admin.PUT("/settings/session-duration", handlers.UpdateSessionDuration)
 			admin.GET("/settings/minimum-work-hours", handlers.GetMinimumWorkHours)
 			admin.PUT("/settings/minimum-work-hours", handlers.UpdateMinimumWorkHours)
+			admin.GET("/settings/quota-presets", handlers.GetQuotaPresetsSetting)
+			admin.PUT("/settings/quota-presets", handlers.UpdateQuotaPresets)
 		}
 
 		// Instructor routes
@@ -107,14 +109,22 @@ func main() {
 		{
 			instructorGroup.POST("/students", handlers.CreateStudent)
 			instructorGroup.GET("/students", handlers.GetStudents)
+			instructorGroup.PUT("/students/:id", handlers.UpdateStudent)
 			instructorGroup.PUT("/students/:id/adjust-quota", handlers.AdjustStudentQuota)
+			instructorGroup.PUT("/students/:id/archive", handlers.ArchiveStudent)
+			instructorGroup.GET("/students/:id/sessions", handlers.GetStudentSessions)
 
 			instructorGroup.POST("/schedule", handlers.CreateLearningPlan)
 			instructorGroup.GET("/schedule", handlers.GetLearningPlans)
+			instructorGroup.PUT("/schedule/:id", handlers.UpdateLearningPlan)
+			instructorGroup.DELETE("/schedule/:id", handlers.DeleteLearningPlan)
+			instructorGroup.POST("/schedule/bulk", handlers.BulkCreateLearningPlan)
 
 			instructorGroup.POST("/session/start", handlers.StartStudentSession)
 			instructorGroup.POST("/session/end", handlers.EndStudentSession)
 			instructorGroup.GET("/session/active", handlers.GetActiveStudentSession)
+
+			instructorGroup.GET("/quota-presets", handlers.GetQuotaPresets)
 		}
 	}
 

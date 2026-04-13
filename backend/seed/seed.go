@@ -452,28 +452,35 @@ func SeedAttendanceRecords() {
 
 // SeedSystemSettings creates default system settings
 func SeedSystemSettings() {
-	// Check if session duration setting already exists
-	var existingSetting models.SystemSettings
-	result := database.DB.Where("setting_key = ?", models.SettingSessionDurationHours).First(&existingSetting)
-
-	if result.Error == nil {
-		log.Printf("System setting '%s' already exists, skipping", models.SettingSessionDurationHours)
-		return
+	defaultSettings := []struct {
+		key         string
+		value       string
+		description string
+	}{
+		{models.SettingSessionDurationHours, "24", "Durasi sesi login default (jam)"},
+		{models.SettingQuotaPresetOptions, "8,10", "Opsi preset kuota murid (jam, dipisahkan koma)"},
 	}
 
-	// Create default session duration setting (24 hours)
-	setting := models.SystemSettings{
-		SettingKey:   models.SettingSessionDurationHours,
-		SettingValue: "24",
-		Description:  "Durasi sesi login default (jam)",
-	}
+	for _, s := range defaultSettings {
+		var existing models.SystemSettings
+		if err := database.DB.Where("setting_key = ?", s.key).First(&existing).Error; err == nil {
+			log.Printf("System setting '%s' already exists, skipping", s.key)
+			continue
+		}
 
-	if err := database.DB.Create(&setting).Error; err != nil {
-		log.Printf("Failed to create system setting: %v", err)
-		return
-	}
+		setting := models.SystemSettings{
+			SettingKey:   s.key,
+			SettingValue: s.value,
+			Description:  s.description,
+		}
 
-	log.Printf("✓ Created default system setting: %s = %s", setting.SettingKey, setting.SettingValue)
+		if err := database.DB.Create(&setting).Error; err != nil {
+			log.Printf("Failed to create system setting '%s': %v", s.key, err)
+			continue
+		}
+
+		log.Printf("✓ Created default system setting: %s = %s", s.key, s.value)
+	}
 }
 
 // SeedInstructors creates default instructor users.
@@ -528,12 +535,15 @@ func SeedInstructorStudentsAndPlans() {
 	}
 
 	studentSeeds := []struct {
-		name  string
-		quota float64
+		name         string
+		quota        float64
+		whatsapp     string
+		gender       string
+		meetingPoint string
 	}{
-		{"Aulia Rahman", 24},
-		{"Nadia Putri", 16},
-		{"Rizky Pratama", 20},
+		{"Aulia Rahman", 24, "081234567890", "male", "Kampus B"},
+		{"Nadia Putri", 16, "081234567891", "female", "Lapangan MTQ"},
+		{"Rizky Pratama", 20, "081234567892", "male", ""},
 	}
 
 	studentByName := make(map[string]models.Student)
@@ -551,6 +561,10 @@ func SeedInstructorStudentsAndPlans() {
 			InstructorID:        instructor.ID,
 			TotalQuotaHours:     s.quota,
 			RemainingQuotaHours: s.quota,
+			WhatsApp:            s.whatsapp,
+			Gender:              s.gender,
+			MeetingPoint:        s.meetingPoint,
+			IsActive:            true,
 		}
 
 		if err := database.DB.Create(&student).Error; err != nil {

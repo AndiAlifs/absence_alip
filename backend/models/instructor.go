@@ -13,6 +13,10 @@ type Student struct {
 	InstructorID        uint    `json:"instructor_id"`
 	TotalQuotaHours     float64 `json:"total_quota_hours"`
 	RemainingQuotaHours float64 `json:"remaining_quota_hours"`
+	WhatsApp            string  `json:"whatsapp"`
+	Gender              string  `gorm:"type:enum('male','female');default:'male'" json:"gender"`
+	MeetingPoint        string  `json:"meeting_point"`
+	IsActive            bool    `gorm:"default:true" json:"is_active"`
 }
 
 // StudentSession tracks learning session time and quota deduction.
@@ -25,6 +29,7 @@ type StudentSession struct {
 	DeductedHours float64    `json:"deducted_hours"`
 	Latitude      float64    `json:"latitude"`
 	Longitude     float64    `json:"longitude"`
+	Notes         string     `gorm:"type:text" json:"notes"`
 	Student       Student    `gorm:"foreignKey:StudentID" json:"student"`
 }
 
@@ -38,4 +43,5 @@ type LearningPlan struct {
 	StartTime     string    `json:"start_time"`
 	EndTime       string    `json:"end_time"`
 	Status        string    `gorm:"type:enum('planned','completed','cancelled');default:'planned'" json:"status"`
+	ReminderSent  bool      `gorm:"default:false" json:"reminder_sent"`
 }

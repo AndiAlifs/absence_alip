@@ -196,12 +196,31 @@ export class ApiService {
   }
 
   // Instructor - Students
-  createStudent(data: { name: string; total_quota_hours: number }): Observable<any> {
+  createStudent(data: {
+    name: string;
+    total_quota_hours: number;
+    whatsapp: string;
+    gender: string;
+    meeting_point?: string;
+    initial_schedule_date?: string;
+    initial_start_time?: string;
+    initial_end_time?: string;
+  }): Observable<any> {
     return this.http.post(`${this.apiUrl}/instructor/students`, data, this.getHeaders());
   }
 
-  getInstructorStudents(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/instructor/students`, this.getHeaders());
+  getInstructorStudents(active?: string): Observable<any> {
+    const params = active ? `?active=${active}` : '';
+    return this.http.get(`${this.apiUrl}/instructor/students${params}`, this.getHeaders());
+  }
+
+  updateStudent(studentId: number, data: {
+    name?: string;
+    whatsapp?: string;
+    gender?: string;
+    meeting_point?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/instructor/students/${studentId}`, data, this.getHeaders());
   }
 
   adjustStudentQuota(studentId: number, remainingQuotaHours: number): Observable<any> {
@@ -210,6 +229,14 @@ export class ApiService {
       { remaining_quota_hours: remainingQuotaHours },
       this.getHeaders()
     );
+  }
+
+  archiveStudent(studentId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/instructor/students/${studentId}/archive`, {}, this.getHeaders());
+  }
+
+  getStudentSessions(studentId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/instructor/students/${studentId}/sessions`, this.getHeaders());
   }
 
   // Instructor - Learning plans
@@ -223,8 +250,36 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/instructor/schedule`, data, this.getHeaders());
   }
 
-  getLearningPlans(period: 'week' | 'month' = 'month'): Observable<any> {
-    return this.http.get(`${this.apiUrl}/instructor/schedule?period=${period}`, this.getHeaders());
+  getLearningPlans(period: 'week' | 'month' = 'month', startDate?: string, endDate?: string): Observable<any> {
+    let params = `?period=${period}`;
+    if (startDate) params += `&start_date=${startDate}`;
+    if (endDate) params += `&end_date=${endDate}`;
+    return this.http.get(`${this.apiUrl}/instructor/schedule${params}`, this.getHeaders());
+  }
+
+  updateLearningPlan(planId: number, data: {
+    scheduled_date?: string;
+    start_time?: string;
+    end_time?: string;
+    status?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/instructor/schedule/${planId}`, data, this.getHeaders());
+  }
+
+  deleteLearningPlan(planId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/instructor/schedule/${planId}`, this.getHeaders());
+  }
+
+  bulkCreateLearningPlans(data: {
+    student_id: number;
+    days_of_week: number[];    // 1=Mon .. 7=Sun
+    start_time: string;
+    end_time: string;
+    from_date: string;
+    to_date: string;
+    force?: boolean;           // true = skip duplicates silently (after user confirms conflicts)
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/instructor/schedule/bulk`, data, this.getHeaders());
   }
 
   // Instructor - Student sessions
@@ -232,11 +287,16 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/instructor/session/start`, data, this.getHeaders());
   }
 
-  endStudentSession(data: { session_id?: number; student_id?: number }): Observable<any> {
+  endStudentSession(data: { session_id?: number; student_id?: number; notes?: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/instructor/session/end`, data, this.getHeaders());
   }
 
   getActiveStudentSession(): Observable<any> {
     return this.http.get(`${this.apiUrl}/instructor/session/active`, this.getHeaders());
+  }
+
+  // Instructor - Quota presets
+  getQuotaPresets(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/instructor/quota-presets`, this.getHeaders());
   }
 }
