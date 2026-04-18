@@ -93,15 +93,14 @@ export class LearningPlanComponent implements OnInit {
     });
   }
 
-  markStatus(plan: any, status: 'completed' | 'cancelled') {
+  markStatus(plan: any, status: 'cancelled') {
     this.updatingId = plan.id;
     this.message = '';
-
     this.error = '';
     this.apiService.updateLearningPlan(plan.id, { status }).subscribe({
       next: () => {
         this.updatingId = null;
-        this.message = status === 'completed' ? 'Jadwal ditandai selesai' : 'Jadwal dibatalkan';
+        this.message = 'Jadwal dibatalkan';
         this.loadPlans();
         setTimeout(() => this.message = '', 3000);
       },
