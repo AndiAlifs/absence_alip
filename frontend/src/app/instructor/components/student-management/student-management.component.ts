@@ -179,8 +179,10 @@ import { ApiService } from '../../../services/api.service';
               </div>
             </div>
             <div class="flex gap-2 mt-4">
-              <button (click)="saveStudentEdit()" class="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 transition-all">Simpan Perubahan</button>
+              <button (click)="saveStudentEdit()" [disabled]="isDetailActionPending" class="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-slate-400 transition-all">{{ isDetailActionPending ? 'Menyimpan...' : 'Simpan Perubahan' }}</button>
             </div>
+            <div *ngIf="detailMessage" class="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded-lg text-green-800 text-sm">{{ detailMessage }}</div>
+            <div *ngIf="detailError" class="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg text-red-800 text-sm">{{ detailError }}</div>
 
             <!-- Quota Info -->
             <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -246,7 +248,7 @@ import { ApiService } from '../../../services/api.service';
                 <input [(ngModel)]="newSchedule.scheduled_date" type="date" class="border border-slate-300 rounded-lg px-3 py-2" />
                 <input [(ngModel)]="newSchedule.start_time" type="time" class="border border-slate-300 rounded-lg px-3 py-2" />
                 <input [(ngModel)]="newSchedule.end_time" type="time" class="border border-slate-300 rounded-lg px-3 py-2" />
-                <button (click)="addScheduleForStudent()" class="rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-all">Simpan</button>
+                <button (click)="addScheduleForStudent()" [disabled]="isDetailActionPending" class="rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:bg-slate-400 transition-all">{{ isDetailActionPending ? 'Menyimpan...' : 'Simpan' }}</button>
               </div>
             </div>
 
@@ -277,8 +279,8 @@ import { ApiService } from '../../../services/api.service';
                     </td>
                     <td class="px-4 py-3 text-sm">
                       <div class="flex gap-1">
-                        <button *ngIf="sch.status === 'planned'" (click)="cancelSchedule(sch)" class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs transition-all">Batalkan</button>
-                        <button (click)="deleteSchedule(sch)" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs transition-all">Hapus</button>
+                        <button *ngIf="sch.status === 'planned'" (click)="cancelSchedule(sch)" [disabled]="isDetailActionPending" class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 text-xs transition-all">Batalkan</button>
+                        <button (click)="deleteSchedule(sch)" [disabled]="isDetailActionPending" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50 text-xs transition-all">Hapus</button>
                       </div>
                     </td>
                   </tr>
@@ -411,6 +413,9 @@ export class StudentManagementComponent implements OnInit {
   editForm: any = {};
   showAddSchedule = false;
   newSchedule = { scheduled_date: '', start_time: '09:00', end_time: '11:00' };
+  isDetailActionPending = false;
+  detailMessage = '';
+  detailError = '';
 
   constructor(private apiService: ApiService) {}
 
@@ -466,6 +471,10 @@ export class StudentManagementComponent implements OnInit {
     }
     if (this.initScheduleMode === 'recurring' && this.initSelectedDays.length === 0) {
       this.error = 'Pilih minimal satu hari untuk jadwal berulang';
+      return;
+    }
+    if (this.initScheduleMode === 'recurring' && this.initRecurToDate && this.initRecurFromDate && this.initRecurToDate < this.initRecurFromDate) {
+      this.error = '"Sampai Tanggal" tidak boleh lebih awal dari "Dari Tanggal"';
       return;
     }
 
@@ -640,19 +649,26 @@ export class StudentManagementComponent implements OnInit {
     this.detailStudent = null;
     this.detailSessions = [];
     this.detailSchedules = [];
+    this.detailMessage = '';
+    this.detailError = '';
+    this.isDetailActionPending = false;
   }
 
   saveStudentEdit(): void {
-    this.error = '';
-    this.message = '';
+    if (this.isDetailActionPending) return;
+    this.isDetailActionPending = true;
+    this.detailError = '';
+    this.detailMessage = '';
     this.apiService.updateStudent(this.detailStudent.id, this.editForm).subscribe({
       next: (res) => {
-        this.message = res.message || 'Data murid berhasil diperbarui';
+        this.detailMessage = res.message || 'Data murid berhasil diperbarui';
         this.detailStudent = res.data;
+        this.isDetailActionPending = false;
         this.loadStudents();
       },
       error: (err) => {
-        this.error = err.error?.error || 'Gagal memperbarui data murid';
+        this.detailError = err.error?.error || 'Gagal memperbarui data murid';
+        this.isDetailActionPending = false;
       }
     });
   }
@@ -668,8 +684,12 @@ export class StudentManagementComponent implements OnInit {
   }
 
   loadStudentSchedules(studentId: number): void {
-    // Get all schedules for this student (use a wide date range)
-    this.apiService.getLearningPlans('month', '2020-01-01', '2030-12-31').subscribe({
+    const now = new Date();
+    const from = new Date(now);
+    from.setMonth(from.getMonth() - 6);
+    const to = new Date(now);
+    to.setMonth(to.getMonth() + 6);
+    this.apiService.getLearningPlans('month', this.fmtDate(from), this.fmtDate(to)).subscribe({
       next: (res) => {
         const allPlans = res.data || [];
         this.detailSchedules = allPlans.filter((p: any) => p.student_id === studentId);
@@ -679,12 +699,13 @@ export class StudentManagementComponent implements OnInit {
 
   addScheduleForStudent(): void {
     if (!this.newSchedule.scheduled_date || !this.newSchedule.start_time || !this.newSchedule.end_time) {
-      this.error = 'Lengkapi semua field jadwal';
+      this.detailError = 'Lengkapi semua field jadwal';
       return;
     }
-
-    this.error = '';
-    this.message = '';
+    if (this.isDetailActionPending) return;
+    this.isDetailActionPending = true;
+    this.detailError = '';
+    this.detailMessage = '';
     this.apiService.createLearningPlan({
       student_id: this.detailStudent.id,
       scheduled_date: this.newSchedule.scheduled_date,
@@ -692,38 +713,53 @@ export class StudentManagementComponent implements OnInit {
       end_time: this.newSchedule.end_time
     }).subscribe({
       next: (res) => {
-        this.message = res.message || 'Jadwal berhasil dibuat';
+        this.detailMessage = res.message || 'Jadwal berhasil dibuat';
         this.newSchedule = { scheduled_date: '', start_time: '09:00', end_time: '11:00' };
         this.showAddSchedule = false;
+        this.isDetailActionPending = false;
         this.loadStudentSchedules(this.detailStudent.id);
       },
       error: (err) => {
-        this.error = err.error?.error || 'Gagal membuat jadwal';
+        this.detailError = err.error?.error || 'Gagal membuat jadwal';
+        this.isDetailActionPending = false;
       }
     });
   }
 
   cancelSchedule(schedule: any): void {
+    if (!confirm('Yakin ingin membatalkan jadwal ini?')) return;
+    if (this.isDetailActionPending) return;
+    this.isDetailActionPending = true;
+    this.detailError = '';
+    this.detailMessage = '';
     this.apiService.updateLearningPlan(schedule.id, { status: 'cancelled' }).subscribe({
       next: () => {
-        this.message = 'Jadwal berhasil dibatalkan';
+        this.detailMessage = 'Jadwal berhasil dibatalkan';
+        this.isDetailActionPending = false;
         this.loadStudentSchedules(this.detailStudent.id);
       },
       error: (err) => {
-        this.error = err.error?.error || 'Gagal membatalkan jadwal';
+        this.detailError = err.error?.error || 'Gagal membatalkan jadwal';
+        this.isDetailActionPending = false;
       }
     });
   }
 
   deleteSchedule(schedule: any): void {
     if (!confirm('Yakin ingin menghapus jadwal ini?')) return;
+    if (this.isDetailActionPending) return;
+    this.isDetailActionPending = true;
+    this.detailError = '';
+    this.detailMessage = '';
     this.apiService.deleteLearningPlan(schedule.id).subscribe({
       next: () => {
-        this.message = 'Jadwal berhasil dihapus';
+        this.detailMessage = 'Jadwal berhasil dihapus';
+        this.isDetailActionPending = false;
         this.loadStudentSchedules(this.detailStudent.id);
       },
       error: (err) => {
-        this.error = err.error?.error || 'Gagal menghapus jadwal';
+        this.detailError = err.error?.error || 'Gagal menghapus jadwal';
+        this.isDetailActionPending = false;
       }
     });
   }

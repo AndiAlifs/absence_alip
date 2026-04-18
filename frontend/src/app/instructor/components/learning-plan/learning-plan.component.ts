@@ -269,14 +269,14 @@ const DAY_NUMBERS = [1, 2, 3, 4, 5, 6, 7];
                     </td>
                     <td class="px-4 py-3 text-sm">
                       <div class="flex gap-1 flex-wrap">
-                        <button *ngIf="p.status === 'planned'" (click)="startReschedule(p)"
-                          class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs transition-all">
+                        <button *ngIf="p.status === 'planned'" (click)="startReschedule(p)" [disabled]="isActionPending"
+                          class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 text-xs transition-all">
                           📅 Reschedule
                         </button>
-                        <button (click)="startEdit(p)"
-                          class="px-2 py-1 rounded bg-amber-100 text-amber-700 hover:bg-amber-200 text-xs transition-all">Edit</button>
-                        <button (click)="deletePlan(p)"
-                          class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs transition-all">Hapus</button>
+                        <button (click)="startEdit(p)" [disabled]="isActionPending"
+                          class="px-2 py-1 rounded bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 text-xs transition-all">Edit</button>
+                        <button (click)="deletePlan(p)" [disabled]="isActionPending"
+                          class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 text-xs transition-all">Hapus</button>
                       </div>
                     </td>
                   </ng-container>
@@ -305,8 +305,8 @@ const DAY_NUMBERS = [1, 2, 3, 4, 5, 6, 7];
                             <label class="text-xs text-slate-500 block mb-1">Jam Selesai</label>
                             <input [(ngModel)]="rescheduleForm.end_time" type="time" class="border border-violet-300 rounded-lg px-3 py-2 text-sm w-32" />
                           </div>
-                          <button (click)="saveReschedule()" class="px-3 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 text-sm transition-all">Simpan</button>
-                          <button (click)="cancelReschedule()" class="px-3 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 text-sm transition-all">Batal</button>
+                          <button (click)="saveReschedule()" [disabled]="isActionPending" class="px-3 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:bg-slate-400 text-sm transition-all">Simpan</button>
+                          <button (click)="cancelReschedule()" [disabled]="isActionPending" class="px-3 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 text-sm transition-all">Batal</button>
                         </div>
                       </div>
                     </td>
@@ -327,14 +327,13 @@ const DAY_NUMBERS = [1, 2, 3, 4, 5, 6, 7];
                     <td class="px-4 py-3">
                       <select [(ngModel)]="editPlan.status" class="border border-slate-300 rounded px-2 py-1 text-sm">
                         <option value="planned">Direncanakan</option>
-                        <option value="completed">Selesai</option>
                         <option value="cancelled">Dibatalkan</option>
                       </select>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex gap-1">
-                        <button (click)="saveEdit()" class="px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 text-xs transition-all">Simpan</button>
-                        <button (click)="cancelEdit()" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs transition-all">Batal</button>
+                        <button (click)="saveEdit()" [disabled]="isActionPending" class="px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 text-xs transition-all">Simpan</button>
+                        <button (click)="cancelEdit()" [disabled]="isActionPending" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50 text-xs transition-all">Batal</button>
                       </div>
                     </td>
                   </ng-container>
@@ -359,6 +358,7 @@ export class LearningPlanComponent implements OnInit {
   period: 'week' | 'month' = 'month';
   isSubmitting = false;
   isBulkSubmitting = false;
+  isActionPending = false;
   message = '';
   error = '';
 
@@ -410,8 +410,9 @@ export class LearningPlanComponent implements OnInit {
   ngOnInit(): void {
     this.loadStudents();
     this.loadPlans();
-    // Default from_date to today
+    // Default dates to today
     const today = new Date();
+    this.form.scheduled_date = this.fmtDate(today);
     this.recurForm.from_date = this.fmtDate(today);
     const nextMonth = new Date(today);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -423,7 +424,13 @@ export class LearningPlanComponent implements OnInit {
 
   loadStudents(): void {
     this.apiService.getInstructorStudents('true').subscribe({
-      next: (res) => (this.students = res.data || []),
+      next: (res) => {
+        this.students = res.data || [];
+        if (this.students.length > 0) {
+          if (!this.form.student_id) this.form.student_id = this.students[0].id;
+          if (!this.recurForm.student_id) this.recurForm.student_id = this.students[0].id;
+        }
+      },
       error: (err) => (this.error = err.error?.error || 'Gagal mengambil murid')
     });
   }
@@ -474,7 +481,7 @@ export class LearningPlanComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.message = res.message || 'Jadwal berhasil dibuat';
-        this.form = { student_id: null, scheduled_date: '', start_time: '09:00', end_time: '11:00' };
+        this.form = { student_id: this.form.student_id, scheduled_date: this.fmtDate(new Date()), start_time: '09:00', end_time: '11:00' };
         this.loadPlans();
         this.isSubmitting = false;
       },
@@ -551,6 +558,10 @@ export class LearningPlanComponent implements OnInit {
     if (!this.recurForm.student_id || this.selectedDays.length === 0 ||
         !this.recurForm.from_date || !this.recurForm.to_date) {
       this.error = 'Lengkapi semua field jadwal berulang';
+      return;
+    }
+    if (this.recurForm.to_date < this.recurForm.from_date) {
+      this.error = '"Sampai Tanggal" tidak boleh lebih awal dari "Dari Tanggal"';
       return;
     }
     this.isBulkSubmitting = true;
@@ -648,6 +659,8 @@ export class LearningPlanComponent implements OnInit {
       this.error = 'Tanggal baru harus diisi';
       return;
     }
+    if (this.isActionPending) return;
+    this.isActionPending = true;
     this.error = '';
     this.message = '';
     this.apiService.updateLearningPlan(this.reschedulePlanId, this.rescheduleForm).subscribe({
@@ -655,10 +668,12 @@ export class LearningPlanComponent implements OnInit {
         this.message = res.message || 'Jadwal berhasil direschedule';
         this.reschedulePlanId = null;
         this.rescheduleForm = {};
+        this.isActionPending = false;
         this.loadPlans();
       },
       error: (err) => {
         this.error = err.error?.error || 'Gagal melakukan reschedule';
+        this.isActionPending = false;
       }
     });
   }
@@ -683,7 +698,8 @@ export class LearningPlanComponent implements OnInit {
   }
 
   saveEdit(): void {
-    if (!this.editingPlanId) return;
+    if (!this.editingPlanId || this.isActionPending) return;
+    this.isActionPending = true;
     this.error = '';
     this.message = '';
     this.apiService.updateLearningPlan(this.editingPlanId, this.editPlan).subscribe({
@@ -691,10 +707,12 @@ export class LearningPlanComponent implements OnInit {
         this.message = res.message || 'Jadwal berhasil diperbarui';
         this.editingPlanId = null;
         this.editPlan = {};
+        this.isActionPending = false;
         this.loadPlans();
       },
       error: (err) => {
         this.error = err.error?.error || 'Gagal memperbarui jadwal';
+        this.isActionPending = false;
       }
     });
   }
@@ -703,15 +721,19 @@ export class LearningPlanComponent implements OnInit {
 
   deletePlan(plan: any): void {
     if (!confirm(`Yakin ingin menghapus jadwal ${plan.student?.name || ''} pada ${plan.start_time}?`)) return;
+    if (this.isActionPending) return;
+    this.isActionPending = true;
     this.error = '';
     this.message = '';
     this.apiService.deleteLearningPlan(plan.id).subscribe({
       next: (res) => {
         this.message = res.message || 'Jadwal berhasil dihapus';
+        this.isActionPending = false;
         this.loadPlans();
       },
       error: (err) => {
         this.error = err.error?.error || 'Gagal menghapus jadwal';
+        this.isActionPending = false;
       }
     });
   }

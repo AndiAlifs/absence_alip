@@ -567,6 +567,10 @@ func UpdateLearningPlan(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Status tidak valid"})
 			return
 		}
+		if input.Status == "completed" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Status 'selesai' hanya bisa diset melalui sesi aktif"})
+			return
+		}
 		plan.Status = input.Status
 	}
 
