@@ -18,7 +18,7 @@ import { ApiService } from '../../../services/api.service';
           <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p class="text-blue-800 text-sm">Pembuatan dan pengeditan jadwal dilakukan oleh admin. Anda dapat menandai jadwal sebagai <strong>Selesai</strong> atau <strong>Dibatalkan</strong>.</p>
+          <p class="text-blue-800 text-sm">Pembuatan dan pengeditan jadwal dilakukan oleh admin. Anda dapat menandai jadwal sebagai <strong>Dibatalkan</strong>. Status <strong>Selesai</strong> ditetapkan secara otomatis melalui sesi aktif.</p>
         </div>
 
         <!-- Period Tabs -->
@@ -51,10 +51,6 @@ import { ApiService } from '../../../services/api.service';
 
               <!-- Action buttons — only for planned -->
               <div *ngIf="p.status === 'planned'" class="flex gap-2">
-                <button (click)="markStatus(p, 'completed')" [disabled]="updatingId === p.id"
-                  class="px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-xs font-medium disabled:opacity-50">
-                  ✓ Selesai
-                </button>
                 <button (click)="markStatus(p, 'cancelled')" [disabled]="updatingId === p.id"
                   class="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-xs font-medium disabled:opacity-50">
                   ✕ Batalkan
@@ -78,7 +74,9 @@ import { ApiService } from '../../../services/api.service';
 export class LearningPlanComponent implements OnInit {
   plans: any[] = [];
   period: 'week' | 'month' = 'month';
+
   updatingId: number | null = null;
+
   message = '';
   error = '';
 
@@ -98,6 +96,7 @@ export class LearningPlanComponent implements OnInit {
   markStatus(plan: any, status: 'completed' | 'cancelled') {
     this.updatingId = plan.id;
     this.message = '';
+
     this.error = '';
     this.apiService.updateLearningPlan(plan.id, { status }).subscribe({
       next: () => {

@@ -311,11 +311,10 @@ func UpdateLearningPlan(c *gin.Context) {
 		return
 	}
 
-	if input.Status != "completed" && input.Status != "cancelled" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Instruktur hanya dapat mengubah status ke 'completed' atau 'cancelled'"})
+	if input.Status != "cancelled" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Instruktur hanya dapat mengubah status ke 'cancelled'. Status 'selesai' ditetapkan otomatis melalui sesi aktif"})
 		return
 	}
-
 	plan.Status = input.Status
 
 	if err := database.DB.Save(&plan).Error; err != nil {

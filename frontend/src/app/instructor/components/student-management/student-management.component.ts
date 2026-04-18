@@ -89,6 +89,7 @@ import { ApiService } from '../../../services/api.service';
                 <p class="text-xs text-slate-500">Total Kuota</p>
                 <p class="font-semibold text-slate-800 text-sm mt-0.5">{{detailStudent.total_quota_hours}} jam</p>
               </div>
+
               <div class="bg-slate-50 rounded-xl p-3">
                 <p class="text-xs text-slate-500">Sisa Kuota</p>
                 <p class="font-semibold text-sm mt-0.5" [class.text-red-600]="detailStudent.remaining_quota_hours <= 0" [class.text-emerald-700]="detailStudent.remaining_quota_hours > 0">
@@ -138,6 +139,7 @@ export class StudentManagementComponent implements OnInit {
   activeTab: 'active' | 'alumni' = 'active';
 
   detailStudent: any = null;
+
   sessions: any[] = [];
   totalSessions = 0;
   totalHours = 0;

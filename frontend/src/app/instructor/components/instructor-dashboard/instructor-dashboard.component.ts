@@ -53,7 +53,7 @@ import { ApiService } from '../../../services/api.service';
               </div>
               <div class="flex gap-2">
                 <input [(ngModel)]="sessionNotes" placeholder="Catatan sesi (opsional)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm w-48" />
-                <button (click)="finishSession()" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all">Sesi Selesai</button>
+                <button (click)="finishSession()" [disabled]="isFinishingSession" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-slate-400 transition-all">{{ isFinishingSession ? 'Menyelesaikan...' : 'Sesi Selesai' }}</button>
               </div>
             </div>
           </div>
@@ -184,6 +184,7 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
   calendarPlans: any[] = [];
 
   isStartingSession = false;
+  isFinishingSession = false;
   message = '';
   error = '';
 
@@ -226,6 +227,9 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
         this.activeStudents = this.students.filter((s: any) => s.is_active);
         this.activeStudentCount = this.activeStudents.length;
         this.pastStudentCount = this.students.filter((s: any) => !s.is_active).length;
+        if (!this.selectedStudentId && this.activeStudents.length > 0) {
+          this.selectedStudentId = this.activeStudents[0].id;
+        }
       }
     });
     this.loadActiveSession();
@@ -253,10 +257,11 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
   startSession(): void {
     if (!this.selectedStudentId) return;
 
+    this.isStartingSession = true;
+    this.error = '';
+    this.message = '';
+
     this.withGeoLocation((coords) => {
-      this.isStartingSession = true;
-      this.error = '';
-      this.message = '';
 
       this.apiService.startStudentSession({
         student_id: this.selectedStudentId as number,
@@ -279,8 +284,9 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
   }
 
   finishSession(): void {
-    if (!this.activeSession?.id) return;
+    if (!this.activeSession?.id || this.isFinishingSession) return;
 
+    this.isFinishingSession = true;
     this.error = '';
     this.message = '';
     this.apiService.endStudentSession({
@@ -290,11 +296,13 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.message = res.message || 'Sesi selesai';
         this.sessionNotes = '';
+        this.isFinishingSession = false;
         this.loadActiveSession();
         this.loadInitialData();
       },
       error: (err) => {
         this.error = err.error?.error || 'Gagal mengakhiri sesi';
+        this.isFinishingSession = false;
       }
     });
   }
