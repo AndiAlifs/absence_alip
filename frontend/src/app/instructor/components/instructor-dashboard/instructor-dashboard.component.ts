@@ -126,45 +126,18 @@ import { ApiService } from '../../../services/api.service';
           <div *ngIf="selectedDate" class="mt-4 bg-slate-50 rounded-xl p-4">
             <h3 class="text-sm font-semibold text-slate-700 mb-3">Jadwal {{ selectedDate | date:'EEEE, d MMMM yyyy' }}</h3>
             <div *ngIf="selectedDayPlans.length === 0" class="text-sm text-slate-500">Tidak ada jadwal.</div>
-            <ng-container *ngFor="let plan of selectedDayPlans">
-              <!-- Normal row -->
-              <div *ngIf="calReschedulePlanId !== plan.id" class="flex items-center justify-between bg-white rounded-lg p-3 mb-2 shadow-sm">
-                <div>
-                  <p class="text-sm font-medium text-slate-800">{{ plan.student?.name || '-' }}</p>
-                  <p class="text-xs text-slate-500">{{ plan.start_time }} - {{ plan.end_time }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button *ngIf="plan.status === 'planned'" (click)="calStartReschedule(plan)"
-                    class="px-2 py-1 rounded bg-violet-100 text-violet-700 hover:bg-violet-200 text-xs transition-all">📅 Reschedule</button>
-                  <span class="px-2 py-1 rounded-full text-xs"
-                    [class.bg-blue-100]="plan.status === 'planned'"   [class.text-blue-800]="plan.status === 'planned'"
-                    [class.bg-green-100]="plan.status === 'completed'" [class.text-green-800]="plan.status === 'completed'"
-                    [class.bg-red-100]="plan.status === 'cancelled'"  [class.text-red-800]="plan.status === 'cancelled'">
-                    {{ plan.status === 'planned' ? 'Direncanakan' : plan.status === 'completed' ? 'Selesai' : 'Dibatalkan' }}
-                  </span>
-                </div>
+            <div *ngFor="let plan of selectedDayPlans" class="flex items-center justify-between bg-white rounded-lg p-3 mb-2 shadow-sm">
+              <div>
+                <p class="text-sm font-medium text-slate-800">{{ plan.student?.name || '-' }}</p>
+                <p class="text-xs text-slate-500">{{ plan.start_time }} - {{ plan.end_time }}</p>
               </div>
-              <!-- Inline reschedule form -->
-              <div *ngIf="calReschedulePlanId === plan.id" class="bg-violet-50 border border-violet-200 rounded-xl p-3 mb-2">
-                <p class="text-xs font-semibold text-violet-700 mb-2">Jadwal Ulang: {{ plan.student?.name }}</p>
-                <div class="flex flex-wrap gap-2 items-end">
-                  <div>
-                    <label class="text-xs text-slate-500 block mb-1">Tanggal Baru *</label>
-                    <input [(ngModel)]="calRescheduleForm.scheduled_date" type="date" class="border border-violet-300 rounded-lg px-3 py-1.5 text-sm" />
-                  </div>
-                  <div>
-                    <label class="text-xs text-slate-500 block mb-1">Jam Mulai</label>
-                    <input [(ngModel)]="calRescheduleForm.start_time" type="time" class="border border-violet-300 rounded-lg px-3 py-1.5 text-sm w-28" />
-                  </div>
-                  <div>
-                    <label class="text-xs text-slate-500 block mb-1">Jam Selesai</label>
-                    <input [(ngModel)]="calRescheduleForm.end_time" type="time" class="border border-violet-300 rounded-lg px-3 py-1.5 text-sm w-28" />
-                  </div>
-                  <button (click)="calSaveReschedule()" class="px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-700 text-sm">Simpan</button>
-                  <button (click)="calReschedulePlanId = null" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 text-sm">Batal</button>
-                </div>
-              </div>
-            </ng-container>
+              <span class="px-2 py-1 rounded-full text-xs"
+                [class.bg-blue-100]="plan.status === 'planned'"   [class.text-blue-800]="plan.status === 'planned'"
+                [class.bg-green-100]="plan.status === 'completed'" [class.text-green-800]="plan.status === 'completed'"
+                [class.bg-red-100]="plan.status === 'cancelled'"  [class.text-red-800]="plan.status === 'cancelled'">
+                {{ plan.status === 'planned' ? 'Direncanakan' : plan.status === 'completed' ? 'Selesai' : 'Dibatalkan' }}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -205,10 +178,6 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
   currentDate = new Date();
   selectedDate: Date | null = null;
   selectedDayPlans: any[] = [];
-
-  // Calendar inline reschedule
-  calReschedulePlanId: number | null = null;
-  calRescheduleForm: any = {};
 
   constructor(private apiService: ApiService, private router: Router) {}
 
@@ -455,37 +424,9 @@ export class InstructorDashboardComponent implements OnInit, OnDestroy {
 
   selectDay(day: any): void {
     this.selectedDate = day.date;
-    this.calReschedulePlanId = null;
     const dayStr = this.formatDate(day.date);
     this.selectedDayPlans = this.calendarPlans.filter((p: any) => {
       return this.formatDate(new Date(p.scheduled_date)) === dayStr;
-    });
-  }
-
-  calStartReschedule(plan: any): void {
-    this.calReschedulePlanId = plan.id;
-    const d = new Date(plan.scheduled_date);
-    this.calRescheduleForm = {
-      scheduled_date: this.formatDate(d),
-      start_time: plan.start_time,
-      end_time: plan.end_time
-    };
-  }
-
-  calSaveReschedule(): void {
-    if (!this.calReschedulePlanId || !this.calRescheduleForm.scheduled_date) return;
-    this.error = '';
-    this.message = '';
-    this.apiService.updateLearningPlan(this.calReschedulePlanId, this.calRescheduleForm).subscribe({
-      next: (res) => {
-        this.message = res.message || 'Jadwal berhasil direschedule';
-        this.calReschedulePlanId = null;
-        this.calRescheduleForm = {};
-        this.buildCalendar();
-      },
-      error: (err) => {
-        this.error = err.error?.error || 'Gagal melakukan reschedule';
-      }
     });
   }
 
