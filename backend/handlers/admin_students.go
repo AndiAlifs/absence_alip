@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -526,12 +527,19 @@ func AdminBulkCreateLearningPlan(c *gin.Context) {
 		daySet[d] = true
 	}
 
-	if _, err := time.Parse("15:04", input.StartTime); err != nil {
+	startT, err := time.Parse("15:04", input.StartTime)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format start_time harus HH:MM"})
 		return
 	}
-	if _, err := time.Parse("15:04", input.EndTime); err != nil {
+	endT, err := time.Parse("15:04", input.EndTime)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format end_time harus HH:MM"})
+		return
+	}
+	sessionDurationHours := endT.Sub(startT).Hours()
+	if sessionDurationHours <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Jam selesai harus setelah jam mulai"})
 		return
 	}
 
@@ -599,6 +607,19 @@ func AdminBulkCreateLearningPlan(c *gin.Context) {
 		return
 	}
 
+	// Limit sessions to what the student's remaining quota allows
+	quotaLimited := 0
+	if student.RemainingQuotaHours > 0 {
+		maxByQuota := int(math.Floor(student.RemainingQuotaHours / sessionDurationHours))
+		if maxByQuota < len(createDates) {
+			quotaLimited = len(createDates) - maxByQuota
+			createDates = createDates[:maxByQuota]
+		}
+	} else {
+		quotaLimited = len(createDates)
+		createDates = nil
+	}
+
 	created := 0
 	for _, date := range createDates {
 		plan := models.LearningPlan{
@@ -615,9 +636,10 @@ func AdminBulkCreateLearningPlan(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Jadwal berulang berhasil dibuat",
-		"created": created,
-		"skipped": len(conflictDates),
+		"message":       "Jadwal berulang berhasil dibuat",
+		"created":       created,
+		"skipped":       len(conflictDates),
+		"quota_limited": quotaLimited,
 	})
 }
 

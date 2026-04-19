@@ -112,14 +112,24 @@ import { ApiService } from '../../services/api.service';
                     <option *ngFor="let s of allStudents" [ngValue]="s.id">{{s.name}} ({{getInstructorNameById(s.instructor_id)}})</option>
                   </select>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jam Mulai *</label>
-                    <input type="time" [(ngModel)]="planForm.start_time" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
+                <div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Jam Mulai *</label>
+                      <input type="time" [(ngModel)]="planForm.start_time" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Jam Selesai *</label>
+                      <input type="time" [(ngModel)]="planForm.end_time" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jam Selesai *</label>
-                    <input type="time" [(ngModel)]="planForm.end_time" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
+                  <div class="flex gap-2 items-center mt-2">
+                    <span class="text-xs text-gray-500">Preset:</span>
+                    <button type="button" (click)="applyPreset(1)"
+                      [class]="sessionDurationMinutes === 60 ? 'px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium' : 'px-2.5 py-1 border rounded text-xs hover:bg-gray-50'">1 jam</button>
+                    <button type="button" (click)="applyPreset(2)"
+                      [class]="sessionDurationMinutes === 120 ? 'px-2.5 py-1 bg-blue-600 text-white rounded text-xs font-medium' : 'px-2.5 py-1 border rounded text-xs hover:bg-gray-50'">2 jam</button>
+                    <span *ngIf="sessionDurationLabel" class="ml-auto text-sm font-semibold text-blue-600">{{ sessionDurationLabel }}</span>
                   </div>
                 </div>
 
@@ -160,6 +170,7 @@ import { ApiService } from '../../services/api.service';
                       <input type="date" [(ngModel)]="bulkTo" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
                     </div>
                   </div>
+                  <div *ngIf="bulkQuotaInfo" class="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-700">{{bulkQuotaInfo}}</div>
                   <div *ngIf="conflictWarning" class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800">
                     <p class="font-medium">{{conflictWarning}}</p>
                     <button (click)="forceCreate=true; submitForm()" class="mt-2 px-3 py-1 bg-yellow-500 text-white rounded text-xs font-medium hover:bg-yellow-600">Lewati & Buat Quand Même</button>
@@ -285,6 +296,40 @@ export class AdminLearningPlansComponent implements OnInit {
     if (i >= 0) this.selectedDays.splice(i, 1); else this.selectedDays.push(d);
   }
 
+  get sessionDurationMinutes(): number {
+    if (!this.planForm.start_time || !this.planForm.end_time) return 0;
+    const [sh, sm] = this.planForm.start_time.split(':').map(Number);
+    const [eh, em] = this.planForm.end_time.split(':').map(Number);
+    return (eh * 60 + em) - (sh * 60 + sm);
+  }
+
+  get sessionDurationLabel(): string {
+    const dur = this.sessionDurationMinutes;
+    if (dur <= 0) return '';
+    if (dur % 60 === 0) return `${dur / 60} jam`;
+    return `${Math.floor(dur / 60)} jam ${dur % 60} mnt`;
+  }
+
+  applyPreset(hours: number) {
+    if (!this.planForm.start_time) return;
+    const [h, m] = this.planForm.start_time.split(':').map(Number);
+    const total = h * 60 + m + hours * 60;
+    const eh = Math.floor(total / 60) % 24;
+    const em = total % 60;
+    this.planForm.end_time = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+  }
+
+  get bulkQuotaInfo(): string {
+    if (this.createMode !== 'bulk' || !this.planForm.student_id) return '';
+    const student = this.allStudents.find((s: any) => s.id === this.planForm.student_id);
+    if (!student) return '';
+    const dur = this.sessionDurationMinutes;
+    if (dur <= 0) return '';
+    const durH = dur / 60;
+    const maxSessions = Math.floor(student.remaining_quota_hours / durH);
+    return `Kuota tersisa: ${student.remaining_quota_hours} jam → maks ${maxSessions} sesi (${durH} jam/sesi)`;
+  }
+
   submitForm() {
     if (!this.planForm.student_id) { this.formError = 'Pilih murid'; return; }
     if (!this.planForm.start_time || !this.planForm.end_time) { this.formError = 'Waktu wajib diisi'; return; }
@@ -319,7 +364,9 @@ export class AdminLearningPlansComponent implements OnInit {
           this.saving = false;
           this.closeModal();
           this.loadPlans();
-          this.showSuccess(`${r.created} jadwal berhasil dibuat`);
+          let msg = `${r.created} jadwal berhasil dibuat`;
+          if (r.quota_limited > 0) msg += ` (${r.quota_limited} dibatasi karena kuota habis)`;
+          this.showSuccess(msg);
         },
         error: (e: any) => {
           this.saving = false;
