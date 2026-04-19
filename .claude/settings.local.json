@@ -3,6 +3,7 @@
     "allow": [
       "Bash(go build *)",
       "Bash(grep -E \"\\\\.\\(ts|html\\)$\")"
-    ]
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }

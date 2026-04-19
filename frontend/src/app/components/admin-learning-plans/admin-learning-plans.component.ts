@@ -170,7 +170,7 @@ import { ApiService } from '../../services/api.service';
                       <input type="date" [(ngModel)]="bulkTo" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 outline-none"/>
                     </div>
                   </div>
-                  <div *ngIf="bulkQuotaInfo" class="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-700">{{bulkQuotaInfo}}</div>
+                  <div *ngIf="bulkQuotaInfo" [class]="bulkQuotaExceeded ? 'p-3 bg-red-50 border border-red-300 rounded-lg text-xs text-red-700 font-medium' : 'p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-700'">{{bulkQuotaInfo}}</div>
                   <div *ngIf="conflictWarning" class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800">
                     <p class="font-medium">{{conflictWarning}}</p>
                     <button (click)="forceCreate=true; submitForm()" class="mt-2 px-3 py-1 bg-yellow-500 text-white rounded text-xs font-medium hover:bg-yellow-600">Lewati & Buat Quand Même</button>
@@ -319,6 +319,30 @@ export class AdminLearningPlansComponent implements OnInit {
     this.planForm.end_time = `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
   }
 
+  get plannedSessionsCount(): number {
+    if (!this.selectedDays.length || !this.bulkFrom || !this.bulkTo) return 0;
+    const from = new Date(this.bulkFrom);
+    const to = new Date(this.bulkTo);
+    if (from > to) return 0;
+    const jsDays = this.selectedDays.map((v: number) => v === 7 ? 0 : v);
+    let count = 0;
+    const cur = new Date(from);
+    while (cur <= to) {
+      if (jsDays.includes(cur.getDay())) count++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+  }
+
+  get bulkQuotaExceeded(): boolean {
+    if (this.createMode !== 'bulk' || !this.planForm.student_id) return false;
+    const student = this.allStudents.find((s: any) => s.id === this.planForm.student_id);
+    if (!student) return false;
+    const dur = this.sessionDurationMinutes;
+    if (dur <= 0 || !this.plannedSessionsCount) return false;
+    return this.plannedSessionsCount * (dur / 60) > student.remaining_quota_hours;
+  }
+
   get bulkQuotaInfo(): string {
     if (this.createMode !== 'bulk' || !this.planForm.student_id) return '';
     const student = this.allStudents.find((s: any) => s.id === this.planForm.student_id);
@@ -327,7 +351,13 @@ export class AdminLearningPlansComponent implements OnInit {
     if (dur <= 0) return '';
     const durH = dur / 60;
     const maxSessions = Math.floor(student.remaining_quota_hours / durH);
-    return `Kuota tersisa: ${student.remaining_quota_hours} jam → maks ${maxSessions} sesi (${durH} jam/sesi)`;
+    let info = `Kuota tersisa: ${student.remaining_quota_hours} jam → maks ${maxSessions} sesi (${durH} jam/sesi)`;
+    const planned = this.plannedSessionsCount;
+    if (planned > 0) {
+      info += ` | Direncanakan: ${planned} sesi (${planned * durH} jam)`;
+      if (planned > maxSessions) info += ` — MELEBIHI KUOTA!`;
+    }
+    return info;
   }
 
   submitForm() {

@@ -6,9 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// instructorBase is a drop-in replacement for gorm.Model that serialises ID as lowercase "id".
-type instructorBase struct {
-	ID        uint           `gorm:"primarykey" json:"id"`
+// InstructorBase is a drop-in replacement for gorm.Model that serialises ID as lowercase "id".
+type InstructorBase struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
@@ -16,7 +16,7 @@ type instructorBase struct {
 
 // Student represents the learner managed by the instructor.
 type Student struct {
-	instructorBase
+	InstructorBase
 	Name                string  `json:"name"`
 	InstructorID        uint    `json:"instructor_id"`
 	Instructor          User    `gorm:"foreignKey:InstructorID" json:"instructor,omitempty"`
@@ -30,7 +30,7 @@ type Student struct {
 
 // StudentSession tracks learning session time and quota deduction.
 type StudentSession struct {
-	instructorBase
+	InstructorBase
 	StudentID     uint       `json:"student_id"`
 	InstructorID  uint       `json:"instructor_id"`
 	CheckInTime   time.Time  `json:"check_in_time"`
@@ -44,7 +44,7 @@ type StudentSession struct {
 
 // LearningPlan is the schedule created by an instructor.
 type LearningPlan struct {
-	instructorBase
+	InstructorBase
 	InstructorID  uint      `json:"instructor_id"`
 	StudentID     uint      `json:"student_id"`
 	Student       Student   `gorm:"foreignKey:StudentID" json:"student"`
