@@ -101,24 +101,38 @@ func main() {
 			admin.PUT("/settings/minimum-work-hours", handlers.UpdateMinimumWorkHours)
 			admin.GET("/settings/quota-presets", handlers.GetQuotaPresetsSetting)
 			admin.PUT("/settings/quota-presets", handlers.UpdateQuotaPresets)
+
+			// Student Management (admin-owned)
+			admin.POST("/students", handlers.AdminCreateStudent)
+			admin.GET("/students", handlers.AdminGetStudents)
+			admin.GET("/students/roster.xlsx", handlers.AdminExportStudentRoster)
+			admin.PUT("/students/:id", handlers.AdminUpdateStudent)
+			admin.PUT("/students/:id/adjust-quota", handlers.AdminAdjustStudentQuota)
+			admin.PUT("/students/:id/archive", handlers.AdminArchiveStudent)
+			admin.PUT("/students/:id/reassign", handlers.AdminReassignStudent)
+			admin.GET("/students/:id/sessions", handlers.AdminGetStudentSessions)
+
+			// Learning Plan Management (admin-owned)
+			admin.POST("/learning-plans", handlers.AdminCreateLearningPlan)
+			admin.GET("/learning-plans", handlers.AdminGetLearningPlans)
+			admin.POST("/learning-plans/bulk", handlers.AdminBulkCreateLearningPlan)
+			admin.PUT("/learning-plans/:id", handlers.AdminUpdateLearningPlan)
+			admin.DELETE("/learning-plans/:id", handlers.AdminDeleteLearningPlan)
+
+			// Instructor Insight
+			admin.GET("/instructors", handlers.AdminListInstructors)
+			admin.GET("/instructor-load", handlers.AdminGetInstructorLoad)
 		}
 
 		// Instructor routes
 		instructorGroup := protected.Group("/instructor")
 		instructorGroup.Use(auth.InstructorMiddleware())
 		{
-			instructorGroup.POST("/students", handlers.CreateStudent)
 			instructorGroup.GET("/students", handlers.GetStudents)
-			instructorGroup.PUT("/students/:id", handlers.UpdateStudent)
-			instructorGroup.PUT("/students/:id/adjust-quota", handlers.AdjustStudentQuota)
-			instructorGroup.PUT("/students/:id/archive", handlers.ArchiveStudent)
 			instructorGroup.GET("/students/:id/sessions", handlers.GetStudentSessions)
 
-			instructorGroup.POST("/schedule", handlers.CreateLearningPlan)
 			instructorGroup.GET("/schedule", handlers.GetLearningPlans)
 			instructorGroup.PUT("/schedule/:id", handlers.UpdateLearningPlan)
-			instructorGroup.DELETE("/schedule/:id", handlers.DeleteLearningPlan)
-			instructorGroup.POST("/schedule/bulk", handlers.BulkCreateLearningPlan)
 
 			instructorGroup.POST("/session/start", handlers.StartStudentSession)
 			instructorGroup.POST("/session/end", handlers.EndStudentSession)

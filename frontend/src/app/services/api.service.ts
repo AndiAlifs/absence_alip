@@ -299,4 +299,131 @@ export class ApiService {
   getQuotaPresets(): Observable<any> {
     return this.http.get(`${this.apiUrl}/instructor/quota-presets`, this.getHeaders());
   }
+
+  // Admin - Student Management
+  adminListStudents(params?: { instructor_id?: number; is_active?: boolean; q?: string }): Observable<any> {
+    let query = '';
+    if (params) {
+      const parts: string[] = [];
+      if (params.instructor_id != null) parts.push(`instructor_id=${params.instructor_id}`);
+      if (params.is_active != null) parts.push(`is_active=${params.is_active}`);
+      if (params.q) parts.push(`q=${encodeURIComponent(params.q)}`);
+      if (parts.length) query = '?' + parts.join('&');
+    }
+    return this.http.get(`${this.apiUrl}/admin/students${query}`, this.getHeaders());
+  }
+
+  adminCreateStudent(data: {
+    name: string;
+    instructor_id: number;
+    total_quota_hours: number;
+    whatsapp: string;
+    gender: string;
+    meeting_point?: string;
+    initial_schedule_date?: string;
+    initial_start_time?: string;
+    initial_end_time?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/students`, data, this.getHeaders());
+  }
+
+  adminUpdateStudent(id: number, data: {
+    name?: string;
+    whatsapp?: string;
+    gender?: string;
+    meeting_point?: string;
+    instructor_id?: number;
+  }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/students/${id}`, data, this.getHeaders());
+  }
+
+  adminAdjustQuota(id: number, remainingQuotaHours: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/students/${id}/adjust-quota`,
+      { remaining_quota_hours: remainingQuotaHours }, this.getHeaders());
+  }
+
+  adminArchiveStudent(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/students/${id}/archive`, {}, this.getHeaders());
+  }
+
+  adminReassignStudent(id: number, instructorId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/students/${id}/reassign`,
+      { instructor_id: instructorId }, this.getHeaders());
+  }
+
+  adminGetStudentSessions(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/students/${id}/sessions`, this.getHeaders());
+  }
+
+  // Admin - Learning Plans
+  adminListLearningPlans(params?: {
+    instructor_id?: number;
+    student_id?: number;
+    period?: 'week' | 'month';
+    start_date?: string;
+    end_date?: string;
+  }): Observable<any> {
+    const parts: string[] = [];
+    if (params) {
+      if (params.instructor_id != null) parts.push(`instructor_id=${params.instructor_id}`);
+      if (params.student_id != null) parts.push(`student_id=${params.student_id}`);
+      if (params.period) parts.push(`period=${params.period}`);
+      if (params.start_date) parts.push(`start_date=${params.start_date}`);
+      if (params.end_date) parts.push(`end_date=${params.end_date}`);
+    }
+    const query = parts.length ? '?' + parts.join('&') : '';
+    return this.http.get(`${this.apiUrl}/admin/learning-plans${query}`, this.getHeaders());
+  }
+
+  adminCreateLearningPlan(data: {
+    student_id: number;
+    scheduled_date: string;
+    start_time: string;
+    end_time: string;
+    status?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/learning-plans`, data, this.getHeaders());
+  }
+
+  adminUpdateLearningPlan(id: number, data: {
+    scheduled_date?: string;
+    start_time?: string;
+    end_time?: string;
+    status?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/learning-plans/${id}`, data, this.getHeaders());
+  }
+
+  adminDeleteLearningPlan(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/learning-plans/${id}`, this.getHeaders());
+  }
+
+  adminBulkCreateLearningPlan(data: {
+    student_id: number;
+    days_of_week: number[];
+    start_time: string;
+    end_time: string;
+    from_date: string;
+    to_date: string;
+    force?: boolean;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/learning-plans/bulk`, data, this.getHeaders());
+  }
+
+  // Admin - Instructor Insight
+  adminListInstructors(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/instructors`, this.getHeaders());
+  }
+
+  adminGetInstructorLoad(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/instructor-load`, this.getHeaders());
+  }
+
+  adminDownloadStudentRoster(): Observable<Blob> {
+    const token = localStorage.getItem('token');
+    return this.http.get(`${this.apiUrl}/admin/students/roster.xlsx`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      responseType: 'blob'
+    });
+  }
 }

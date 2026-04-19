@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
@@ -38,6 +39,69 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
               🏢 Kelola Kantor ({{officeCount}})
             </button>
           </div>
+        </div>
+
+        <!-- Teaching Section Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <!-- Active Students Card -->
+          <div class="bg-white rounded-2xl shadow-xl p-6 flex flex-col cursor-pointer hover:shadow-2xl transition-shadow" (click)="goToAdminStudents()">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Murid Aktif</h3>
+              <svg class="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <p class="text-4xl font-bold text-green-700">{{activeStudentsCount}}</p>
+            <p class="text-sm text-blue-600 mt-3 font-medium">Kelola Murid →</p>
+          </div>
+
+          <!-- Instructor Load Card -->
+          <div class="bg-white rounded-2xl shadow-xl p-6 col-span-1 md:col-span-2 cursor-pointer hover:shadow-2xl transition-shadow" (click)="goToAdminInstructors()">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Beban Instruktur</h3>
+              <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm" *ngIf="instructorLoad.length > 0">
+                <thead>
+                  <tr class="text-xs text-gray-500 border-b">
+                    <th class="text-left pb-2">Instruktur</th>
+                    <th class="text-right pb-2">Murid Aktif</th>
+                    <th class="text-right pb-2">Sisa Jam</th>
+                    <th class="text-right pb-2">Sesi Bulan Ini</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of instructorLoad" class="border-b last:border-0">
+                    <td class="py-1.5 font-medium">{{row.full_name || row.username}}</td>
+                    <td class="py-1.5 text-right">{{row.active_students}}</td>
+                    <td class="py-1.5 text-right" [class.text-red-600]="row.remaining_quota_hours <= 0">{{row.remaining_quota_hours}} jam</td>
+                    <td class="py-1.5 text-right">{{row.sessions_this_month}}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p *ngIf="instructorLoad.length === 0" class="text-gray-400 text-sm py-2">Belum ada data instruktur</p>
+            </div>
+            <p class="text-sm text-blue-600 mt-3 font-medium">Lihat semua →</p>
+          </div>
+        </div>
+
+        <!-- Quick links for teaching management -->
+        <div class="flex gap-3 mb-8">
+          <button (click)="goToAdminStudents()" class="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 shadow flex items-center gap-2 text-sm">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Manajemen Murid
+          </button>
+          <button (click)="goToAdminLearningPlans()" class="px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 shadow flex items-center gap-2 text-sm">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Jadwal Belajar
+          </button>
+          <button (click)="goToAdminInstructors()" class="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow flex items-center gap-2 text-sm">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Beban Instruktur
+          </button>
         </div>
 
         <!-- Daily Attendance Dashboard Section -->
@@ -542,18 +606,38 @@ export class ManagerDashboardComponent implements OnInit {
   minWorkHoursMessage = '';
   isMinWorkHoursError = false;
 
+  // Teaching section
+  instructorLoad: any[] = [];
+  activeStudentsCount = 0;
+
   constructor(
     private apiService: ApiService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private router: Router
   ) {}
-  
+
   ngOnInit(): void {
     this.loadOfficeLocation();
     this.loadEmployees();
     this.loadDailyAttendance();
     this.loadOfficeCount();
     this.loadSessionDuration();
+    this.loadTeachingWidgets();
   }
+
+  loadTeachingWidgets() {
+    this.apiService.adminGetInstructorLoad().subscribe({
+      next: (r: any) => {
+        this.instructorLoad = (r.data || []).slice(0, 5);
+        this.activeStudentsCount = (r.data || []).reduce((a: number, row: any) => a + row.active_students, 0);
+      },
+      error: () => {}
+    });
+  }
+
+  goToAdminStudents() { this.router.navigate(['/admin/students']); }
+  goToAdminLearningPlans() { this.router.navigate(['/admin/learning-plans']); }
+  goToAdminInstructors() { this.router.navigate(['/admin/instructors']); }
 
   // Daily Attendance Methods
   loadDailyAttendance() {

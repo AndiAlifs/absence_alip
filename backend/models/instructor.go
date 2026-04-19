@@ -19,6 +19,7 @@ type Student struct {
 	instructorBase
 	Name                string  `json:"name"`
 	InstructorID        uint    `json:"instructor_id"`
+	Instructor          User    `gorm:"foreignKey:InstructorID" json:"instructor,omitempty"`
 	TotalQuotaHours     float64 `json:"total_quota_hours"`
 	RemainingQuotaHours float64 `json:"remaining_quota_hours"`
 	WhatsApp            string  `json:"whatsapp"`

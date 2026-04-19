@@ -19,6 +19,9 @@ import { LandingPageComponent } from './components/landing-page/landing-page.com
 import { LegacyLandingPageComponent } from './components/landing-page/legacy-landing-page.component';
 import { NavbarComponent } from './components/shared/navbar/navbar.component';
 import { AuthGuard } from './auth.guard';
+import { AdminStudentsComponent } from './components/admin-students/admin-students.component';
+import { AdminLearningPlansComponent } from './components/admin-learning-plans/admin-learning-plans.component';
+import { AdminInstructorsComponent } from './components/admin-instructors/admin-instructors.component';
 
 const routes: Routes = [
   { path: '', component: LandingPageComponent },
@@ -33,6 +36,9 @@ const routes: Routes = [
   { path: 'admin/offices', component: OfficeManagementComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
   { path: 'admin/reports', component: AttendanceReportsComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
   { path: 'admin/leaves', component: LeaveManagementComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/students', component: AdminStudentsComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/learning-plans', component: AdminLearningPlansComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
+  { path: 'admin/instructors', component: AdminInstructorsComponent, canActivate: [AuthGuard], data: { roles: ['manager'] } },
   {
     path: 'instructor',
     canActivate: [AuthGuard],
@@ -64,7 +70,10 @@ const routes: Routes = [
     ReactiveFormsModule,
     HttpClientModule,
     RouterModule.forRoot(routes),
-    OfficeManagementComponent
+    OfficeManagementComponent,
+    AdminStudentsComponent,
+    AdminLearningPlansComponent,
+    AdminInstructorsComponent
   ],
   providers: [AuthGuard],
   bootstrap: [AppComponent]
